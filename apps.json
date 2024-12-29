@@ -2,8 +2,8 @@
   "name": "AkanesSource",
   "subtitle": "A source for all of my apps",
   "description": "Apps Made by a dev For Users that have no idea why im doing this stuff.",
-  "iconURL": "https://example.com/source_icon.png",
-  "headerURL": "https://example.com/source_header.png",
+  "iconURL": "https://akanedev.au/Images/AkaneDev.png",
+  "headerURL": "https://akanedev.au/Images/AkaneDev.png",
   "website": "https://akanedev.au",
   "tintColor": "#005959",
   "featuredApps": [],
@@ -14,6 +14,7 @@
       "identifier": "akanes_source_creation",
       "caption": "Cause Nobody Can Stop Me",
       "date": "2024-12-29",
+      "imageURL": "https://akanedev.au/Images/AkaneDev.png",
       "tintColor": "#FF5733",
       "notify": true
     }
