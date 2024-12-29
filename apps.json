@@ -6,9 +6,16 @@
   "headerURL": "https://example.com/source_header.png",
   "website": "https://akanedev.au",
   "tintColor": "#005959",
-  "featuredApps": [
-    "au.akanedev.funfact",
-  ],
+  "featuredApps": [],
   "apps": [],
-  "news": [],
+  "news": [
+    {
+      "title": "Akane Creates This Altstore Source",
+      "identifier": "akanes_source_creation",
+      "caption": "Cause Nobody Can Stop Me",
+      "date": "2024-12-29",
+      "tintColor": "#F54F32",
+      "notify": true
+    }
+  ]
 }
