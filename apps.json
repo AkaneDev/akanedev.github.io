@@ -16,6 +16,14 @@
       "date": "2024-12-29",
       "tintColor": "#FF5733",
       "notify": true
+    },
+    {
+      "title": "Wondering how possible a game mod loader for games",
+      "identifier": "bepinex_apple",
+      "caption": "hoping that it works",
+      "date": "2025-2-1",
+      "tintColor": "#FF5733",
+      "notify": true
     }
   ]
 }
