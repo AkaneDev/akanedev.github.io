@@ -1,5 +1,21 @@
 let isSpeaking = false;
 let isPaused = false;
+let konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight"]; // Up, Up, Down, Down, Left, Right, Left, Right, B, A
+let konamiCodePosition = 0;
+
+document.addEventListener("keydown", function (e) {
+
+    // console.log(e.key);
+    if (e.key === konamiCode[konamiCodePosition]) {
+        konamiCodePosition++;
+        if (konamiCodePosition === konamiCode.length) {
+            console.log("Konami Code activated!");
+            konamiCodePosition = 0;
+        }
+    } else {
+        konamiCodePosition = 0;
+    }
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     const themeToggle = document.getElementById("theme-toggle");
@@ -7,6 +23,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const body = document.body;
     const openMenuButton = document.getElementById("open-menu");
     const menu = document.getElementById("menu");
+
+
     
     // Load theme preference
     if (localStorage.getItem("theme") === "light") {
