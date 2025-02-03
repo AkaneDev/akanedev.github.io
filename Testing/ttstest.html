@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>TEMPLATE</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='main.js'></script>
+    <!-- <script defer src="../script.js"></script> -->
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    
+<section id="play-tts">
+    <p>Text To Speech</p>
+    <button onclick="speakText()">Click to Speak</button>
+    <button onclick="togglepauseSpeaking()">Click to Pause/Play</button>
+    <button onclick="stopSpeaking()">Click to Stop</button>
+    <p id="status">Status: Ready to Speak</p> <!-- Status message -->
+</section>
+
+<script>
+    let isSpeaking = false;
+    let isPaused = false;
+    let utterance = new SpeechSynthesisUtterance();
+
+    function speakText() {
+        if (!isSpeaking) {
+            utterance.text = "Hello, this is a test of the text-to-speech system.";
+            speechSynthesis.speak(utterance);
+            isSpeaking = true;
+            document.getElementById('status').textContent = "Status: Speaking";
+        }
+    }
+
+    function togglepauseSpeaking() {
+        if (isSpeaking) {
+            if (isPaused) {
+                speechSynthesis.resume();
+                document.getElementById('status').textContent = "Status: Resumed Speaking";
+            } else {
+                speechSynthesis.pause();
+                document.getElementById('status').textContent = "Status: Paused";
+            }
+            isPaused = !isPaused;
+        }
+    }
+
+    function stopSpeaking() {
+        speechSynthesis.cancel();
+        isSpeaking = false;
+        isPaused = false;
+        document.getElementById('status').textContent = "Status: Stopped Speaking";
+    }
+</script>
+
+</body>
+</html>

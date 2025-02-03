@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech</title>
+</head>
+<body>
+    <h1>Text-to-Speech Example</h1>
+    <input type="text" id="text-to-speak" placeholder="Enter text here">
+    <button onclick="speakText()">Click to Speak</button>
+
+    <script>
+      function speakText() {
+        var text = document.getElementById('text-to-speak').value;
+        if (text !== '') {
+          var speech = new SpeechSynthesisUtterance(text);
+          var voices = window.speechSynthesis.getVoices();
+          speech.voice = voices[0]; // Select first available voice
+          speech.rate = 1;
+          speech.pitch = 1;
+          window.speechSynthesis.speak(speech);
+        } else {
+          alert("Please enter some text to speak!");
+        }
+      }
+    </script>
+</body>
+</html>
