@@ -1,7 +1,9 @@
 let isSpeaking = false;
 let isPaused = false;
+let devMode = false;
 let konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight"]; // Up, Up, Down, Down, Left, Right, Left, Right, B, A
 let konamiCodePosition = 0;
+var coll = document.getElementsByClassName("collapsible");
 
 document.addEventListener("keydown", function (e) {
 
@@ -10,6 +12,8 @@ document.addEventListener("keydown", function (e) {
         konamiCodePosition++;
         if (konamiCodePosition === konamiCode.length) {
             console.log("Konami Code activated!");
+            devMode = true;
+            console.log("Developer Mode: ON");
             konamiCodePosition = 0;
         }
     } else {
@@ -23,8 +27,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const body = document.body;
     const openMenuButton = document.getElementById("open-menu");
     const menu = document.getElementById("menu");
-
-
     
     // Load theme preference
     if (localStorage.getItem("theme") === "light") {
@@ -63,7 +65,68 @@ document.addEventListener("DOMContentLoaded", function () {
     projectCards.forEach(card => {
         card.style.color = "white";
     });
+
+    setInterval(function () {
+        if (devMode && !document.getElementById("dev-window")) {
+            console.log("Developer Mode is active. Additional features enabled.");
+
+            // Create floating window
+            const devWindow = document.createElement("div");
+            devWindow.id = "dev-window";
+            // devWindow.className = "dark-mode";
+            devWindow.innerHTML = `
+                <div id="dev-window-header" class="dark-mode">Developer Mode</div>
+                <div id="dev-window-content" class="dark-mode">
+                    <p>Developer Mode is active. Additional features enabled.</p>
+                    <button class="collapsible">TTS Test</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p id="status">Status: Idle</p>
+                        <section id="tts">This is a test of the text to speech system.</section>
+                        <button onclick="speakText()">Speak</button>
+                        <button onclick="stopSpeaking()">Stop</button>
+                    </div>
+                    <br>
+                    <button class="collapsible">Force Darkmode</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p>Force darkmode is active.</p>
+                        <button onclick="document.body.classList.add('dark-mode')">Enable</button>
+                        <button onclick="document.body.classList.remove('dark-mode')">Disable</button>
+                    </div>
+                    <br>
+                    <button class="remove-dev-window">Close</button>
+                </div>
+            `;
+            document.body.appendChild(devWindow);
+            // Make the window draggable
+            collapsibleSetup();
+            dragElement(devWindow);
+        }
+    }, 1000); // Check every second
 });
+
+function collapsibleSetup() {
+    coll = document.getElementsByClassName("collapsible");
+    for (var i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        });
+    }
+
+    const removeDevWindow = document.getElementsByClassName("remove-dev-window");
+    for (var i = 0; i < removeDevWindow.length; i++) {
+        removeDevWindow[i].addEventListener("click", function() {
+            document.getElementById("dev-window").remove();
+            devMode = false;
+            console.log("Developer Mode: OFF");
+        });
+    }
+}
 
 function speakText() {
     if (!isSpeaking) {
@@ -128,4 +191,39 @@ function testAllVoices() {
         speech.pitch = 1;
         window.speechSynthesis.speak(speech);
     });
+}
+
+function dragElement(elmnt) {
+    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    const header = document.getElementById(elmnt.id + "-header");
+    if (header) {
+        header.onmousedown = dragMouseDown;
+    } else {
+        elmnt.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
 }
