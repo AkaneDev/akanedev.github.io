@@ -1,2 +1,8 @@
+User-agent: Googlebot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
 User-agent: *
-Disallow: *
+Disallow: /
