@@ -176,6 +176,9 @@ body {
     transition: background 0.3s ease;
 }
 
+#nav-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
 
 /* Hamburger menu */
 #open-menu {
@@ -191,6 +194,10 @@ body {
     cursor: pointer;
 }
 
+#open-menu:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 /* Hamburger menu */
 .menu {
     display: none;
@@ -201,6 +208,27 @@ body {
     background-color: rgba(0, 0, 0, 0.9);
     padding: 15px;
     text-align: center;
+    
+}
+
+@-webkit-keyframes fadein {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+  
+@keyframes fadein {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@-webkit-keyframes fadeout {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+  
+@keyframes fadeout {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 .menu a {
@@ -218,6 +246,9 @@ body {
 /* When the menu is open */
 .menu.open {
     display: block;
+    /* -webkit-animation: fadein 0.5s linear forwards;
+    animation: fadein 0.5s linear forwards; */
+    /* opacity: 1; */
 }
 
 
