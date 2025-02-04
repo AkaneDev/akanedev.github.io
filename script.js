@@ -54,11 +54,12 @@ document.addEventListener("DOMContentLoaded", function () {
             window.history.back();
         });
     }
-
-    openMenuButton.addEventListener("click", function () {
-        // alert("open menu");
-        menu.classList.toggle("open");
-    });
+    if (openMenuButton !== null) {
+        openMenuButton.addEventListener("click", function () {
+            // alert("open menu");
+            menu.classList.toggle("open");
+        });
+    }
 
     // Ensure text remains unaffected by light mode
     const projectCards = document.querySelectorAll(".project-card");
