@@ -5,9 +5,10 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Redirect</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
     <link rel="stylesheet" href="../styles.css">
+    <script src='main.js'></script>
     <script defer src="../script.js"></script>
-    <!-- <script defer src="../scripts/redirect.js"></script> -->
 </head>
 <body class="dark-mode">
     <nav class="navbar">
@@ -20,15 +21,5 @@
         <h1>Redirecting</h1>
         <p>you are being redirected to the right page.</p>
     </section>
-    <script>
-        function redirect(Location = "../index.html", time = 5000) {
-            console.log("Redirecting to " + Location);
-            setTimeout(() => {
-                window.location.replace(Location);
-            }, time);
-        }
-
-        redirect("ProtocolDeltaTheLastDays.html", 0);
-    </script>
 </body>
 </html>
