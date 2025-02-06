@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Json to Lang Conversion Tool</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="../styles.css">
+    <script defer src="../script.js"></script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <h1>JSON2LANG - Minecraft Language File Backporting Tool</h1>
+        <p><strong>Repository:</strong> <a href="https://github.com/AkanesExperiments/JSON2LANG" target="_blank">GitHub</a></p>
+        <p><strong>Author:</strong> AkaneDev</p>
+        <p><strong>Version:</strong> <a href="https://github.com/AkanesExperiments/JSON2LANG/releases/tag/v0.1.0-alpha">0.1 alpha</a></p>
+        
+        <h2>Overview</h2>
+        <p>JSON2LANG is a command-line utility designed to <strong>backport Minecraft translation files</strong> from modern JSON-based formats to the legacy <code>.lang</code> format used in <strong>Minecraft Forge 1.12.2</strong>. It automates the conversion process for modders who need compatibility with older versions.</p>
+        
+        <h2>Purpose</h2>
+        <ul>
+            <li>Minecraft 1.12.2 uses <code>.lang</code> files for localization.</li>
+            <li>Minecraft 1.13+ switched to JSON-based translation files.</li>
+            <li>JSON2LANG converts newer JSON translation files into the <code>.lang</code> format required for Minecraft 1.12.2.</li>
+        </ul>
+        
+        <h2>How It Works</h2>
+        <h3>Input Format (JSON)</h3>
+        <pre><code>{
+    "block.minecraft.stone": "Stone",
+    "item.minecraft.diamond": "Diamond"
+}</code></pre>
+        
+        <h3>Output Format (.lang)</h3>
+        <pre><code>block.minecraft.stone=Stone
+item.minecraft.diamond=Diamond</code></pre>
+        
+        <h2>Usage</h2>
+        <p>Run JSON2LANG with the following command:</p>
+        <pre><code>jsontolang [-h] input output</code></pre>
+        
+        <h3>Arguments</h3>
+        <ul>
+            <li><code>input</code> - Path to the input JSON file.</li>
+            <li><code>output</code> - Path where the <code>.lang</code> file will be saved.</li>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre><code>jsontolang en_us.json en_us.lang</code></pre>
+        
+        <h2>Why Use JSON2LANG?</h2>
+        <ul>
+            <li><strong>Fast and Efficient</strong> - Converts entire files in seconds.</li>
+        </ul>
+        
+        <h2>Future Improvements</h2>
+        <ul>
+            <li>Batch conversion for multiple files.</li>
+        </ul>
+        
+        <h2>Support Me</h2>
+        <p>If you find this tool helpful, consider supporting me on <a href="https://buymeacoffee.com/akanedev" target="_blank">Buy Me a Coffee</a>.</p>
+    </section>
+</body>
+</html>
