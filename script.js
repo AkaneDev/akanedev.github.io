@@ -94,6 +94,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         <button onclick="document.body.classList.remove('dark-mode')">Disable</button>
                     </div>
                     <br>
+                    <button class="looks-nice" id="download-ultrakill">Download Ultrakill</button>
+                    <br>
+                    <button class="collapsible">Design tools</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p>Design tools are active.</p>
+                        <button onclick="addCenteringLines()">Add Centering Lines</button>
+                    </div>
                     <button class="remove-dev-window">Close</button>
                 </div>
             `;
@@ -107,6 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function collapsibleSetup() {
     coll = document.getElementsByClassName("collapsible");
+    ultrakill = document.getElementById("download-ultrakill");
     for (var i = 0; i < coll.length; i++) {
         coll[i].addEventListener("click", function() {
             this.classList.toggle("active");
@@ -118,6 +126,11 @@ function collapsibleSetup() {
             }
         });
     }
+
+    ultrakill.addEventListener("click", function() {
+        console.log("Downloading Ultrakill...");
+        window.location.href = "https://ultrakill.newblood.games/";
+    });
 
     const removeDevWindow = document.getElementsByClassName("remove-dev-window");
     for (var i = 0; i < removeDevWindow.length; i++) {
@@ -228,3 +241,35 @@ function dragElement(elmnt) {
         document.onmousemove = null;
     }
 }
+
+function addCenteringLines() {
+    const lines = ['vertical', 'horizontal'];
+  
+    lines.forEach(line => {
+      const div = document.createElement('div');
+      div.style.position = 'absolute';
+      div.style.pointerEvents = 'none'; // Allow click-through to elements below
+      div.style.backgroundColor = 'rgba(255, 0, 0, 100)'; // Light color for visibility
+      div.style.zIndex = '9999'; // Make sure the lines are on top
+  
+      if (line === 'vertical') {
+        div.style.width = '1px'; // Thin vertical line
+        div.style.height = '100%';
+        div.style.left = '50%';
+        div.style.top = '0';
+        div.style.transform = 'translateX(-50%)'; // Center horizontally
+      } else if (line === 'horizontal') {
+        div.style.height = '1px'; // Thin horizontal line
+        div.style.width = '100%';
+        div.style.top = '50%';
+        div.style.left = '0';
+        div.style.transform = 'translateY(-50%)'; // Center vertically
+      }
+  
+      document.body.appendChild(div);
+    });
+  }
+  
+  // Call the function to add centering lines
+//   addCenteringLines();
+  
