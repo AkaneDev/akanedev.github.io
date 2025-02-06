@@ -129,7 +129,7 @@ function collapsibleSetup() {
 
     ultrakill.addEventListener("click", function() {
         console.log("Downloading Ultrakill...");
-        window.location.href = "https://ultrakill.newblood.games/";
+        window.location.href = "https://store.steampowered.com/app/1229490/ULTRAKILL/";
     });
 
     const removeDevWindow = document.getElementsByClassName("remove-dev-window");
