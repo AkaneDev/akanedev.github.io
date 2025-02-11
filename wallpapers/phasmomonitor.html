@@ -80,7 +80,9 @@
     <script>
         const canvas = document.getElementById("activityCanvas");
         const ctx = canvas.getContext("2d");
-
+        const ghosts = ["Banshee", "Demon", "Deogen", "Goryo", "Hantu", "Jinn", "Mare", "Moroi", "Myling", "Obake", "Oni", "Onryo", "Phantom", "Poltergeist", "Raiju", "Revenant", "Shade", "Spirit", "Thaye", "The Mimic", "The Twins", "Wraith", "Yokai", "Yurei"];
+        // const ghost = ghosts[Math.floor(Math.random() * ghosts.length)];
+        const ghost = "The Twins";
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = canvas.parentElement.clientHeight;
 
@@ -118,11 +120,78 @@
             ctx.stroke();
         }
 
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        let lastDirection = 0;  // 0 = no change, 1 = increasing, -1 = decreasing
+        let isHunting = false;
+        let isHuntingStartUp = true;
+        let HuntDuration = 0;
         function updateActivity() {
+            const lastActivity = activityData[activityData.length - 1];
+            let newActivity;
+
+            // Decide whether to change or keep the same number
+            if (isHunting) {
+                // If hunting, randomly pick a value between 5 and 10
+                newActivity = 10;
+                if (isHuntingStartUp){
+                    HuntDuration = getRandomInt(2, 60);
+                    isHuntingStartUp = false;
+                    console.log("Hunt Duration: " + HuntDuration);
+                }
+                HuntDuration--;
+                if (HuntDuration <= 0){
+                    isHunting = false;
+                    isHuntingStartUp = true;
+                    newActivity = 0;
+                }
+            }
+            else {
+                if (Math.random() < 0.1) { // 30% chance to change the number
+                    // Determine whether to increase, decrease, or stay the same
+                    if (lastDirection === 1) {
+                        // If increasing, can either stay the same or increase by 1
+                        newActivity = Math.min(lastActivity);
+                        console.log("Increasing");
+                    } else if (lastDirection === -1) {
+                        // If decreasing, can either stay the same or decrease by 1
+                        newActivity = Math.max(lastActivity);
+                        console.log("Decreasing");
+                    } else {
+                        // If no direction (first run), randomly pick a value between 0 and 10
+                        newActivity = Math.floor(Math.random() * 11);
+                        console.log("Random");
+                    }
+                    console.log(newActivity);
+                } else {
+                    // 70% chance to stay the same
+                    newActivity = lastActivity;
+                    console.log("Staying the same");
+                }
+            }
+            
+            if (newActivity == 10) {
+                console.log("Hunting!");
+                isHunting = true;
+            }
+
+            // Update direction (track if it increased or decreased)
+            if (newActivity > lastActivity) {
+                lastDirection = 1; // Increasing
+            } else if (newActivity < lastActivity) {
+                lastDirection = -1; // Decreasing
+            } else {
+                lastDirection = 0; // No change
+            }
+
+            // Shift old data and add new activity value
             activityData.shift();
-            activityData.push(Math.floor(Math.random() * 11));
+            activityData.push(newActivity);
             drawGraph();
         }
+
 
         setInterval(updateActivity, 1000);
         drawGraph();
