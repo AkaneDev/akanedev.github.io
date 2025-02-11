@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phasmophobia Activity Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            position: relative;
+            width: 90vw;
+            height: 50vh;
+            background: #111;
+            border: 3px solid #666;
+            padding: 20px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+        }
+        .title {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #ddd;
+        }
+        .labels {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .canvas-container {
+            position: absolute;
+            bottom: 40px;
+            left: 20px;
+            right: 20px;
+            top: 40px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
+        .time-label {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">TOTAL ACTIVITY</div>
+        <div class="canvas-container">
+            <canvas id="activityCanvas"></canvas>
+        </div>
+        <div class="labels">STRENGTH</div>
+        <div class="time-label">TIME IN SECONDS</div>
+    </div>
+    <script>
+        const canvas = document.getElementById("activityCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+
+        let activityData = new Array(60).fill(0);
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Grid
+            ctx.strokeStyle = "#222";
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                let y = canvas.height - (i * (canvas.height / 10));
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            for (let i = 0; i <= 10; i++) {
+                let x = i * (canvas.width / 10);
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw Activity Line
+            ctx.strokeStyle = "#ff5500";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - (activityData[0] * (canvas.height / 10)));
+            for (let i = 1; i < activityData.length; i++) {
+                ctx.lineTo(i * (canvas.width / activityData.length), canvas.height - (activityData[i] * (canvas.height / 10)));
+            }
+            ctx.stroke();
+        }
+
+        function updateActivity() {
+            activityData.shift();
+            activityData.push(Math.floor(Math.random() * 11));
+            drawGraph();
+        }
+
+        setInterval(updateActivity, 1000);
+        drawGraph();
+    </script>
+</body>
+</html>
