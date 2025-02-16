@@ -19,15 +19,19 @@
             width: 100vw;
             color: white;
             font-family: 'Arial', sans-serif;
+            overflow: hidden; /* Hide any overflow */
         }
         .container {
-            position: relative;
-            width: 90vw;
-            height: 50vh;
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
             background: #111;
-            border: 3px solid #666;
             padding: 20px;
             box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .title {
             position: absolute;
@@ -45,12 +49,65 @@
             font-size: 14px;
             color: #aaa;
         }
+        .label-0s,
+        .label-10s,
+        .label-20s,
+        .label-30s,
+        .label-40s,
+        .label-50s,
+        .label-60s {
+            position: absolute;
+            bottom: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .label-0s {
+            left: 0%;
+        }
+
+        .label-10s {
+            left: calc(100% / 6);  /* This will place it at 1/6th of the width */
+        }
+
+        .label-20s {
+            left: calc(2 * 100% / 6);  /* 2/6th of the width */
+        }
+
+        .label-30s {
+            left: calc(3 * 100% / 6);  /* 3/6th of the width */
+        }
+
+        .label-40s {
+            left: calc(4 * 100% / 6);  /* 4/6th of the width */
+        }
+
+        .label-50s {
+            left: calc(5 * 100% / 6);  /* 5/6th of the width */
+        }
+
+        .label-60s {
+            left: 100%;  /* Rightmost edge of the container */
+            transform: translateX(-100%);  /* Adjust to position it correctly */
+        }
+
+        .strength-label {
+            position: absolute;
+            top: 50%;
+            left: -25px;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 14px;
+            font-weight: bold;
+            color: #ddd;
+        }
         .canvas-container {
             position: absolute;
             bottom: 40px;
             left: 20px;
             right: 20px;
             top: 40px;
+            width: 100%;
+            height: 100%;
         }
         canvas {
             width: 100%;
@@ -74,8 +131,17 @@
         <div class="canvas-container">
             <canvas id="activityCanvas"></canvas>
         </div>
-        <div class="labels">STRENGTH</div>
+        <div class="strength-label">STRENGTH</div>
+        <br>
         <div class="time-label">TIME IN SECONDS</div>
+        <br>
+        <div class="label-0s">0s</div>
+        <div class="label-10s">10s</div>
+        <div class="label-20s">20s</div>
+        <div class="label-30s">30s</div>
+        <div class="label-40s">40s</div>
+        <div class="label-50s">50s</div>
+        <div class="label-60s">60s</div>
     </div>
     <script>
         const canvas = document.getElementById("activityCanvas");
@@ -128,6 +194,30 @@
         let isHunting = false;
         let isHuntingStartUp = true;
         let HuntDuration = 0;
+        let DoingTwinsAction = false;
+        let DoingDemonAction = false;
+        let DoingOniAction = false;
+        let DoingPoltergeistAction = false;
+        let DoingRevenantAction = false;
+        let DoingShadeAction = false;
+        let DoingSpiritAction = false;
+        let DoingTheMimicAction = false;
+        let DoingWraithAction = false;
+        let DoingYureiAction = false;
+        let DoingMoroiAction = false;
+        let DoingMylingAction = false;
+        let DoingObakeAction = false;
+        let DoingOnryoAction = false;
+        let DoingPhantomAction = false;
+        let DoingRaijuAction = false;
+        let DoingThayeAction = false;
+        let DoingYokaiAction = false;
+        let DoingHantuAction = false;
+        let DoingJinnAction = false;
+        let DoingGoryoAction = false;
+        let DoingBansheeAction = false;
+        let DoingDeogenAction = false;
+
         function updateActivity() {
             const lastActivity = activityData[activityData.length - 1];
             let newActivity;
@@ -137,11 +227,13 @@
                 // If hunting, randomly pick a value between 5 and 10
                 newActivity = 10;
                 if (isHuntingStartUp){
-                    HuntDuration = getRandomInt(2, 60);
+                    HuntDuration = getRandomInt(1, 60);
                     isHuntingStartUp = false;
                     console.log("Hunt Duration: " + HuntDuration);
                 }
-                HuntDuration--;
+                else {
+                    HuntDuration--;
+                }
                 if (HuntDuration <= 0){
                     isHunting = false;
                     isHuntingStartUp = true;
@@ -195,6 +287,7 @@
 
         setInterval(updateActivity, 1000);
         drawGraph();
+        console.log("Ghost: " + ghost + ", Ryan Made Me Do this");
     </script>
 </body>
 </html>
