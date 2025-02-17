@@ -1,0 +1,6 @@
+title: AkaneDev
+description: Just my AkaneDev Project Site
+
+plugins:
+  - jekyll-feed
+
