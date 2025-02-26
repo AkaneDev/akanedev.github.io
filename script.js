@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Ghost is: " + ghost);
     const themeToggle = document.getElementById("theme-toggle");
     const backbutton = document.getElementById("back-button");
+    const logocontact = document.getElementById("contactme");
     const body = document.body;
     const openMenuButton = document.getElementById("open-menu");
     const menu = document.getElementById("menu");
@@ -51,6 +52,13 @@ document.addEventListener("DOMContentLoaded", function () {
             themeToggle.textContent = "☀️";
         }
     });
+
+    if (logocontact !== null) {
+        logocontact.addEventListener("click", function () {
+            window.location.href = "mailto:akane@akanedev.au";
+        }
+        );
+    }
 
     if (backbutton !== null) {
         backbutton.addEventListener("click", function () {
