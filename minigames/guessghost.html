@@ -81,6 +81,9 @@
             let message = '';
             let evidence = '';
             const userGuess = document.getElementById('ghost-input').value.trim();
+            if (userGuess === '') {
+                return;
+            }
 
             if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
                 message = `Correct! The ghost is ${currentGhost.name}.`;
