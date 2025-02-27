@@ -3,7 +3,7 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>TEMPLATE</title>
+    <title>Ghost Guessing</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="guessghost.css">
@@ -86,6 +86,7 @@
                 message = `Correct! The ghost is ${currentGhost.name}.`;
                 evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
                 document.getElementById('guess-button').disabled = true;
+                document.getElementById('restart-button').classList.remove('hidden');
             } else {
                 if (attempts === 1) {
                 message = 'First guess: Here is one piece of random evidence.';
