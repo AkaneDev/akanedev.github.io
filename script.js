@@ -77,8 +77,40 @@ document.addEventListener("DOMContentLoaded", function () {
             // Create floating window
             const devWindow = document.createElement("div");
             devWindow.id = "dev-window";
-            // devWindow.className = "dark-mode";
-            devWindow.innerHTML = `
+            if (currentGhost !== null) {
+                devWindow.innerHTML = `
+                <div id="dev-window-header" class="dark-mode">Developer Mode</div>
+                <div id="dev-window-content" class="dark-mode">
+                    <p>Developer Mode is active. Additional features enabled.</p>` + `<p>Ghost is: ` + currentGhost.name + `</p>` + `
+                    <button class="collapsible">TTS Test</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p id="status">Status: Idle</p>
+                        <section id="tts">This is a test of the text to speech system.</section>
+                        <button onclick="speakText()">Speak</button>
+                        <button onclick="stopSpeaking()">Stop</button>
+                    </div>
+                    <br>
+                    <button class="collapsible">Force Darkmode</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p>Force darkmode is active.</p>
+                        <button onclick="document.body.classList.add('dark-mode')">Enable</button>
+                        <button onclick="document.body.classList.remove('dark-mode')">Disable</button>
+                    </div>
+                    <br>
+                    <button class="looks-nice" id="download-ultrakill">Download Ultrakill</button>
+                    <br>
+                    <button class="collapsible">Design tools</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p>Design tools are active.</p>
+                        <button onclick="addCenteringLines()">Add Centering Lines</button>
+                    </div>
+                    <button class="remove-dev-window">Close</button>
+                </div>
+                `;
+            }
+            else {
+                // devWindow.className = "dark-mode";
+                devWindow.innerHTML = `
                 <div id="dev-window-header" class="dark-mode">Developer Mode</div>
                 <div id="dev-window-content" class="dark-mode">
                     <p>Developer Mode is active. Additional features enabled.</p>` + `<p>Ghost is: ` + ghost + `</p>` + `
@@ -106,7 +138,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                     <button class="remove-dev-window">Close</button>
                 </div>
-            `;
+                `;
+            }
             document.body.appendChild(devWindow);
             // Make the window draggable
             collapsibleSetup();

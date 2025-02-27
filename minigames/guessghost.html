@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>TEMPLATE</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="guessghost.css">
+    <script defer src="../script.js"></script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <section id="content" class="centered">
+            <h1>Ghost Guessing</h1>
+        </section>
+        <div id="game" class="centered-game">
+            <p id="message">Guess the ghost!</p>
+            <input type="text" id="ghost-input" placeholder="Enter ghost name">
+            <button id="guess-button">Guess</button>
+            <button id="restart-button" class="hidden">Restart</button>
+            <div id="evidence"></div>
+        </div>
+
+        <script>
+            const MiniGameghosts = [
+            { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
+            { name: 'Wraith', evidence: ['EMF Level 5', 'Spirit Box', 'D.O.T.S Projector'] },
+            { name: 'Phantom', evidence: ['Spirit Box', 'Fingerprints', 'D.O.T.S Projector'] },
+            { name: 'Poltergeist', evidence: ['Spirit Box', 'Fingerprints', 'Ghost Writing'] },
+            { name: 'Banshee', evidence: ['Fingerprints', 'Ghost Orb', 'D.O.T.S Projector'] },
+            { name: 'Jinn', evidence: ['EMF Level 5', 'Fingerprints', 'Freezing Temperatures'] },
+            { name: 'Mare', evidence: ['Spirit Box', 'Ghost Orb', 'Ghost Writing'] },
+            { name: 'Revenant', evidence: ['Ghost Orb', 'Ghost Writing', 'Freezing Temperatures'] },
+            { name: 'Shade', evidence: ['EMF Level 5', 'Ghost Writing', 'Freezing Temperatures'] },
+            { name: 'Demon', evidence: ['Fingerprints', 'Ghost Writing', 'Freezing Temperatures'] },
+            { name: 'Yurei', evidence: ['Ghost Orb', 'Freezing Temperatures', 'D.O.T.S Projector'] },
+            { name: 'Oni', evidence: ['EMF Level 5', 'Freezing Temperatures', 'D.O.T.S Projector'] },
+            { name: 'Yokai', evidence: ['Spirit Box', 'Ghost Orb', 'D.O.T.S Projector'] },
+            { name: 'Hantu', evidence: ['Fingerprints', 'Ghost Orb', 'Freezing Temperatures'] },
+            { name: 'Goryo', evidence: ['EMF Level 5', 'Fingerprints', 'D.O.T.S Projector'] },
+            { name: 'Myling', evidence: ['EMF Level 5', 'Fingerprints', 'Ghost Writing'] },
+            { name: 'Onryo', evidence: ['Spirit Box', 'Ghost Orb', 'Freezing Temperatures'] },
+            { name: 'The Twins', evidence: ['EMF Level 5', 'Spirit Box', 'Freezing Temperatures'] },
+            { name: 'Raiju', evidence: ['EMF Level 5', 'Ghost Orb', 'D.O.T.S Projector'] },
+            { name: 'Obake', evidence: ['EMF Level 5', 'Fingerprints', 'Ghost Orb'] },
+            { name: 'The Mimic', evidence: ['Spirit Box', 'Fingerprints', 'Freezing Temperatures'] },
+            { name: 'Moroi', evidence: ['Spirit Box', 'Ghost Writing', 'Freezing Temperatures'] },
+            { name: 'Deogen', evidence: ['Spirit Box', 'Ghost Writing', 'D.O.T.S Projector'] },
+            { name: 'Thaye', evidence: ['Ghost Orb', 'Ghost Writing', 'D.O.T.S Projector'] },
+            ];
+
+            let currentGhost = MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)];
+            let attempts = 0;
+
+            const restartbutton = document.getElementById('restart-button');
+            restartbutton.innerText = 'Restart';
+            restartbutton.addEventListener('click', () => {
+                document.getElementById('guess-button').disabled = false;
+                document.getElementById('message').innerText = 'Guess the ghost!';
+                document.getElementById('evidence').innerText = '';
+                document.getElementById('ghost-input').value = '';
+                currentGhost = MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)];
+                attempts = 0;
+                document.getElementById('restart-button').classList.add('hidden');
+            });
+            document.getElementById('ghost-input').addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    document.getElementById('guess-button').click();
+                }
+            });
+            document.getElementById('guess-button').addEventListener('click', () => {
+            attempts++;
+            let message = '';
+            let evidence = '';
+            const userGuess = document.getElementById('ghost-input').value.trim();
+
+            if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
+                message = `Correct! The ghost is ${currentGhost.name}.`;
+                evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
+                document.getElementById('guess-button').disabled = true;
+            } else {
+                if (attempts === 1) {
+                message = 'First guess: Here is one piece of random evidence.';
+                evidence = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)];
+                } else if (attempts === 2) {
+                message = 'Second guess: Here are two pieces of evidence.';
+                evidence = currentGhost.evidence.slice(0, 2).join(', ');
+                } else {
+                message = `You failed! The ghost was ${currentGhost.name}.`;
+                evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
+                document.getElementById('guess-button').disabled = true;
+                document.getElementById('restart-button').classList.remove('hidden');
+                }
+            }
+            
+            document.getElementById('ghost-input').value = '';
+            document.getElementById('message').innerText = message;
+            document.getElementById('evidence').innerText = evidence;
+            });
+        </script>
+    </section>
+</body>
+</html>
