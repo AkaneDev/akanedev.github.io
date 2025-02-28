@@ -5,7 +5,7 @@ let konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "
 let konamiCodePosition = 0;
 var coll = document.getElementsByClassName("collapsible");
 const ghosts = ["Banshee", "Demon", "Deogen", "Goryo", "Hantu", "Jinn", "Mare", "Moroi", "Myling", "Obake", "Oni", "Onryo", "Phantom", "Poltergeist", "Raiju", "Revenant", "Shade", "Spirit", "Thaye", "The Mimic", "The Twins", "Wraith", "Yokai", "Yurei"];
-const ghost = ghosts[Math.floor(Math.random() * ghosts.length)];
+let ghost = ghosts[Math.floor(Math.random() * ghosts.length)];
 
 document.addEventListener("keydown", function (e) {
 
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 devWindow.innerHTML = `
                 <div id="dev-window-header" class="dark-mode">Developer Mode</div>
                 <div id="dev-window-content" class="dark-mode">
-                    <p>Developer Mode is active. Additional features enabled.</p>` + `<p>Ghost is: ` + currentGhost.name + `</p>` + `
+                    <p>Developer Mode is active. Additional features enabled.</p>` + `<p id="devGhost">Ghost is: ` + currentGhost.name + `</p>` + `
                     <button class="collapsible">TTS Test</button>
                     <div class="dark-mode" style="display: none;">
                         <p id="status">Status: Idle</p>
@@ -103,6 +103,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="dark-mode" style="display: none;">
                         <p>Design tools are active.</p>
                         <button onclick="addCenteringLines()">Add Centering Lines</button>
+                    </div>
+                    <br>
+                    <button class="collapsible">Set Current Ghost</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p>Select a ghost from the dropdown menu:</p>
+                        <select id="ghost-dropdown">
+                            ${MiniGameghosts.map(ghost => `<option value="${ghost.name}">${ghost.name}</option>`).join('')}
+                        </select>
+                        <button onclick="setCurrentGhost()">Set Ghost</button>
                     </div>
                     <button class="remove-dev-window">Close</button>
                 </div>
@@ -308,4 +317,4 @@ function addCenteringLines() {
   
   // Call the function to add centering lines
 //   addCenteringLines();
-  
+

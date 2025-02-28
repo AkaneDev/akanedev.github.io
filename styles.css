@@ -297,6 +297,11 @@ body {
     box-sizing: border-box;
 }
 
+.blur {
+    filter: blur(7.5px);
+  }
+  
+
 .centered-game button {
     text-align: center;
     background-color: #1e1e1e;

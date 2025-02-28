@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background: white;
+            border: 2px solid black;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <h1>404 - Page Not Found</h1>
+    <p>Sorry, the page you are looking for does not exist.</p>
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="popup">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <script>
+        let konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight"]; // Up, Up, Down, Down, Left, Right, Left, Right, B, A
+        let konamiCodePosition = 0;
+        
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('popup').style.display = 'none';
+        
+        document.addEventListener("keydown", function (e) {
+            if (e.key === konamiCode[konamiCodePosition]) {
+                konamiCodePosition++;
+                if (konamiCodePosition === konamiCode.length) {
+                    document.getElementById('overlay').style.display = 'block';
+                    document.getElementById('popup').style.display = 'block';
+                    startGame();
+                    konamiCodePosition = 0;
+                }
+            } else {
+                konamiCodePosition = 0;
+            }
+        });
+
+        document.getElementById('overlay').addEventListener('click', function() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('popup').style.display = 'none';
+        });
+
+        function startGame() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const grid = 20;
+            const cols = 10;
+            const rows = 20;
+            const canvasWidth = canvas.clientWidth;
+            const canvasHeight = canvas.clientHeight;
+            const gameWidth = cols * grid;
+            const gameHeight = rows * grid;
+            const offsetX = (canvasWidth - gameWidth) / 2;
+            const offsetY = (canvasHeight - gameHeight) / 2;
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            const tetrominoes = [
+                [[1, 1, 1, 1]],
+                [[1, 1], [1, 1]],
+                [[0, 1, 0], [1, 1, 1]],
+                [[0, 1, 1], [1, 1, 0]],
+                [[1, 1, 0], [0, 1, 1]],
+                [[1, 1, 1], [0, 0, 1]],
+                [[1, 1, 1], [1, 0, 0]]
+            ];
+            const colors = ['cyan', 'yellow', 'purple', 'green', 'red', 'blue', 'orange'];
+            let tetromino = getRandomTetromino();
+            let nextTetromino = getRandomTetromino();
+            let position = { x: 3, y: 0 };
+            let board = Array.from({ length: rows }, () => Array(cols).fill(0));
+            let gameOver = false;
+            let score = 0;
+
+            function getRandomTetromino() {
+                const index = Math.floor(Math.random() * tetrominoes.length);
+                return { shape: tetrominoes[index], color: colors[index] };
+            }
+
+            function drawTetromino(tetromino, pos, context = ctx) {
+                for (let row = 0; row < tetromino.shape.length; row++) {
+                    for (let col = 0; col < tetromino.shape[row].length; col++) {
+                        if (tetromino.shape[row][col]) {
+                            context.fillStyle = tetromino.color;
+                            context.fillRect((pos.x + col) * grid, (pos.y + row) * grid, grid, grid);
+                            context.strokeRect((pos.x + col) * grid, (pos.y + row) * grid, grid, grid);
+                        }
+                    }
+                }
+            }
+
+            function drawBoard() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let row = 0; row < board.length; row++) {
+                    for (let col = 0; col < board[row].length; col++) {
+                        if (board[row][col]) {
+                            ctx.fillStyle = board[row][col];
+                            ctx.fillRect(offsetX + col * grid, offsetY + row * grid, grid, grid);
+                            ctx.strokeRect(offsetX + col * grid, offsetY + row * grid, grid, grid);
+                        }
+                    }
+                }
+            }
+
+            function drawNextTetromino() {
+                const nextBoxSize = 4 * grid;
+                ctx.clearRect(canvas.width - nextBoxSize - 10, 10, nextBoxSize, nextBoxSize);
+                ctx.strokeRect(canvas.width - nextBoxSize - 10, 10, nextBoxSize, nextBoxSize);
+                drawTetromino(nextTetromino, { x: canvas.width / grid - 4 - 1, y: 1 });
+            }
+
+            function drawScore() {
+                ctx.fillStyle = 'black';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Score: ${score}`, 10, 30);
+            }
+
+            function draw() {
+                drawBoard();
+                drawTetromino(tetromino, position);
+                drawNextTetromino();
+                drawScore();
+            }
+
+            function moveTetromino(dx, dy) {
+                position.x += dx;
+                position.y += dy;
+                if (collision()) {
+                    position.x -= dx;
+                    position.y -= dy;
+                }
+                draw();
+            }
+
+            function rotateTetromino() {
+                const newTetromino = [];
+                for (let row = 0; row < tetromino.shape[0].length; row++) {
+                    newTetromino[row] = [];
+                    for (let col = 0; col < tetromino.shape.length; col++) {
+                        newTetromino[row][col] = tetromino.shape[tetromino.shape.length - 1 - col][row];
+                    }
+                }
+                const oldTetromino = tetromino.shape;
+                tetromino.shape = newTetromino;
+                if (collision()) {
+                    tetromino.shape = oldTetromino;
+                }
+                draw();
+            }
+
+            function collision() {
+                for (let row = 0; row < tetromino.shape.length; row++) {
+                    for (let col = 0; col < tetromino.shape[row].length; col++) {
+                        if (tetromino.shape[row][col] &&
+                            (board[position.y + row] && board[position.y + row][position.x + col]) !== 0) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function merge() {
+                for (let row = 0; row < tetromino.shape.length; row++) {
+                    for (let col = 0; col < tetromino.shape[row].length; col++) {
+                        if (tetromino.shape[row][col]) {
+                            board[position.y + row][position.x + col] = tetromino.color;
+                        }
+                    }
+                }
+            }
+
+            function resetTetromino() {
+                tetromino = nextTetromino;
+                nextTetromino = getRandomTetromino();
+                position = { x: 3, y: 0 };
+                if (collision()) {
+                    gameOver = true;
+                }
+            }
+
+            function clearLines() {
+                for (let row = board.length - 1; row >= 0; row--) {
+                    if (board[row].every(cell => cell !== 0)) {
+                        board.splice(row, 1);
+                        board.unshift(Array(cols).fill(0));
+                        score += 10;
+                    }
+                }
+            }
+
+            function dropTetromino() {
+                position.y++;
+                if (collision()) {
+                    position.y--;
+                    merge();
+                    clearLines();
+                    resetTetromino();
+                }
+                draw();
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowLeft' || e.key === 'a') {
+                    moveTetromino(-1, 0);
+                } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                    moveTetromino(1, 0);
+                } else if (e.key === 'ArrowDown' || e.key === 's') {
+                    dropTetromino();
+                } else if (e.key === 'ArrowUp' || e.key === 'w') {
+                    rotateTetromino();
+                }
+            });
+
+            function gameLoop() {
+                if (!gameOver) {
+                    dropTetromino();
+                    setTimeout(gameLoop, 1000);
+                } else {
+                    alert('Game Over');
+                }
+            }
+
+            draw();
+            gameLoop();
+        }
+    </script>
+</body>
+</html>

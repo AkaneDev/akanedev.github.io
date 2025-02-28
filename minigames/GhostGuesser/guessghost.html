@@ -5,9 +5,9 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Ghost Guessing</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../../styles.css">
     <link rel="stylesheet" href="guessghost.css">
-    <script defer src="../script.js"></script>
+    <script defer src="../../script.js"></script>
 </head>
 <body class="dark-mode">
     <nav class="navbar">
@@ -30,6 +30,7 @@
         </div>
 
         <script>
+            let currentGhost;
             const MiniGameghosts = [
             { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
             { name: 'Wraith', evidence: ['EMF Level 5', 'Spirit Box', 'D.O.T.S Projector'] },
@@ -56,10 +57,14 @@
             { name: 'Deogen', evidence: ['Spirit Box', 'Ghost Writing', 'D.O.T.S Projector'] },
             { name: 'Thaye', evidence: ['Ghost Orb', 'Ghost Writing', 'D.O.T.S Projector'] },
             ];
-
-            let currentGhost = MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)];
+            setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
             let attempts = 0;
-
+            let i = 0;
+            MiniGameghosts.forEach(element => {
+                console.log(i + ": " + element.name);
+                i++;
+            });
+            console.log(currentGhost.name);
             const restartbutton = document.getElementById('restart-button');
             restartbutton.innerText = 'Restart';
             restartbutton.addEventListener('click', () => {
@@ -67,7 +72,7 @@
                 document.getElementById('message').innerText = 'Guess the ghost!';
                 document.getElementById('evidence').innerText = '';
                 document.getElementById('ghost-input').value = '';
-                currentGhost = MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)];
+                setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
                 attempts = 0;
                 document.getElementById('restart-button').classList.add('hidden');
             });
@@ -77,38 +82,52 @@
                 }
             });
             document.getElementById('guess-button').addEventListener('click', () => {
-            attempts++;
-            let message = '';
-            let evidence = '';
-            const userGuess = document.getElementById('ghost-input').value.trim();
-            if (userGuess === '') {
-                return;
+                attempts++;
+                let message = '';
+                let evidence = '';
+                let userGuess = document.getElementById('ghost-input').value.trim();
+                if (userGuess === '') {
+                    return;
+                }
+                if (userGuess.toLowerCase() === "mimic"){
+                    userGuess = "The Mimic";
+                }
+                if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
+                    message = `Correct! The ghost is ${currentGhost.name}.`;
+                    evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
+                    document.getElementById('guess-button').disabled = true;
+                    document.getElementById('restart-button').classList.remove('hidden');
+                } else {
+                    if (attempts === 1) {
+                    message = 'First guess: Here is one piece of random evidence.';
+                    evidence = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)];
+                    } else if (attempts === 2) {
+                    message = 'Second guess: Here are two pieces of evidence.';
+                    evidence = currentGhost.evidence.slice(0, 2).join(', ');
+                    } else {
+                    message = `You failed! The ghost was ${currentGhost.name}.`;
+                    evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
+                    document.getElementById('guess-button').disabled = true;
+                    document.getElementById('restart-button').classList.remove('hidden');
+                    }
+                }
+            
+                document.getElementById('ghost-input').value = '';
+                document.getElementById('message').innerText = message;
+                document.getElementById('evidence').innerText = evidence;
+            });
+
+            function setCurrentGhost(ghost) {
+                currentGhost = ghost;
             }
 
-            if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
-                message = `Correct! The ghost is ${currentGhost.name}.`;
-                evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
-                document.getElementById('guess-button').disabled = true;
-                document.getElementById('restart-button').classList.remove('hidden');
-            } else {
-                if (attempts === 1) {
-                message = 'First guess: Here is one piece of random evidence.';
-                evidence = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)];
-                } else if (attempts === 2) {
-                message = 'Second guess: Here are two pieces of evidence.';
-                evidence = currentGhost.evidence.slice(0, 2).join(', ');
-                } else {
-                message = `You failed! The ghost was ${currentGhost.name}.`;
-                evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
-                document.getElementById('guess-button').disabled = true;
-                document.getElementById('restart-button').classList.remove('hidden');
+            setInterval(() => {
+                let dvgh = document.getElementById('devGhost')
+                if (dvgh !== null) {
+                    dvgh.innerText = "Ghost is: " + currentGhost.name;
                 }
-            }
-            
-            document.getElementById('ghost-input').value = '';
-            document.getElementById('message').innerText = message;
-            document.getElementById('evidence').innerText = evidence;
-            });
+            }, 1000);
+
         </script>
     </section>
 </body>
