@@ -15,27 +15,29 @@ document.addEventListener("keydown", function (e) {
         allowdevmodeposition++;
         if (allowdevmodeposition === allowdevmodekey.length) {
             allowdevmode();
-            console.log("Developer Mode key activated!");
             konamiCodePosition = 0;
         }
     }
     else {
         allowdevmodeposition = 0;
     }
-    if (allowdevkey) {
-        // console.log(e.key);
-        if (e.key === konamiCode[konamiCodePosition]) {
-            konamiCodePosition++;
-            if (konamiCodePosition === konamiCode.length) {
-                console.log("Konami Code activated!");
+    // console.log(e.key);
+    if (e.key === konamiCode[konamiCodePosition]) {
+        konamiCodePosition++;
+        if (konamiCodePosition === konamiCode.length) {
+            if (allowdevkey) {
                 devMode = true;
-                console.log("Developer Mode: ON");
                 konamiCodePosition = 0;
             }
-        } else {
-            konamiCodePosition = 0;
+            else {
+                window.location.replace("/site/index.html");
+                konamiCodePosition = 0;
+            }
         }
+    } else {
+        konamiCodePosition = 0;
     }
+
 });
 
 function allowdevmode() {
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const body = document.body;
     const openMenuButton = document.getElementById("open-menu");
     const menu = document.getElementById("menu");
+    const allowdevmodeonpage = document.getElementById("no-dev-mode");
     
     // Load theme preference
     if (localStorage.getItem("theme") === "light") {
@@ -91,13 +94,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     setInterval(function () {
-        if (devMode && !document.getElementById("dev-window")) {
+        let isdefined;
+        if (devMode && !document.getElementById("dev-window") && (allowdevmodeonpage === null || allowdevmodeonpage === undefined)) {
             console.log("Developer Mode is active. Additional features enabled.");
-
+            try {
+                currentGhost;
+                isdefined = true;
+                console.log("currentGhost is defined");
+            } catch (e) {
+                console.log("currentGhost is not defined");
+                isdefined = false;
+            }
             // Create floating window
             const devWindow = document.createElement("div");
             devWindow.id = "dev-window";
-            if (currentGhost !== null) {
+            if (isdefined) {
+                console.log("Executing")
                 devWindow.innerHTML = `
                 <div id="dev-window-header" class="dark-mode">Developer Mode</div>
                 <div id="dev-window-content" class="dark-mode">
@@ -147,23 +159,34 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="dark-mode" style="display: none;">
                         <p id="status">Status: Idle</p>
                         <section id="tts">This is a test of the text to speech system.</section>
-                        <button onclick="speakText()">Speak</button>
-                        <button onclick="stopSpeaking()">Stop</button>
+                        <button onclick="speakText()" class="looks-nice">Speak</button>
+                        <button onclick="stopSpeaking()" class="looks-nice">Stop</button>
                     </div>
                     <br>
                     <button class="collapsible">Force Darkmode</button>
                     <div class="dark-mode" style="display: none;">
                         <p>Force darkmode is active.</p>
-                        <button onclick="document.body.classList.add('dark-mode')">Enable</button>
-                        <button onclick="document.body.classList.remove('dark-mode')">Disable</button>
+                        <button onclick="document.body.classList.add('dark-mode')" class="looks-nice">Enable</button>
+                        <button onclick="document.body.classList.remove('dark-mode')" class="looks-nice">Disable</button>
                     </div>
                     <br>
-                    <button class="looks-nice" id="download-ultrakill">Download Ultrakill</button>
+                    <button class="collapsible">Page Jump</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p>Jump to a page:</p>
+                        <select id="page-dropdown">
+                            <option value="index.html">Home</option>
+                            <option value="projects.html">Projects</option>
+                            <option value="about.html">About</option>
+                            <option value="contact.html">Contact</option>
+                            <option value="/minigames/GhostGuesserCompetive/guessghost.html">Locked Page, GGC</option>
+                        </select>
+                        <button onclick="jumpToPage()" class="looks-nice">Jump</button>
+                    </div>
                     <br>
                     <button class="collapsible">Design tools</button>
                     <div class="dark-mode" style="display: none;">
                         <p>Design tools are active.</p>
-                        <button onclick="addCenteringLines()">Add Centering Lines</button>
+                        <button onclick="addCenteringLines()" class="looks-nice">Add Centering Lines</button>
                     </div>
                     <button class="remove-dev-window">Close</button>
                 </div>
@@ -174,12 +197,26 @@ document.addEventListener("DOMContentLoaded", function () {
             collapsibleSetup();
             dragElement(devWindow);
         }
+        else if (devMode && (allowdevmodeonpage !== null || allowdevmodeonpage !== undefined) && !document.getElementById("dev-window")) {
+            console.log("ERR: Refused feature");
+            const devWindow = document.createElement("div");
+            devWindow.id = "dev-window";
+            devWindow.className = "hidden";
+            devWindow.innerHTML = ``;
+            document.body.appendChild(devWindow);
+            devMode = false;
+            devWindow.remove();
+        }
     }, 1000); // Check every second
 });
 
+function jumpToPage() {
+    const pageDropdown = document.getElementById("page-dropdown");
+    window.location.href = pageDropdown.value;
+}
+
 function collapsibleSetup() {
     coll = document.getElementsByClassName("collapsible");
-    ultrakill = document.getElementById("download-ultrakill");
     for (var i = 0; i < coll.length; i++) {
         coll[i].addEventListener("click", function() {
             this.classList.toggle("active");
@@ -191,11 +228,6 @@ function collapsibleSetup() {
             }
         });
     }
-
-    ultrakill.addEventListener("click", function() {
-        console.log("Downloading Ultrakill...");
-        window.location.href = "https://store.steampowered.com/app/1229490/ULTRAKILL/";
-    });
 
     const removeDevWindow = document.getElementsByClassName("remove-dev-window");
     for (var i = 0; i < removeDevWindow.length; i++) {
