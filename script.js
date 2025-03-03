@@ -1,5 +1,6 @@
 let isSpeaking = false;
 let isPaused = false;
+let allowdevkey = false;
 let devMode = false;
 let konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight"]; // Up, Up, Down, Down, Left, Right, Left, Right, B, A
 let konamiCodePosition = 0;
@@ -8,18 +9,19 @@ const ghosts = ["Banshee", "Demon", "Deogen", "Goryo", "Hantu", "Jinn", "Mare", 
 let ghost = ghosts[Math.floor(Math.random() * ghosts.length)];
 
 document.addEventListener("keydown", function (e) {
-
-    // console.log(e.key);
-    if (e.key === konamiCode[konamiCodePosition]) {
-        konamiCodePosition++;
-        if (konamiCodePosition === konamiCode.length) {
-            console.log("Konami Code activated!");
-            devMode = true;
-            console.log("Developer Mode: ON");
+    if (allowdevkey) {
+        // console.log(e.key);
+        if (e.key === konamiCode[konamiCodePosition]) {
+            konamiCodePosition++;
+            if (konamiCodePosition === konamiCode.length) {
+                console.log("Konami Code activated!");
+                devMode = true;
+                console.log("Developer Mode: ON");
+                konamiCodePosition = 0;
+            }
+        } else {
             konamiCodePosition = 0;
         }
-    } else {
-        konamiCodePosition = 0;
     }
 });
 
