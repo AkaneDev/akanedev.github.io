@@ -12,6 +12,10 @@
         body {
             font-family: 'Montserrat', sans-serif;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="dark-mode">
@@ -79,6 +83,11 @@
                 <p><small>1021 Words in total</small></p>
             </a>
         </div>
+    </section>
+
+    <section id="projects" class="hidden">
+        <h1>Change Log</h1>
+        {{ include "changelog.md" }}
     </section>
 
     <footer class="footer">
