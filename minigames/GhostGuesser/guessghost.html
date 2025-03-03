@@ -137,6 +137,15 @@
                 if (userGuess.toLowerCase() === "mimic"){
                     userGuess = "The Mimic";
                 }
+                if (userGuess.toLowerCase() === "twins"){
+                    userGuess = "The Twins";
+                }
+                if (userGuess.toLowerCase() === "polty"){
+                    userGuess = "Poltergeist";
+                }
+                if (userGuess.toLowerCase() === "bitch boy"){
+                    attempts = 3;
+                }
                 if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
                     message = `Correct! The ghost is ${currentGhost.name}.`;
                     evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
