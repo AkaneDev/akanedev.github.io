@@ -26,11 +26,20 @@
             <input type="text" id="ghost-input" placeholder="Enter ghost name">
             <button id="guess-button">Guess</button>
             <button id="restart-button" class="hidden">Restart</button>
+            <button id="ghostlist">List Ghosts</button>
             <div id="evidence"></div>
+            <div id="dropdown" class="hidden">
+                <div id="dropdown-content">
+                    <div id="ghostlistSearchable">
+
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
             let currentGhost;
+            let currentevidence = [];
             const MiniGameghosts = [
             { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
             { name: 'Wraith', evidence: ['EMF Level 5', 'Spirit Box', 'D.O.T.S Projector'] },
@@ -64,6 +73,23 @@
                 console.log(i + ": " + element.name);
                 i++;
             });
+
+            function updateList() {
+                let ghostlist = document.getElementById('ghostlistSearchable');
+                let dropdownstuff = document.getElementById('dropdown');
+                let filteredGhosts = MiniGameghosts.filter(ghost => {
+                    return currentevidence.length === 0 || currentevidence.every(evidence => ghost.evidence.includes(evidence));
+                });
+                if (filteredGhosts.length === 0) {
+                    filteredGhosts = [{name: "error", evidence: ["no ghosts found this should never happen"]}];
+                }
+                let listghost = filteredGhosts.map(ghost => {
+                    let remainingEvidence = ghost.evidence;
+                    return `${ghost.name}: ${remainingEvidence.join(', ')}`;
+                });
+                console.log(listghost);
+                ghostlist.innerHTML = listghost.join('<br>');
+            }
             console.log(currentGhost.name);
             const restartbutton = document.getElementById('restart-button');
             restartbutton.innerText = 'Restart';
@@ -74,7 +100,26 @@
                 document.getElementById('ghost-input').value = '';
                 setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
                 attempts = 0;
+                currentevidence = [];
                 document.getElementById('restart-button').classList.add('hidden');
+                updateList();
+            });
+            document.getElementById('ghostlist').addEventListener('click', () => {
+                let ghostlist = document.getElementById('ghostlistSearchable');
+                let dropdownstuff = document.getElementById('dropdown');
+                dropdownstuff.classList.toggle('hidden');
+                let filteredGhosts = MiniGameghosts.filter(ghost => {
+                    return currentevidence.length === 0 || currentevidence.every(evidence => ghost.evidence.includes(evidence));
+                });
+                if (filteredGhosts.length === 0) {
+                    filteredGhosts = [{name: "error", evidence: ["no ghosts found this should never happen"]}];
+                }
+                let listghost = filteredGhosts.map(ghost => {
+                    let remainingEvidence = ghost.evidence;
+                    return `${ghost.name}: ${remainingEvidence.join(', ')}`;
+                });
+                console.log(listghost);
+                ghostlist.innerHTML = listghost.join('<br>');
             });
             document.getElementById('ghost-input').addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
@@ -99,11 +144,15 @@
                     document.getElementById('restart-button').classList.remove('hidden');
                 } else {
                     if (attempts === 1) {
-                    message = 'First guess: Here is one piece of random evidence.';
-                    evidence = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)];
+                        let singleEvidence = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)];
+                        message = 'First guess: Here is one piece of random evidence.';
+                        evidence = singleEvidence;
+                        currentevidence.push(singleEvidence);  // Ensure we push a single piece
                     } else if (attempts === 2) {
-                    message = 'Second guess: Here are two pieces of evidence.';
-                    evidence = currentGhost.evidence.slice(0, 2).join(', ');
+                        message = 'Second guess: Here are two pieces of evidence.';
+                        let newEvidence = currentGhost.evidence.slice(0, 2);  // Slice returns an array
+                        evidence = newEvidence.join(', ');
+                        currentevidence = [...new Set([...currentevidence, ...newEvidence])]; // Ensure unique values
                     } else {
                     message = `You failed! The ghost was ${currentGhost.name}.`;
                     evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
@@ -111,7 +160,7 @@
                     document.getElementById('restart-button').classList.remove('hidden');
                     }
                 }
-            
+                updateList();
                 document.getElementById('ghost-input').value = '';
                 document.getElementById('message').innerText = message;
                 document.getElementById('evidence').innerText = evidence;

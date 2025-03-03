@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Some Cookie Clicker Clone</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <h1>Cookie Clicker Clone</h1>
+        <section id="game">
+            <button id="cookie">Click me!</button>
+            <p>Cookies: <span id="cookieCount">0</span></p>
+        </section>
+        <section id="shop" class="scrollable-panel"></section>
+            <h2>Shop</h2>
+            <button id="buyCursor">Buy Cursor (<span id="cursorCost">10</span> cookies)</button>
+            <p>Cursors: <span id="cursorCount">0</span></p>
+            <button id="buyGrandma">Buy Grandma (<span id="grandmaCost">100</span> cookies)</button>
+            <p>Grandmas: <span id="grandmaCount">0</span></p>
+            <button id="buyFarm">Buy Farm (<span id="farmCost">1000</span> cookies)</button>
+            <p>Farms: <span id="farmCount">0</span></p>
+        </section>
+    </section>
+</body>
+</html>

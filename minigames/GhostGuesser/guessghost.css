@@ -1,3 +1,19 @@
 .hidden {
     display: none;
 }
+
+#ghostlistSearchable {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #333;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    margin: 0 auto; /* Centers it horizontally */
+}
+
+
+#dropdown {
+    justify-content: center;
+}
