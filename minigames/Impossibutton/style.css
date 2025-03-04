@@ -1,0 +1,56 @@
+
+
+#explodingButton {
+    position: absolute;
+}
+
+.button {
+    padding: 20px 40px;
+    font-size: 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.explosion {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 100px;
+    font-weight: bold;
+    color: red;
+    animation: explode 0.5s ease-out forwards;
+}
+
+@keyframes explode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(5);
+        opacity: 0;
+    }
+}
+
+.particle {
+    position: absolute;
+    background-color: rgba(255, 165, 0, 0.8);
+    border-radius: 50%;
+    animation: particleMove 1s ease-out forwards;
+}
+
+@keyframes particleMove {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0);
+    }
+}
