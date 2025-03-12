@@ -285,6 +285,14 @@ body {
     text-align: center;
 }
 
+warning {
+    background-color: red;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    display: block;
+}
+
 .centered-game input {
     text-align: center;
     background-color: #1e1e1e;
@@ -379,12 +387,6 @@ body {
     margin-right: 10px;
     color: white;
     text-decoration: none; /* no underline */
-}
-
-a {
-    color: white;
-    text-decoration: none; /* no underline */
-    cursor: default;
 }
 
 .padding {
