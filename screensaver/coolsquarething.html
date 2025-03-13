@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marching Cubes with Rotating Camera</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Create the marching cubes object
+    const size = 20;
+    const grid = [];
+    const simplex = new SimplexNoise();
+    
+    const noise = (x, y, z) => simplex.noise3D(x * 0.1, y * 0.1, z * 0.1);
+    
+    for (let x = 0; x < size; x++) {
+        grid[x] = [];
+        for (let y = 0; y < size; y++) {
+            grid[x][y] = [];
+            for (let z = 0; z < size; z++) {
+                grid[x][y][z] = noise(x, y, z);
+            }
+        }
+    }
+
+    // Create cubes
+    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 });
+    
+    for (let x = 0; x < size - 1; x++) {
+        for (let y = 0; y < size - 1; y++) {
+            for (let z = 0; z < size - 1; z++) {
+                const value = grid[x][y][z];
+                if (value > 0) { // Thresholding based on Perlin noise
+                    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+                    cube.position.set(x - size / 2, y - size / 2, z - size / 2);
+                    scene.add(cube);
+                }
+            }
+        }
+    }
+
+    // Create light sources
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 10).normalize();
+    scene.add(directionalLight);
+
+    const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+    scene.add(ambientLight);
+
+    // Camera movement variables
+    let cameraAngle = 0;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Rotate the camera around the origin (0, 0, 0)
+        cameraAngle += 0.01; // Adjust this value to control speed
+        const radius = 20;
+        
+        camera.position.x = radius * Math.cos(cameraAngle);
+        camera.position.z = radius * Math.sin(cameraAngle);
+        camera.position.y = 10 * Math.sin(cameraAngle); // Optional: oscillate up and down
+        camera.lookAt(scene.position); // Ensure the camera is always looking at the origin
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+
+</body>
+</html>
