@@ -20,6 +20,7 @@
     <section id="content">
         <section id="content" class="centered">
             <h1>Ghost Guessing</h1>
+            <h6><small>Version: 1.0</small></h6>
         </section>
         <div id="game" class="centered-game">
             <p id="message">Guess the ghost!</p>
@@ -145,6 +146,9 @@
                 }
                 if (userGuess.toLowerCase() === "bitch boy"){
                     attempts = 3;
+                }
+                if (userGuess.toLowerCase() === "deo"){
+                    userGuess = "Deogen"
                 }
                 if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
                     message = `Correct! The ghost is ${currentGhost.name}.`;

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Visual Binary</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='../main.css'>
+    <link rel="stylesheet" href="../styles.css">
+    <script src='../main.js'></script>
+    <script defer src="../script.js"></script>
+    <script defer src="visualBinary.js"></script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <h1>Visual Binary</h1>
+        <p>Adjust the number of bits and see the binary representation.</p>
+        <label for="bit-count">Number of bits:</label>
+        <input type="number" id="bit-count" value="8" min="1" max="64">
+        <div id="binary-visualization"></div>
+        <h2>Binary Calculator</h2>
+        <label for="decimal-input">Enter a decimal number:</label>
+        <input type="number" id="decimal-input">
+        <button id="calculate-binary">Calculate Binary</button>
+        <p>Binary Representation: <span id="binary-output"></span></p>
+    </section>
+    <script>
+        document.getElementById('bit-count').addEventListener('input', updateVisualization);
+        document.getElementById('calculate-binary').addEventListener('click', calculateBinary);
+
+        function updateVisualization() {
+            const bitCount = document.getElementById('bit-count').value;
+            const container = document.getElementById('binary-visualization');
+            container.innerHTML = '';
+            for (let i = 0; i < bitCount; i++) {
+                const bit = document.createElement('span');
+                bit.className = 'bit';
+                bit.textContent = '0';
+                container.appendChild(bit);
+            }
+        }
+
+        function calculateBinary() {
+            const decimal = document.getElementById('decimal-input').value;
+            const bitCount = document.getElementById('bit-count').value;
+            const binary = Number(decimal).toString(2).padStart(bitCount, '0');
+            document.getElementById('binary-output').textContent = binary;
+            updateVisualization();
+            const bits = document.querySelectorAll('#binary-visualization .bit');
+            for (let i = 0; i < binary.length; i++) {
+                bits[i].textContent = binary[i];
+            }
+        }
+
+        updateVisualization();
+    </script>
+</body>
+</html>

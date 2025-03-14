@@ -41,15 +41,23 @@
     // Create cubes
     const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
     const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 });
-    
+
+    const createCube = (x, y, z) => {
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube.position.set(x - size / 2, y - size / 2, z - size / 2);
+        scene.add(cube);
+        return cube;
+    };
+
+    const cubes = [];
+
     for (let x = 0; x < size - 1; x++) {
         for (let y = 0; y < size - 1; y++) {
             for (let z = 0; z < size - 1; z++) {
                 const value = grid[x][y][z];
                 if (value > 0) { // Thresholding based on Perlin noise
-                    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-                    cube.position.set(x - size / 2, y - size / 2, z - size / 2);
-                    scene.add(cube);
+                    const cube = createCube(x, y, z);
+                    cubes.push({ cube, x, y, z });
                 }
             }
         }
@@ -62,6 +70,50 @@
 
     const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
     scene.add(ambientLight);
+
+    // Function to check if a face is exposed
+    const isExposed = (x, y, z, dx, dy, dz) => {
+        const nx = x + dx;
+        const ny = y + dy;
+        const nz = z + dz;
+        return nx < 0 || nx >= size || ny < 0 || ny >= size || nz < 0 || nz >= size || grid[nx][ny][nz] <= 0;
+    };
+
+    // Update cube face visibility
+    const updateCubeVisibility = () => {
+        cubes.forEach(({ cube, x, y, z }) => {
+            cube.geometry.groups.forEach((group) => {
+                // Get the indices of the vertices that make up the group (a face)
+                const indexArray = cube.geometry.index.array;
+                
+                // Get the vertices for this face (group)
+                const i1 = indexArray[group.start];
+                const i2 = indexArray[group.start + 1];
+                const i3 = indexArray[group.start + 2];
+
+                const v1 = new THREE.Vector3().fromBufferAttribute(cube.geometry.attributes.position, i1);
+                const v2 = new THREE.Vector3().fromBufferAttribute(cube.geometry.attributes.position, i2);
+                const v3 = new THREE.Vector3().fromBufferAttribute(cube.geometry.attributes.position, i3);
+
+                // Compute the normal of the face (triangle formed by the three vertices)
+                const normal = new THREE.Vector3();
+                const edge1 = new THREE.Vector3().subVectors(v2, v1);
+                const edge2 = new THREE.Vector3().subVectors(v3, v1);
+                normal.crossVectors(edge1, edge2).normalize();
+
+                const dx = Math.round(normal.x);
+                const dy = Math.round(normal.y);
+                const dz = Math.round(normal.z);
+
+                const exposed = isExposed(x, y, z, dx, dy, dz);
+                console.log("X: " + dx + ", Y: " + dy + ", Z: " + dz + ", Exposed: " + exposed);
+                // console.log(exposed)
+                group.visible = exposed;
+            });
+            cube.geometry.groupsNeedUpdate = true;
+        });
+    };
+
 
     // Camera movement variables
     let cameraAngle = 0;
@@ -77,6 +129,8 @@
         camera.position.z = radius * Math.sin(cameraAngle);
         camera.position.y = 10 * Math.sin(cameraAngle); // Optional: oscillate up and down
         camera.lookAt(scene.position); // Ensure the camera is always looking at the origin
+
+        updateCubeVisibility(); // Update cube visibility every frame
 
         renderer.render(scene, camera);
     }
