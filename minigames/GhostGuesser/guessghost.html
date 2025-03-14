@@ -41,6 +41,7 @@
         <script>
             let currentGhost;
             let currentevidence = [];
+            const BlackListedWords = ["bitch boy", "your mom", "you're mom", "ur mom", "ur mum", "you're mum", "your mum", "youre mom", "youre mum", "straight"]
             const MiniGameghosts = [
             { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
             { name: 'Wraith', evidence: ['EMF Level 5', 'Spirit Box', 'D.O.T.S Projector'] },
@@ -144,9 +145,11 @@
                 if (userGuess.toLowerCase() === "polty"){
                     userGuess = "Poltergeist";
                 }
-                if (userGuess.toLowerCase() === "bitch boy"){
-                    attempts = 3;
-                }
+                BlackListedWords.forEach(element => {
+                    if (userGuess.toLowerCase() === element.toLowerCase()){
+                        attempts = 3;
+                    }
+                });
                 if (userGuess.toLowerCase() === "deo"){
                     userGuess = "Deogen"
                 }
