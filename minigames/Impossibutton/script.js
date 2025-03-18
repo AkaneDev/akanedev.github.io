@@ -1,11 +1,12 @@
 const button = document.getElementById('explodingButton');
 let buttonRect = button.getBoundingClientRect();
 let ButtonParent;
-let velocityX = 5; 
-let velocityY = 5;
+let velocityX = 0; 
+let velocityY = 0;
 const MIN_VELOCITY = 2;
 let lastPosition = { x: buttonRect.left, y: buttonRect.top };
 let stuckCounter = 0;
+let shouldMove = false;
 let lastMousePosition = { x: 0, y: 0 };
 let mouseStoppedCounter = 0;
 
@@ -83,13 +84,13 @@ document.addEventListener('mousemove', (e) => {
         newY = Math.max(0, Math.min(newY, window.innerHeight - buttonRect.height));
     }
 
-    // Ensure velocity never drops below a minimum threshold
-    if (Math.abs(velocityX) < MIN_VELOCITY) {
-        velocityX = velocityX < 0 ? -MIN_VELOCITY : MIN_VELOCITY;
-    }
-    if (Math.abs(velocityY) < MIN_VELOCITY) {
-        velocityY = velocityY < 0 ? -MIN_VELOCITY : MIN_VELOCITY;
-    }
+    // // Ensure velocity never drops below a minimum threshold
+    // if (Math.abs(velocityX) < MIN_VELOCITY) {
+    //     velocityX = velocityX < 0 ? -MIN_VELOCITY : MIN_VELOCITY;
+    // }
+    // if (Math.abs(velocityY) < MIN_VELOCITY) {
+    //     velocityY = velocityY < 0 ? -MIN_VELOCITY : MIN_VELOCITY;
+    // }
 
     // Update the button position
     button.style.left = `${newX}px`;
@@ -99,7 +100,7 @@ document.addEventListener('mousemove', (e) => {
     const distance = Math.sqrt(Math.pow(mouseX - buttonX, 2) + Math.pow(mouseY - buttonY, 2));
     if (distance < 350) {
         const angle = Math.atan2(mouseY - buttonY, mouseX - buttonX);
-
+        shouldMove = true;
         // Update velocity based on the angle
         velocityX = -Math.cos(angle) * 10;
         velocityY = -Math.sin(angle) * 10;
@@ -127,29 +128,31 @@ document.addEventListener('mousemove', (e) => {
 
 // Add random velocity jitter periodically
 setInterval(() => {
-    velocityX += (Math.random() - 0.5) * 2; // Add random jitter between -1 and 1
-    velocityY += (Math.random() - 0.5) * 2;
+    if (shouldMove) {
+        velocityX += (Math.random() - 0.5) * 5; // Add random jitter between -1 and 1
+        velocityY += (Math.random() - 0.5) * 5;
 
-    // Update the button's position based on the new velocity
-    let newX = buttonRect.left + velocityX;
-    let newY = buttonRect.top + velocityY;
+        // Update the button's position based on the new velocity
+        let newX = buttonRect.left + velocityX;
+        let newY = buttonRect.top + velocityY;
 
-    // Bounce off the edges of the viewport
-    if (newX <= 0 || newX + buttonRect.width >= window.innerWidth) {
-        velocityX = -velocityX; // Reverse horizontal direction
-        newX = Math.max(0, Math.min(newX, window.innerWidth - buttonRect.width));
+        // Bounce off the edges of the viewport
+        if (newX <= 0 || newX + buttonRect.width >= window.innerWidth) {
+            velocityX = -velocityX; // Reverse horizontal direction
+            newX = Math.max(0, Math.min(newX, window.innerWidth - buttonRect.width));
+        }
+        if (newY <= 0 || newY + buttonRect.height >= window.innerHeight) {
+            velocityY = -velocityY; // Reverse vertical direction
+            newY = Math.max(0, Math.min(newY, window.innerHeight - buttonRect.height));
+        }
+
+        // Ensure the button stays within the viewport
+        button.style.left = `${newX}px`;
+        button.style.top = `${newY}px`;
+
+        // Update buttonRect to reflect the new position
+        buttonRect = button.getBoundingClientRect();
     }
-    if (newY <= 0 || newY + buttonRect.height >= window.innerHeight) {
-        velocityY = -velocityY; // Reverse vertical direction
-        newY = Math.max(0, Math.min(newY, window.innerHeight - buttonRect.height));
-    }
-
-    // Ensure the button stays within the viewport
-    button.style.left = `${newX}px`;
-    button.style.top = `${newY}px`;
-
-    // Update buttonRect to reflect the new position
-    buttonRect = button.getBoundingClientRect();
 }, 1); // Apply jitter every 500ms
 
 // // Change direction randomly if the mouse isn't moving
