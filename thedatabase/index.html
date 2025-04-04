@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Database</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>The Database</h1>
+        <p>Browse through the database of unique stories. Use the search bar to find specific stories.</p>
+        <p><small>date format's are <strong>dd/mm/yyyy</strong></small></p>
+        <!-- Search Bar -->
+        <input type="text" id="search" placeholder="Search for entries..." onkeyup="searchStories()">
+
+        <div class="folder">
+            <div class="folder-content">
+                <table id="story-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Author</th>
+                        </tr>
+                    </thead>
+                    <tbody id="story-list">
+                        <!-- Stories will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Stories data array
+        const stories = [
+            { id: "001", title: "Protocol Delta: The Last Days", url: "stories/ProtocolDeltaTheLastDays.html", date: "02-03-2025", author: "Akane" }
+        ];
+
+        // Function to display all stories in the table
+        function displayStories(filteredStories) {
+            const storyList = document.getElementById("story-list");
+            storyList.innerHTML = ""; // Clear the existing list
+
+            filteredStories.forEach(story => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${story.id}</td>
+                    <td><a href="${story.url}">${story.title}</a></td>
+                    <td>${story.date}</td>
+                    <td>${story.author}</td>
+                `;
+                storyList.appendChild(row);
+            });
+        }
+
+        // Initial display of all stories
+        displayStories(stories);
+
+        // Function to handle the search feature
+        function searchStories() {
+            const searchTerm = document.getElementById("search").value.toLowerCase();
+            const filteredStories = stories.filter(story => {
+                return story.id.toLowerCase().includes(searchTerm) ||
+                       story.title.toLowerCase().includes(searchTerm) || 
+                       story.author.toLowerCase().includes(searchTerm) ||
+                       story.date.includes(searchTerm);
+            });
+            displayStories(filteredStories);
+        }
+    </script>
+</body>
+</html>
