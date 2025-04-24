@@ -25,5 +25,13 @@
       "tintColor": "#FF5733",
       "notify": true
     }
+    {
+      "title": "Kinda Bored",
+      "identifier": "bored",
+      "caption": "Just shitposting using altstore sources",
+      "date": "2025-4-24",
+      "tintColor": "#FF5733",
+      "notify": true
+    },
   ]
 }
