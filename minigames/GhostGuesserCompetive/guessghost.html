@@ -6,12 +6,11 @@
     <title>Ghost Guessing</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="../../styles.css">
+    <script src="/imports/supabase-js2.js"></script>
     <link rel="stylesheet" href="guessghost.css">
     <script defer src="../../script.js"></script>
-    <script defer src="../../dev.js"></script>
 </head>
 <body class="dark-mode">
-    <div id="no-dev-mode" class="hidden"></div>
     <nav class="navbar">
         <div class="container">
             <span class="logo">AkaneDev</span>
@@ -22,16 +21,39 @@
     <section id="content">
         <section id="content" class="centered">
             <h1>Ghost Guessing</h1>
+            <h6><small>Version: 1.2 Competive</small></h6>
         </section>
         <div id="game" class="centered-game">
             <p id="message">Guess the ghost!</p>
             <input type="text" id="ghost-input" placeholder="Enter ghost name">
             <button id="guess-button">Guess</button>
             <button id="restart-button" class="hidden">Restart</button>
+            <button id="hint-button" class="hidden">Get Hint</button>
+            <button id="ghostlist">List Ghosts</button>
             <div id="evidence"></div>
+            <div id="dropdown" class="hidden">
+                <div id="dropdown-content">
+                    <div id="ghostlistSearchable">
+
+                    </div>
+                </div>
+            </div>
+            <div id="leaderboard" class="centered-game">
+                <h3>Leaderboard (Fastest Times)</h3>
+                <ul id="leaderboard-list" class="no-dots"></ul>
+            </div>
         </div>
 
-        <script>
+        <script type="module">
+            const { createClient } = supabase;
+            console.log("Supabase loaded");
+            let currentGhost;
+            let currentevidence = [];
+            let startTime = Date.now();
+            // const supabase = 'fuck'
+            // const { createClient } = supabase;
+            const _supabase = createClient('https://xvfchdtczhlnubbrncnk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2ZmNoZHRjemhsbnViYnJuY25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMDIyMzIsImV4cCI6MjA2MTU3ODIzMn0.PfulBTli6Dcq8xbLb7-bVCt0AYVgVGLkckMNUGv9u5w');
+            const BlackListedWords = ["bitch boy", "your mom", "you're mom", "ur mom", "ur mum", "you're mum", "your mum", "youre mom", "youre mum", "straight"]
             const MiniGameghosts = [
             { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
             { name: 'Wraith', evidence: ['EMF Level 5', 'Spirit Box', 'D.O.T.S Projector'] },
@@ -58,10 +80,51 @@
             { name: 'Deogen', evidence: ['Spirit Box', 'Ghost Writing', 'D.O.T.S Projector'] },
             { name: 'Thaye', evidence: ['Ghost Orb', 'Ghost Writing', 'D.O.T.S Projector'] },
             ];
-
-            let currentGhost = MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)];
+            setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
             let attempts = 0;
+            let totalAttempts = 0;
+            let i = 0;
+            MiniGameghosts.forEach(element => {
+                console.log(i + ": " + element.name);
+                i++;
+            });
 
+            function updateList() {
+                let ghostlist = document.getElementById('ghostlistSearchable');
+                let dropdownstuff = document.getElementById('dropdown');
+                let filteredGhosts = MiniGameghosts.filter(ghost => {
+                    return currentevidence.length === 0 || currentevidence.every(evidence => ghost.evidence.includes(evidence));
+                });
+                if (filteredGhosts.length === 0) {
+                    filteredGhosts = [{name: "error", evidence: ["no ghosts found this should never happen"]}];
+                }
+                let listghost = filteredGhosts.map(ghost => {
+                    let remainingEvidence = ghost.evidence;
+                    return `${ghost.name}: ${remainingEvidence.join(', ')}`;
+                });
+                console.log(listghost);
+                ghostlist.innerHTML = listghost.join('<br>');
+            }
+
+            function fetchLeaderboard() {
+                _supabase.from('leaderboard')
+                    .select('*')
+                    .order('time_taken', { ascending: true })
+                    .limit(10)
+                    .then(({ data }) => {
+                        const list = document.getElementById('leaderboard-list');
+                        list.innerHTML = '';
+                        data.forEach(entry => {
+                            const li = document.createElement('li');
+                            li.textContent = `${entry.player_name}: ${(entry.time_taken / 1000).toFixed(2)}s, Attempts: ${entry.attempts}, Hints used: ${entry.Hints}`;
+                            list.appendChild(li);
+                        });
+                    });
+            }
+
+            fetchLeaderboard();
+
+            // console.log(currentGhost.name);
             const restartbutton = document.getElementById('restart-button');
             restartbutton.innerText = 'Restart';
             restartbutton.addEventListener('click', () => {
@@ -69,9 +132,47 @@
                 document.getElementById('message').innerText = 'Guess the ghost!';
                 document.getElementById('evidence').innerText = '';
                 document.getElementById('ghost-input').value = '';
-                currentGhost = MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)];
+                setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
                 attempts = 0;
+                totalAttempts = 0;
+                currentevidence = [];
                 document.getElementById('restart-button').classList.add('hidden');
+                document.getElementById('hint-button').classList.add('hidden');
+                startTime = Date.now();
+                updateList();
+            });
+
+            document.getElementById('hint-button').addEventListener('click', () => {
+                if (attempts >= 3) {
+                    let hint = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)]; 
+                    if (currentevidence.includes(hint)) {
+                        hint = currentGhost.evidence[(currentGhost.evidence.indexOf(hint) + 1) % currentGhost.evidence.length];
+                    }
+                    currentevidence.push(hint);
+                    document.getElementById('evidence').innerText = `Hint: ${hint}`;
+                    attempts = 0;
+                    updateList();
+                } else {
+                    alert("You need to guess 3 times before you can get a hint!");
+                }
+            });
+
+            document.getElementById('ghostlist').addEventListener('click', () => {
+                let ghostlist = document.getElementById('ghostlistSearchable');
+                let dropdownstuff = document.getElementById('dropdown');
+                dropdownstuff.classList.toggle('hidden');
+                let filteredGhosts = MiniGameghosts.filter(ghost => {
+                    return currentevidence.length === 0 || currentevidence.every(evidence => ghost.evidence.includes(evidence));
+                });
+                if (filteredGhosts.length === 0) {
+                    filteredGhosts = [{name: "error", evidence: ["no ghosts found this should never happen"]}];
+                }
+                let listghost = filteredGhosts.map(ghost => {
+                    let remainingEvidence = ghost.evidence;
+                    return `${ghost.name}: ${remainingEvidence.join(', ')}`;
+                });
+                console.log(listghost);
+                ghostlist.innerHTML = listghost.join('<br>');
             });
             document.getElementById('ghost-input').addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
@@ -79,38 +180,70 @@
                 }
             });
             document.getElementById('guess-button').addEventListener('click', () => {
-            attempts++;
-            let message = '';
-            let evidence = '';
-            const userGuess = document.getElementById('ghost-input').value.trim();
-            if (userGuess === '') {
-                return;
+                attempts++;
+                totalAttempts++;
+                let message = '';
+                let evidence = '';
+                let userGuess = document.getElementById('ghost-input').value.trim();
+                if (userGuess === '') {
+                    return;
+                }
+                if (userGuess.toLowerCase() === "mimic"){
+                    userGuess = "The Mimic";
+                }
+                if (userGuess.toLowerCase() === "twins"){
+                    userGuess = "The Twins";
+                }
+                if (userGuess.toLowerCase() === "polty"){
+                    userGuess = "Poltergeist";
+                }
+                BlackListedWords.forEach(element => {
+                    if (userGuess.toLowerCase() === element.toLowerCase()){
+                        attempts = 3;
+                    }
+                });
+                if (userGuess.toLowerCase() === "deo"){
+                    userGuess = "Deogen"
+                }
+                if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
+                    const timeTaken = Date.now() - startTime;
+                    let playerName = prompt("You guessed it! Enter your name for the leaderboard:");
+                    if (playerName) {
+                        _supabase.from('leaderboard').insert({
+                            player_name: playerName,
+                            time_taken: timeTaken,
+                            attempts: totalAttempts,
+                            Hints: currentevidence.length,
+                        }).then(response => {
+                            console.log("Submitted to leaderboard:", response);
+                            // Optionally refresh leaderboard display
+                            fetchLeaderboard();
+                        });
+                    }
+                    message = `Correct! The ghost is ${currentGhost.name}.`;
+                    evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
+                    document.getElementById('guess-button').disabled = true;
+                    document.getElementById('restart-button').classList.remove('hidden');
+                } else {
+                    document.getElementById('hint-button').classList.remove('hidden');
+                }
+                updateList();
+                document.getElementById('ghost-input').value = '';
+                document.getElementById('message').innerText = message;
+                document.getElementById('evidence').innerText = evidence;
+            });
+
+            function setCurrentGhost(ghost) {
+                currentGhost = ghost;
             }
 
-            if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
-                message = `Correct! The ghost is ${currentGhost.name}.`;
-                evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
-                document.getElementById('guess-button').disabled = true;
-                document.getElementById('restart-button').classList.remove('hidden');
-            } else {
-                if (attempts === 1) {
-                message = 'First guess: Here is one piece of random evidence.';
-                evidence = currentGhost.evidence[Math.floor(Math.random() * currentGhost.evidence.length)];
-                } else if (attempts === 2) {
-                message = 'Second guess: Here are two pieces of evidence.';
-                evidence = currentGhost.evidence.slice(0, 2).join(', ');
-                } else {
-                message = `You failed! The ghost was ${currentGhost.name}.`;
-                evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
-                document.getElementById('guess-button').disabled = true;
-                document.getElementById('restart-button').classList.remove('hidden');
+            setInterval(() => {
+                let dvgh = document.getElementById('devGhost')
+                if (dvgh !== null) {
+                    dvgh.innerText = "Ghost is: " + currentGhost.name;
                 }
-            }
-            
-            document.getElementById('ghost-input').value = '';
-            document.getElementById('message').innerText = message;
-            document.getElementById('evidence').innerText = evidence;
-            });
+            }, 1000);
+
         </script>
     </section>
 </body>
