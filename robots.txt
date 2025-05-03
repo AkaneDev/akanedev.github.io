@@ -1,8 +1,15 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /thedatabase/
 
 User-agent: DuckDuckBot
 Allow: /
+Disallow: /thedatabase/
+
+User-agent: Applebot-Extended
+Disallow: /projects/
+Disallow: /stories/
+Disallow: /thedatabase/
 
 User-agent: CCBot
 Disallow: /
