@@ -210,11 +210,13 @@
                     const timeTaken = Date.now() - startTime;
                     let playerName = prompt("You guessed it! Enter your name for the leaderboard:");
                     if (playerName) {
-                        _supabase.from('leaderboard').insert({
+                        _supabase.from('leaderboard').upsert({
                             player_name: playerName,
                             time_taken: timeTaken,
                             attempts: totalAttempts,
                             Hints: currentevidence.length,
+                        }, {
+                            onConflict: ['player_name'] // tells Supabase what to match on
                         }).then(response => {
                             console.log("Submitted to leaderboard:", response);
                             // Optionally refresh leaderboard display
