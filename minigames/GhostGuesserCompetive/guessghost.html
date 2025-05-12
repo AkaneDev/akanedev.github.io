@@ -83,7 +83,7 @@
             ];
             setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
             let attempts = 0;
-            let totalAttempts = 0;
+            let totalAttempts = parseInt(localStorage.getItem("totalAttempts")) || 0;
             let i = 0;
             MiniGameghosts.forEach(element => {
                 console.log(i + ": " + element.name);
@@ -136,6 +136,7 @@
                 setCurrentGhost(MiniGameghosts[Math.floor(Math.random() * MiniGameghosts.length)]);
                 attempts = 0;
                 totalAttempts = 0;
+                localStorage.setItem("totalAttempts", totalAttempts);
                 currentevidence = [];
                 document.getElementById('restart-button').classList.add('hidden');
                 document.getElementById('hint-button').classList.add('hidden');
@@ -229,6 +230,7 @@
                     document.getElementById('restart-button').classList.remove('hidden');
                 } else {
                     document.getElementById('hint-button').classList.remove('hidden');
+                    localStorage.setItem("totalAttempts", totalAttempts);
                 }
                 updateList();
                 document.getElementById('ghost-input').value = '';
