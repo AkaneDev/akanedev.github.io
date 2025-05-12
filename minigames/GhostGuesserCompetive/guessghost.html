@@ -200,7 +200,7 @@
                 }
                 BlackListedWords.forEach(element => {
                     if (userGuess.toLowerCase() === element.toLowerCase()){
-                        attempts = 3;
+                        attempts += 10;
                     }
                 });
                 if (userGuess.toLowerCase() === "deo"){
