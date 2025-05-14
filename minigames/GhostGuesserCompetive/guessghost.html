@@ -110,17 +110,27 @@
                 ghostlist.innerHTML = listghost.join('<br>');
             }
 
+            function calculateScore(timeTaken, attempts, hints) {
+                // You can adjust these weights as needed.  Lower timeTaken is better, lower attempts and hints are better
+                const timeWeight = -0.1;  // Negative because lower time is better
+                const attemptWeight = -10; // Negative because fewer attempts are better
+                const hintWeight = -50;    // Negative because fewer hints are better
+
+                const score = (timeWeight * timeTaken) + (attemptWeight * attempts) + (hintWeight * hints);
+                return score;
+            }
+
             function fetchLeaderboard() {
                 _supabase.from('leaderboard')
                     .select('*')
-                    .order('time_taken', { ascending: true })
+                    .order('score', { ascending: false }) // Order by the new score column
                     .limit(10)
                     .then(({ data }) => {
                         const list = document.getElementById('leaderboard-list');
                         list.innerHTML = '';
                         data.forEach(entry => {
                             const li = document.createElement('li');
-                            li.textContent = `${entry.player_name}: ${(entry.time_taken / 1000).toFixed(2)}s, Attempts: ${entry.attempts}, Hints used: ${entry.Hints}`;
+                            li.textContent = `${entry.player_name}: Score: ${entry.score.toFixed(2)}, Time: ${(entry.time_taken / 1000).toFixed(2)}s, Attempts: ${entry.attempts}, Hints: ${entry.Hints}`;
                             list.appendChild(li);
                         });
                     });
@@ -214,11 +224,14 @@
                     const timeTaken = Date.now() - startTime;
                     let playerName = prompt("You guessed it! Enter your name for the leaderboard:");
                     if (playerName) {
+                       const score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
+
                         _supabase.from('leaderboard').upsert({
                             player_name: playerName,
                             time_taken: timeTaken,
                             attempts: totalAttempts,
                             Hints: currentevidence.length,
+                            score: score  // Store the calculated score
                         }, {
                             onConflict: ['player_name'] // tells Supabase what to match on
                         }).then(response => {
@@ -248,7 +261,7 @@
             setInterval(() => {
                 let dvgh = document.getElementById('devGhost')
                 if (dvgh !== null) {
-                    dvgh.innerText = "Ghost is: " + currentGhost.name;
+                    dvgh.innerText = "Ghost is: " + "None Ya";
                 }
             }, 1000);
 
