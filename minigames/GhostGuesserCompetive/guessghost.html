@@ -114,12 +114,12 @@
             }
 
             function calculateScore(timeTaken, attempts, hints) {
-                // You can adjust these weights as needed.  Lower timeTaken is better, lower attempts and hints are better
-                const timeWeight = -0.1;  // Negative because lower time is better
-                const attemptWeight = -0.2; // Negative because fewer attempts are better
-                const hintWeight = -50;    // Negative because fewer hints are better
+                // Ensure all weights are positive to contribute to a positive score
+                const timeWeight = 1 / (timeTaken / 1000 + 1); // Invert time, add 1 to avoid division by zero
+                const attemptWeight = 100 / (attempts + 1);    // Invert attempts, add 1 to avoid division by zero
+                const hintWeight = 50 / (hints + 1);       // Invert hints, add 1 to avoid division by zero
 
-                const score = (timeWeight * timeTaken) + (attemptWeight * attempts) + (hintWeight * hints);
+                const score = timeWeight + attemptWeight + hintWeight;
                 return score;
             }
 
@@ -216,8 +216,10 @@
                     userGuess = "Poltergeist";
                 }
                 BlackListedWords.forEach(element => {
+                    console.log("Checking against: " + element);
+                    console.log("User guess: " + userGuess);
                     if (userGuess.toLowerCase() === element.toLowerCase()){
-                        attempts += 10;
+                        totalAttempts += 10;
                     }
                 });
                 if (userGuess.toLowerCase() === "deo"){
