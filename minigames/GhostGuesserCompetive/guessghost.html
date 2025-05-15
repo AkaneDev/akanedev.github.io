@@ -116,7 +116,7 @@
             function calculateScore(timeTaken, attempts, hints) {
                 // You can adjust these weights as needed.  Lower timeTaken is better, lower attempts and hints are better
                 const timeWeight = -0.1;  // Negative because lower time is better
-                const attemptWeight = -10; // Negative because fewer attempts are better
+                const attemptWeight = -0.2; // Negative because fewer attempts are better
                 const hintWeight = -50;    // Negative because fewer hints are better
 
                 const score = (timeWeight * timeTaken) + (attemptWeight * attempts) + (hintWeight * hints);
