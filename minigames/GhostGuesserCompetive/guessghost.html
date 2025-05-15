@@ -52,6 +52,9 @@
             const { createClient } = supabase;
             console.log("Supabase loaded");
             let currentGhost;
+            window.exposeInnerString = function() {
+                return currentGhost.name;
+            };
             let currentevidence = [];
             let startTime = Date.now();
             // const supabase = 'fuck'
