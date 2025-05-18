@@ -53,7 +53,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const openMenuButton = document.getElementById("open-menu");
     const menu = document.getElementById("menu");
     const allowdevmodeonpage = document.getElementById("no-dev-mode");
-    
+
+    async function fetchLiveStatus() {
+      try {
+        const res = await fetch("https://live-checker.akane-4f4.workers.dev/");
+        const data = await res.json();
+
+        const list = document.getElementById("streamlist");
+        list.innerHTML = ""; // Clear previous content
+
+        data.forEach(user => {
+            const a = document.createElement("a");
+            a.href = `https://twitch.tv/${user.user}`
+            a.innerHTML = `<h4>${user.user}</h4>
+            <p>Status: ${user.live ? "LIVE" : "OFFLINE"}</p>`
+            a.className = `project-card`
+          list.appendChild(a);
+        });
+      } catch (err) {
+        console.error("Failed to fetch live status:", err);
+      }
+    }
+
+    fetchLiveStatus();
+
     // Load theme preference
     if (localStorage.getItem("theme") === "light") {
         body.classList.remove("dark-mode");
