@@ -1,0 +1,12 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+canvas {
+  image-rendering: pixelated;
+  border: 1px solid black;
+  width: 500px;
+  height: 500px;
+  cursor: crosshair;
+}

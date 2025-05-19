@@ -50,10 +50,25 @@
 
         <script type="module">
             const { createClient } = supabase;
+            const devmodetrue = false;
             console.log("Supabase loaded");
             let currentGhost;
-            window.exposeInnerString = function() {
-                return currentGhost.name;
+            window.jagtetheriu = function() {
+                if (devmodetrue) {
+                    devmodetrue = false;
+                }
+                else {
+                    devmodetrue = true;
+                }
+            }
+            window.DevCheats = function() {
+                if (devmodetrue) {
+                    return currentGhost.name;
+                }
+                else {
+                    totalAttempts += 100000000;
+                    return "CHEATER"
+                }
             };
             let currentevidence = [];
             let startTime = Date.now();
