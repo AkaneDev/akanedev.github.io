@@ -244,6 +244,8 @@
                     const timeTaken = Date.now() - startTime;
                     let playerName = prompt("You guessed it! Enter your name for the leaderboard:");
                     if (playerName) {
+                       playerName = playerName.toLocaleLowerCase();
+                       playerName = playerName.charAt(0).toLocaleUpperCase() + playerName.slice(1);
                        const score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
 
                         _supabase.from('leaderboard').upsert({
