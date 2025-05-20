@@ -9,6 +9,7 @@
     <script src="/imports/supabase-js2.js"></script>
     <link rel="stylesheet" href="guessghost.css">
     <script defer src="../../script.js"></script>
+    <script defer src="/dev.js"></script>
 </head>
 <body class="dark-mode">
     <nav class="navbar">
@@ -75,7 +76,7 @@
             // const supabase = 'fuck'
             // const { createClient } = supabase;
             const _supabase = createClient('https://xvfchdtczhlnubbrncnk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2ZmNoZHRjemhsbnViYnJuY25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMDIyMzIsImV4cCI6MjA2MTU3ODIzMn0.PfulBTli6Dcq8xbLb7-bVCt0AYVgVGLkckMNUGv9u5w');
-            const BlackListedWords = ["bitch boy", "your mom", "you're mom", "ur mom", "ur mum", "you're mum", "your mum", "youre mom", "youre mum", "straight", "SEX"]
+            const BlackListedWords = ["bitch boy", "your mom", "you're mom", "ur mom", "ur mum", "you're mum", "your mum", "youre mom", "youre mum", "straight", "SEX", "gay"]
             const MiniGameghosts = [
             { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
             { name: 'Wraith', evidence: ['EMF Level 5', 'Spirit Box', 'D.O.T.S Projector'] },
@@ -137,6 +138,14 @@
                 const score = timeWeight + attemptWeight + hintWeight;
                 return score;
             }
+
+            function setCookie(name, value, days = 365) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000)); // expires in N days
+                const expires = "expires=" + date.toUTCString();
+                document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/`;
+            }
+
 
             function fetchLeaderboard() {
                 _supabase.from('leaderboard')
@@ -244,6 +253,7 @@
                     const timeTaken = Date.now() - startTime;
                     let playerName = prompt("You guessed it! Enter your name for the leaderboard:");
                     if (playerName) {
+                       
                        playerName = playerName.toLocaleLowerCase();
                        playerName = playerName.charAt(0).toLocaleUpperCase() + playerName.slice(1);
                        const score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
