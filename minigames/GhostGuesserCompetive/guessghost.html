@@ -9,7 +9,7 @@
     <script src="/imports/supabase-js2.js"></script>
     <link rel="stylesheet" href="guessghost.css">
     <script defer src="../../script.js"></script>
-    <script defer src="/dev.js"></script>
+    <!-- <script defer src="/dev.js"></script> -->
 </head>
 <body class="dark-mode">
     <nav class="navbar">
@@ -54,7 +54,7 @@
             const devmodetrue = false;
             console.log("Supabase loaded");
             let currentGhost;
-            window.jagtetheriu = function() {
+            window.developer.data.jagtetheriu = function() {
                 if (devmodetrue) {
                     devmodetrue = false;
                 }
@@ -62,7 +62,7 @@
                     devmodetrue = true;
                 }
             }
-            window.DevCheats = function() {
+            window.developer.data.DevCheats = function() {
                 if (devmodetrue) {
                     return currentGhost.name;
                 }
@@ -144,6 +144,16 @@
                 date.setTime(date.getTime() + (days*24*60*60*1000)); // expires in N days
                 const expires = "expires=" + date.toUTCString();
                 document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/`;
+            }
+            function getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1);
+                    if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length));
+                }
+                return null;
             }
 
 
@@ -251,11 +261,12 @@
                 }
                 if (userGuess.toLowerCase() === currentGhost.name.toLowerCase()) {
                     const timeTaken = Date.now() - startTime;
-                    let playerName = prompt("You guessed it! Enter your name for the leaderboard:");
+                    let playerName = getCookie("player_name");
+                    if (!playerName) {
+                        playerName = askForName();
+                    }
                     if (playerName) {
-                       
                        playerName = playerName.toLocaleLowerCase();
-                       playerName = playerName.charAt(0).toLocaleUpperCase() + playerName.slice(1);
                        const score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
 
                         _supabase.from('leaderboard').upsert({
@@ -288,6 +299,18 @@
 
             function setCurrentGhost(ghost) {
                 currentGhost = ghost;
+            }
+            
+            function askForName() {
+                let name = "";
+                while (!name) {
+                    name = prompt("Please enter your player name:");
+                    if (name) {
+                        name = name.trim();
+                    }
+                }
+                setCookie("player_name", name);
+                return name;
             }
 
             setInterval(() => {
