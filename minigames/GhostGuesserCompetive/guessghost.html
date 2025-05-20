@@ -55,6 +55,7 @@
             let devmodetrue = false;
             console.log("Supabase loaded");
             let currentGhost;
+            let devmodewasenabled = false;
             window.jagtetheriu = function() {
                 if (devmodetrue) {
                     devmodetrue = false;
@@ -62,6 +63,7 @@
                 else {
                     devmodetrue = true;
                 }
+                devmodewasenabled = true;
             }
             window.DevCheats = function() {
                 if (devmodetrue) {
@@ -137,7 +139,7 @@
                 const hintWeight = 50 / (hints + 1);       // Invert hints, add 1 to avoid division by zero
 
                 const score = timeWeight + attemptWeight + hintWeight;
-                if (devmodetrue) {
+                if (devmodewasenabled) {
                     return 0;
                 }
                 return score;
@@ -274,9 +276,9 @@
                         playerName = playerName.toLocaleLowerCase();
                         let score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
 
-                        if (devmodetrue) {
+                        if (devmodewasenabled) {
                             playerName = playerName + "(DEVELOPER MODE)"
-                       }
+                        }
                        
 
                         _supabase.from('leaderboard').upsert({
