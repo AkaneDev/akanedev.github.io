@@ -266,8 +266,15 @@
                         playerName = askForName();
                     }
                     if (playerName) {
-                       playerName = playerName.toLocaleLowerCase();
-                       const score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
+                       if (devmodetrue) {
+                            playerName = playerName + "(DEVELOPER MODE)"
+                            const score = 0
+                       }
+                       else {
+                            playerName = playerName.toLocaleLowerCase();
+                            const score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
+                       }
+                       
 
                         _supabase.from('leaderboard').upsert({
                             player_name: playerName,
