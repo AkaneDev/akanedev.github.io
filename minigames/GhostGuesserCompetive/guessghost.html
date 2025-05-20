@@ -137,6 +137,9 @@
                 const hintWeight = 50 / (hints + 1);       // Invert hints, add 1 to avoid division by zero
 
                 const score = timeWeight + attemptWeight + hintWeight;
+                if (devmodetrue) {
+                    return 0;
+                }
                 return score;
             }
 
@@ -273,7 +276,6 @@
 
                         if (devmodetrue) {
                             playerName = playerName + "(DEVELOPER MODE)"
-                            score = 1
                        }
                        
 
