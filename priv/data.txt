@@ -1,0 +1,437 @@
+BIOS x86/x64 Assembly Bootloader Guide
+
+This guide covers writing BIOS-based bootloaders on x86 and x64, from the initial 16-bit stage through protected (32-bit) and long (64-bit) modes. It assumes C/C++ experience but little assembly knowledge. We explain the boot process, memory layout, registers, BIOS services, mode switching, and provide code examples and testing tips.
+1. Overview of the BIOS Boot Process
+
+When an x86 PC boots, the firmware (BIOS) performs hardware initialization and then searches for a bootable device. The BIOS loads the boot sector (Master Boot Record, first 512 bytes) into physical memory at 0x0000:0x7C00 (linear address 0x07C00)
+sqlpassion.at
+wiki.osdev.org
+. The last two bytes of this 512-byte sector must be the magic signature 0xAA55 to indicate a valid bootloader
+sqlpassion.at
+. The BIOS then jumps to 0x7C00 to execute the bootloader. At this point the CPU is in Real Mode (16-bit), with only the first 1 MiB of memory accessible.
+
+The memory map below illustrates key areas in the first megabyte after BIOS loads the MBR:
+Address Range	Size	Use
+0x00000–0x003FF	1 KiB	Interrupt Vector Table (IVT)
+0x00400–0x004FF	256 B	BIOS Data Area (BDA)
+0x00500–0x07FFF	~31.5 KiB	Conventional RAM (usable)
+0x07C00–0x07DFF	512 B	Boot Sector (loaded code)
+0x08000–0x9FFFF	576 KiB	Conventional RAM (usable)
+0x0A0000–0x0BFFF	128 KiB	Video memory (graphics/text)
+0x0C0000–0xC7FFF	32 KiB	Video BIOS ROM and VGA BIOS
+0x0C8000–0xEFFFF	160 KiB	Option ROMs/expansions
+0x0F0000–0x0FFFF	64 KiB	System BIOS ROM
+
+Table: Memory layout of the first 1 MiB on an IBM PC-compatible (after BIOS loads the boot sector)
+wiki.osdev.org
+wiki.osdev.org
+.
+
+After loading the MBR, the BIOS does not provide further services except hardware interrupts. The bootloader (or OS kernel) must then use BIOS interrupts (only available in real mode) to access hardware, or switch the CPU into protected/long mode and use drivers. Common BIOS interrupts include:
+
+    INT 0x10 (video services): Set video mode, print characters, draw graphics etc.
+    en.wikipedia.org
+    .
+
+    INT 0x13 (disk services): Read/write sectors on floppy/hard drives using CHS/LBA addressing
+    wiki.osdev.org
+    .
+
+    INT 0x1A (time/date): Query the system clock/calendar.
+
+    INT 0x16 (keyboard), INT 0x17 (printer), INT 0x19 (Bootstrap loader): Various device services.
+
+For example, INT 0x13 function 2 (AH=0x02) reads disk sectors; it requires AL=sector count, CH=cylinder, CL=sector (1–63), DH=head, DL=drive number, and ES:BX = buffer for data
+wiki.osdev.org
+en.wikipedia.org
+. INT 0x10 function 0x0E (AH=0x0E) outputs a character: AL = character, BH = page, BL = color
+en.wikipedia.org
+en.wikipedia.org
+.
+
+Modern operating systems move to protected/long mode to avoid BIOS limitations (no paging, <1 MB memory, no preemption). In legacy BIOS booting, once you exit real mode, you normally do not return to BIOS interrupts (v8086 mode in long mode is very expensive)
+en.wikipedia.org
+. UEFI systems (later boot firmware) replace BIOS interrupts with standardized protocols (UGA/GOP)
+en.wikipedia.org
+.
+2. Real Mode (16-bit)
+
+In 16-bit real mode, the CPU behaves like an 8086/8088. Key features:
+
+    Registers: The CPU has 16-bit general registers AX, BX, CX, DX (each with high/low byte), index/pointer registers SI, DI, SP, BP, segment registers CS, DS, ES, SS (and FS, GS in 386+), 16-bit instruction pointer IP, and FLAGS. (Despite 16-bit mode, the 32-bit registers EAX, etc. are still reachable with a prefix
+    wiki.osdev.org
+    .)
+
+    Segmentation: Addresses use a segment:offset pair. PhysicalAddress = Segment×16 + Offset
+    wiki.osdev.org
+    . For example, the bootloader at 0000:7C00 is at 0x07C00. Each segment register points to a 64 KiB segment; the 16-bit offset can range 0–0xFFFF. Common segments: CS for code, DS/ES for data, SS for stack. Address notation is written as SEG:OFF (e.g. 07C0:0000 = 0x07C00)
+    wiki.osdev.org
+    .
+
+    Memory: Only ≈1 MiB is directly accessible. The upper 384 KiB (0xA0000–0xFFFFF) is reserved for video BIOS, option ROMs, etc. Conventional RAM is below 640 KiB (0x00000–0x9FFFF)
+    wiki.osdev.org
+    wiki.osdev.org
+    .
+
+    Instruction set: Default operand and address size is 16-bit. Use bits 16 in NASM to encode. Use org 0x7C00 so labels are relative to 0x7C00. Standard instructions (MOV, ADD, INT, JMP, etc.) apply. Although the mode is 16-bit, you can still use 32-bit or 64-bit registers by prefacing instructions (NASM handles dword or qword operands automatically)
+    wiki.osdev.org
+    .
+
+    BIOS calls: Use INT 0x10 for video, INT 0x13 for disk, etc. For example, to print characters you can set AH=0x0E (TTY output) and call INT 10h
+    en.wikipedia.org
+    . The NASM example above shows printing “Howdy!” via INT 10h
+    alanfoster.me
+    .
+
+Example Operations in Real Mode
+
+    Reading from disk (INT 0x13): BIOS function AH=0x02 reads sectors. Before calling, set AH=0x02, AL=sector_count, CH=track, CL=sector, DH=head, DL=drive_number, and point ES:BX to a buffer. On return, CF=0 on success, AH contains status code
+    en.wikipedia.org
+    .
+
+    Writing to screen (INT 0x10): To put a character: mov ah,0x0E; mov al,'A'; mov bh,0; mov bl,7; int 0x10 – this writes ‘A’ with attribute 0x07 (gray on black)
+    en.wikipedia.org
+    .
+
+    Segments & stack: At startup, CS=0x0000, IP=0x7C00 (pointing to boot code). The stack is undefined until you set SS:SP; often code sets xor ax,ax; mov ss,ax; mov sp,0x7C00 or similar. Be careful: push/pops require a valid SS:SP.
+
+    Memory map: Preserve areas like the IVT (0x00000–0x003FF) and BIOS Data Area (BDA at 0x00400–0x004FF)
+    wiki.osdev.org
+    . Your code may use free conventional memory (e.g. above 0x00500) for data and stack. The bootloader itself is at 0x07C00–0x07DFF, so avoid overwriting it until you move on.
+
+3. Protected Mode (32-bit)
+
+Protected mode (PM) enables 32-bit addressing and memory protection. To switch to PM from real mode:
+
+    Enable A20 line. Ensure the 21st address line (A20) is enabled so you can access memory above 1 MiB (the High Memory Area). Most BIOSes have a method (keyboard controller or BIOS call) to un-gate A20.
+
+    Load Global Descriptor Table (GDT). In PM, memory access uses segment descriptors in a GDT. Prepare a GDT in memory containing at least: a null descriptor, a code segment descriptor (base=0, limit=4 GiB, 32-bit code), and a data/stack descriptor (base=0, limit=4 GiB, 32-bit data). Load it with lgdt [gdtr] where gdtr points to the GDT.
+
+    Disable interrupts. Execute cli (and mask NMIs) before mode switch.
+
+    Set CR0.PE = 1. Read CR0, OR its lowest bit (Protection Enable, 0x1), then write back to CR0. This enables protected mode
+    wiki.osdev.org
+    .
+
+    Far jump. Immediately do a far jump (e.g. jmp 0x08:protected_entry) to reload CS from a PM code descriptor. This flushes the prefetch queue and ensures CS=0x08 (selector for your PM code segment). After the jump, the CPU is in 32-bit mode
+    wiki.osdev.org
+    .
+
+    Set up data segments. In the new PM environment, load DS, ES, SS with the data segment selector (e.g. 0x10). Also set up a 32-bit stack pointer (e.g. mov esp, stack_top).
+
+These steps are outlined by Intel and tutorials
+wiki.osdev.org
+wiki.osdev.org
+. For example:
+
+cli
+lgdt [gdtr]        ; load descriptor table
+mov eax, cr0
+or eax, 1          ; set PE bit
+mov cr0, eax
+jmp 0x08:protected_entry  ; far jump to flush pipeline
+; ... now in protected mode, 32-bit
+protected_entry:
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov esp, stack_top
+
+(Here gdtr points to a structure describing the GDT; selector 0x08 is offset 8 in GDT, the first descriptor after the null descriptor.)
+
+In Protected Mode:
+
+    32-bit addressing: Registers (EAX, EBX, etc.) become fully 32-bit; data segments are usually set flat (base=0), so you get a flat address space up to 4 GiB
+    wiki.osdev.org
+    . This means a virtual address equals its physical address under the flat model.
+
+    Paging (optional): You may set up paging by creating page directory/tables and setting CR3 (page directory base) and CR0.PG=1. Paging is optional here, but many kernels enable it. (If you do, remember to set CR4.PAE=1 first to enable 32-bit paging with >32-bit physical addresses.)
+
+    Limitations: Once in PM, BIOS interrupts no longer work (they require real mode)
+    en.wikipedia.org
+    . Any needed BIOS calls must be done beforehand or you must implement drivers for I/O.
+
+Protected-Mode Flat Model
+
+Typically, you use a flat memory model: load CS and DS base=0 and limit=0xFFFFFFFF, so that logical and linear addresses coincide. With paging disabled, a 32-bit pointer (like mov eax,[some_addr]) directly accesses physical memory. This greatly simplifies addressing relative to real mode segmentation.
+
+For completeness, when enabling paging or moving to long mode you will set up paging structures (page directories, page tables) as needed, but the essential switch into 32-bit protected mode is as above.
+4. Long Mode (64-bit)
+
+Long mode (IA-32e) is the 64-bit mode on x86-64 CPUs. To enter long mode from protected mode, follow Intel’s prescribed sequence
+xem.github.io
+xem.github.io
+:
+
+    Enable PAE. Set CR4.PAE = 1 to enable Physical Address Extension (allows 4-level paging).
+
+    Set up page tables. Construct four-level page tables (PML4, PDPT, PD, PT) for 64-bit paging (identity-map or map your kernel at a high half). Load CR3 with the physical address of the PML4 table.
+
+    Enable long mode in MSR. Use the IA32_EFER MSR (Model Specific Register 0xC0000080): read it with rdmsr, set bit 8 (LME = Long Mode Enable), then write it back with wrmsr.
+
+    Enable paging & protected mode. Set CR0.PG = 1 (paging enable) and ensure CR0.PE = 1 (PM already enabled). The CPU will then switch to long mode (the LMA flag in EFER becomes 1)
+    xem.github.io
+    .
+
+In assembly (32-bit mode), this might look like:
+
+; (Assuming protected mode, CR0.PE=1 already)
+mov eax, cr4
+or eax, (1<<5)      ; set CR4.PAE (bit 5)
+mov cr4, eax
+
+mov ecx, 0xC0000080
+rdmsr               ; Read IA32_EFER MSR
+or eax, (1<<8)      ; set LME bit (bit 8)
+wrmsr               ; Enable IA-32e mode
+
+mov eax, cr0
+or eax, 0x80000001  ; set CR0.PG (bit 31) and ensure PE (bit 0) is set
+mov cr0, eax        ; CPU enters IA-32e (long) mode after this
+
+Intel’s manual explicitly recommends this order
+xem.github.io
+xem.github.io
+.
+
+In long mode, the CPU uses 64-bit registers (RAX, RBX, etc., R8–R15) and addresses. Note that segmentation is effectively disabled: all segment bases are treated as zero (except FS/GS offsets)
+wiki.osdev.org
+. The instruction pointer (RIP) and stack pointer (RSP) are 64-bit. The calling convention becomes the 64-bit System V ABI or Microsoft x64 ABI (we cover this below).
+
+Long mode also introduces new instructions (64-bit arithmetic, etc.) and a different syscall mechanism. For example, AMD/Intel syscall/sysret use MSRs (IA32_LSTAR, IA32_STAR) and require setting EFER.SCE=1, but those details are advanced and beyond a basic bootloader (OS kernels handle syscalls in long mode).
+5. Code Snippets
+
+Below are annotated NASM examples for each stage. These snippets highlight key concepts; a complete bootloader would integrate them as needed.
+16-bit Real Mode Example
+
+; boot.asm - 16-bit bootloader stub
+org 0x7C00        ; BIOS loaded this at 0x0000:0x7C00
+bits 16
+
+start:
+    cli                   ; disable interrupts
+    xor ax, ax
+    mov ds, ax            ; DS=0, so segment=0x0000
+    mov es, ax            ; ES=0
+    mov ss, ax            ; SS=0
+    mov sp, 0x7C00        ; stack at 0x0000:0x7C00 (just below boot sector)
+
+    ; Print a string using BIOS INT 0x10
+    mov si, message       ; DS:SI -> "Hello"
+.print_char:
+    lodsb                 ; AL = [DS:SI], SI++
+    cmp al, 0
+    je .done
+    mov ah, 0x0E          ; TTY output
+    mov bh, 0             ; page 0
+    mov bl, 7             ; text attribute (light gray on black)
+    int 0x10              ; call BIOS video service:contentReference[oaicite:36]{index=36}
+    jmp .print_char
+
+.done:
+    ; Hang
+    cli
+.halt:
+    hlt
+    jmp .halt
+
+message db 'Hello from 16-bit BIOS!', 0
+times 510-($-$$) db 0   ; pad to 510 bytes
+dw 0xAA55               ; boot signature
+
+This prints a message by invoking BIOS INT 10h AH=0x0E repeatedly
+en.wikipedia.org
+. Notice org 0x7C00 (NASM sets labels relative to 0x7C00) and the boot signature 0xAA55 at the end. The stack is set up at 0x7C00 (growing downward) to avoid overwriting the code (you could choose a different safe location below 0x500 for stack).
+32-bit Protected Mode Example
+
+; prot.asm - switch to protected mode (32-bit flat)
+[BITS 16]
+org 0x7C00
+
+    cli
+    ; Load GDT descriptor (gdtr points to our GDT table)
+    lgdt [gdtr]      
+    ; Enable A20 line here (implementation-specific)
+
+    mov eax, cr0
+    or eax, 1            ; set PE bit (Protection Enable)
+    mov cr0, eax
+    jmp 0x08:pm_entry    ; far jump to load new CS
+
+[BITS 32]
+pm_entry:
+    ; Now in 32-bit protected mode (flat segments)
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov esp, stack_top
+
+    ; Example: call a 32-bit C function or continue boot
+    ; (... kernel loading code here ...)
+
+halt_pm:
+    hlt
+
+; GDT: Null, Code (0x08), Data (0x10)
+gdt_start:
+    dq 0x0000000000000000
+gdt_code:
+    dw 0xFFFF, 0x0000, 0x9A00, 0x00CF  ; base=0, limit=4GB, 32-bit code
+gdt_data:
+    dw 0xFFFF, 0x0000, 0x9200, 0x00CF  ; base=0, limit=4GB, 32-bit data
+gdt_end:
+
+gdtr:
+    dw gdt_end - gdt_start - 1
+    dd gdt_start
+
+stack_top equ 0x90000 ; example stack top (below 640KB)
+
+After loading the GDT and jumping, the CPU is in 32-bit protected mode
+wiki.osdev.org
+. The code sets up DS,ES,SS to the flat-data segment (selector 0x10) and sets ESP for the stack. From here you can use full 32-bit instructions and registers. Note that BIOS interrupts (e.g. INT 13h) are no longer available; any needed BIOS calls must be done before the jump.
+64-bit Long Mode Example
+
+; long.asm - switch from protected mode to long mode
+; (Assumes in 32-bit protected mode, flat segments)
+
+    ; -- Set up paging structures for 64-bit (not shown) --
+    ; (Create PML4, PDPT, PD, PT with identity mapping for first X GiB)
+
+    mov eax, cr4
+    or eax, (1<<5)        ; enable PAE (bit 5):contentReference[oaicite:39]{index=39}
+    mov cr4, eax
+
+    mov eax, cr0
+    and eax, 0x7FFFFFFF   ; ensure CR0.PG=0 for MSR write
+    mov cr0, eax
+
+    ; Load CR3 with physical address of PML4
+    ; (Assume PML4 table address is in eax after setup)
+    ; mov cr3, eax
+
+    mov ecx, 0xC0000080   ; IA32_EFER MSR
+    rdmsr
+    or eax, (1<<8)        ; set Long Mode Enable (LME) bit:contentReference[oaicite:40]{index=40}
+    wrmsr                 ; EFER now has LME=1
+
+    mov eax, cr0
+    or eax, 0x80000001    ; set PG (bit 31) and PE (bit 0)
+    mov cr0, eax          ; long mode enabled (LMA=1 after this):contentReference[oaicite:41]{index=41}
+
+    jmp 0x08:kernel64     ; far jump to load 64-bit code segment (selector 0x08)
+
+[BITS 64]
+kernel64:
+    ; 64-bit long mode code starts here
+    mov rax, 0x12345678   ; example: use 64-bit registers
+    ; ... continue kernel initialization ...
+    hlt
+
+kernel64_cs equ 0x08      ; selector for 64-bit code segment (must be set in GDT)
+
+This sequence follows Intel’s recommendation
+xem.github.io
+xem.github.io
+. It enables PAE, sets EFER.LME, then turns on paging (CR0.PG), causing the CPU to enter 64-bit mode. After the final far jump, execution continues with 64-bit instructions (note BITS 64). In a real bootloader, you would load your 64-bit kernel image into memory (perhaps via BIOS INT 13h before this point or by copying from a multiboot-formatted image) and then jump to its entry.
+6. Assembling and Testing the Bootloader
+
+Write your bootloader assembly in NASM (Netwide Assembler). For the first-stage boot sector, output a raw binary:
+
+nasm -f bin boot.asm -o boot.bin
+
+This produces a 512-byte boot.bin (for a single-sector bootloader)
+alanfoster.me
+. To test without hardware, use an emulator:
+
+    QEMU: For x86-64 BIOS mode:
+
+qemu-system-x86_64 -drive format=raw,file=boot.bin
+
+or if it’s a floppy image:
+
+    qemu-system-x86_64 -fda boot.bin
+
+    This runs the bootloader in a virtual machine
+    alanfoster.me
+    .
+
+    Bochs: Configure a bochsrc.txt with floppya: imagefile="boot.bin", status=insert and run bochs -f bochsrc.txt. Bochs provides detailed logging and a debugger to step through your code.
+
+Testing in an emulator first is highly recommended. You can also write boot.bin to a USB floppy or CD image and test on real hardware once it works in QEMU/Bochs.
+7. Integrating with a C/C++ Kernel
+
+After the bootloader sets up the CPU (and possibly loads a second stage), it typically transfers control to a kernel written in C or C++. The interface requirements include:
+
+    Calling Convention: For 32-bit kernels, you might use the cdecl convention (stack arguments, return in EAX). In 64-bit, on Linux/Unix the System V AMD64 ABI is standard: first integer arguments in RDI, RSI, RDX, RCX, R8, R9, return value in RAX (RDX for 128-bit)
+    en.wikipedia.org
+    . If writing a kernel for Windows x64, Microsoft’s x64 calling convention uses RCX, RDX, R8, R9 for the first four arguments.
+
+    Linking: Compile your C/C++ kernel with a cross-compiler and -ffreestanding. Link it to a flat binary or ELF. The bootloader can load this binary at a fixed address (e.g. below 4 GiB) and then jump to its entry. For example, after switching to long mode, do jmp 0x08:kernel_entry64, where kernel_entry64 is a label (in NASM or extern) pointing to your C main() (compiled to 64-bit code). Ensure you declare the entry with extern "C" (if C++) and use a compatible symbol name.
+
+    Environment: Before calling C code, set up essential state: the stack pointer (ESP/RSP), data segments (DS/ES). Also, ensure page tables allow access to the kernel’s memory. The C runtime won’t be present, so you need a minimal runtime (e.g. for C++ you may need to call constructors manually or avoid static objects). Use a simple linker script or compilation flags to place the kernel at the correct address in memory.
+
+    Example: A bootloader might do (in NASM):
+
+    extern kernel_main       ; symbol from your C kernel
+    ...
+    ; After mode switch:
+    mov esi, magic          ; example argument in RDI/ESI if needed
+    call kernel_main        ; jump to C code
+
+    In C, declare extern "C" void kernel_main(uint32_t magic);.
+
+In summary, link your kernel as a flat binary for the target mode (32- or 64-bit). Pass control by a far jump or call. Make sure stack and segments are correct. The OSDev wiki and various tutorials cover Multiboot or custom boot protocols if you need a more structured approach; however, for a simple monolithic kernel, direct loading/jump works.
+8. Transitioning to UEFI Bootloaders (C/C++)
+
+UEFI is the modern replacement for BIOS. Key differences:
+
+    Firmware Environment: UEFI bootloaders (called EFI applications) run in a 32- or 64-bit protected environment provided by the firmware. There is no legacy real mode stage (after early initialization, UEFI typically runs in long mode with paging enabled). Thus, you can write UEFI apps in C/C++ without custom assembly for mode switching.
+
+    Executable Format: UEFI firmware loads PE/COFF executables (like Windows .exe) from a FAT-formatted EFI System Partition. Your bootloader is compiled as a PE file, not a raw binary. Tools like GNU-EFI or EDK2 (TianoCore) provide headers and stubs to build UEFI apps. You can still hand-write NASM for parts, but UEFI provides rich services.
+
+    Calling Conventions: UEFI uses the Microsoft x64 calling convention for IA-32e (registers RCX, RDX, R8, R9 for first args on Windows platforms, or System V on other platforms — EFI spec uses EFIAPI which is MS ABI on x86-64). UEFI services use function pointers in the EFI System Table, not software interrupts.
+
+    No BIOS INTs: UEFI provides “boot services” and “runtime services” via function calls (grouped into protocols like Graphics Output Protocol instead of INT 10h)
+    wiki.osdev.org
+    en.wikipedia.org
+    . For example, graphics are handled through the EFI Graphics Output Protocol (GOP), not INT 10h/VBE
+    en.wikipedia.org
+    . Disk access uses EFI Disk IO protocols, etc. These use modern C calls.
+
+    Memory and Passing Data: The firmware passes a pointer to an EFI_SYSTEM_TABLE to your main function, giving access to memory maps, ACPI tables, and protocols. UEFI handles platform initialization (A20, paging, etc.) for you
+    wiki.osdev.org
+    wiki.osdev.org
+    .
+
+    Boot Services vs OS Kernel: A UEFI bootloader typically loads the kernel (from disk or network), then calls ExitBootServices() to hand control to the OS. At that point, the OS (or its next-stage bootloader) runs with no more firmware support.
+
+Tips for UEFI Bootloaders in C/C++:
+
+    Use a development kit (e.g. EDK2) or projects like GNU-EFI to set up the build environment. Write your bootloader as an EFI application with EFIAPI entry point (EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)).
+
+    Link against <efi.h> libraries for types and protocols. Use UEFI’s memory allocation and console I/O instead of BIOS calls.
+
+    Remember that UEFI requires a GUID-namespace (UUID) for your application, and it launches via a boot manager (no BIOS disk signature needed).
+
+    When ready to boot the kernel, you typically allocate memory via UEFI services and copy the kernel image, then jump to the kernel’s entry point (often in long mode).
+
+Transitioning from BIOS assembly to UEFI C++ means relying on firmware protocols rather than interrupts. However, the low-level concepts (e.g. page tables, privilege levels) are similar. Many systems programmers start with a simple BIOS bootloader and later move to UEFI for more features and easier C/C++ development.
+
+Sources: Official Intel manuals and tutorials
+xem.github.io
+xem.github.io
+; OSDev Wiki on boot process and modes
+wiki.osdev.org
+en.wikipedia.org
+; Wikipedia on BIOS interrupts
+en.wikipedia.org
+en.wikipedia.org
+; UEFI references
+wiki.osdev.org
+wiki.osdev.org
+. These explain the steps and facilities in each mode. Use emulators (QEMU/Bochs) and NASM for testing as described
+alanfoster.me
+alanfoster.me
