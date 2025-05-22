@@ -1,0 +1,331 @@
+Writing an x86 Kernel and Bootloader (16/32/64-bit, BIOS and UEFI)
+
+Developing an OS kernel from scratch on x86 requires handling multiple CPU modes and boot standards. The PC (BIOS) boot process begins in 16-bit real mode with very limited memory (1 MB addressable), then the OS must switch to 32-bit protected mode and eventually 64-bit long mode (IA-32e) for modern operation. In UEFI (EFI) boot, the firmware already provides a 64-bit protected/long mode environment. In both cases we must write a custom bootloader (no GRUB) to initialize the CPU state, set up basic memory management (segmentation/paging), and jump to our C kernel entry point. Below is a step-by-step tutorial covering:
+
+    Boot sector creation and constraints (BIOS)
+
+    Switching to Protected Mode (16→32-bit)
+
+    Enabling Long Mode (32→64-bit)
+
+    BIOS vs UEFI bootloaders
+
+    Kernel entry and segment setup
+
+    Basic memory management (GDT, paging)
+
+    Text output (VGA BIOS vs UEFI GOP)
+
+All code examples use NASM syntax for assembly and C for kernel/UEFI. Official references (Intel SDM, UEFI spec) are cited.
+BIOS Boot: Real Mode and the Boot Sector
+
+On legacy BIOS systems, boot begins in 16-bit real mode. The BIOS scans drives for a boot sector (first 512-byte sector) with the magic signature 0xAA55 at its last two bytes. The BIOS loads this 512-byte sector to memory at physical address 0x0000:0x7C00 and jumps there in 16-bit code
+cs.uaf.edu
+. The boot sector must be exactly 512 bytes (padding with zeros), end with 0xAA55, and run as a 16-bit binary. For example:
+
+; boot.asm – simple BIOS boot sector (512 bytes)
+BITS 16
+ORG 0x7C00
+
+    ; (1) Set up stack
+    xor ax, ax
+    mov ss, ax
+    mov sp, 0x7C00
+
+    ; (2) Print a char via BIOS int 0x10
+    mov ah, 0x0E
+    mov al, 'H'
+    int 0x10            ; BIOS teletype output (character in AL)
+
+    ; (3) Hang CPU
+hang: jmp hang
+
+    ; (4) Boot sector signature (must be at offset 510-511)
+times 510-($-$$) db 0  ; pad zeros up to 510 bytes
+dw 0xAA55             ; 0x55AA on little-endian
+
+This example uses BIOS interrupt INT 0x10 (Teletype output) to print a character
+cs.uaf.edu
+. (Alternatively, one can write directly to the VGA text buffer at 0xB8000.) Key constraints: the code must be compiled with NASM in binary mode (-f bin) and exactly 512 bytes long, with the signature at the end
+cs.uaf.edu
+. In practice, this small bootblock usually loads further sectors (disk IO via INT 0x13) to continue booting a larger kernel or second-stage loader.
+From Real Mode to Protected Mode (32-bit)
+
+Once a minimal real-mode bootloader is running, we typically enable the A20 line (to allow access beyond 1 MB) and then switch the CPU into 32-bit protected mode. Protected mode allows 32-bit instructions and access to all physical memory. According to the Intel SDM, the steps are
+cdrdv2-public.intel.com
+cdrdv2-public.intel.com
+:
+
+    Disable interrupts. (CLI) Ensure no interrupts occur during mode change.
+
+    Load a GDT. Use the LGDT instruction to load a descriptor table that defines our code/data segments.
+
+    Enable Protected Mode. Set the Protection Enable (PE) bit in control register CR0 via MOV CR0, CR0 | 1. Protected mode starts immediately.
+
+    Far jump. Immediately after setting PE, perform a far jump (e.g. JMP 0x08:protected_entry) to flush the prefetch queue and reload CS.
+
+    Reload segment registers. After jumping, load data segment registers (DS, ES, SS, etc.) with appropriate selectors pointing into the GDT (often to a flat data segment).
+
+Intel’s guide emphasizes that the MOV CR0 and the following far jump must be carefully ordered
+cdrdv2-public.intel.com
+. A simple assembly snippet might be:
+
+; Switch to protected mode (NASM)
+[BITS 16]
+    cli                         ; disable interrupts
+    lgdt [gdtr]                 ; load GDT (defined below)
+    mov eax, cr0
+    or eax, 1                   ; set PE bit
+    mov cr0, eax                ; enable protected mode (still in 16-bit context)
+    jmp 0x08:pmode_start        ; far jump to selector 0x08 (our protected-mode code segment)
+[BITS 32]
+pmode_start:
+    ; Now running with 32-bit instructions (CS=0x08 as loaded from GDT)
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; ... continue with 32-bit code (e.g., enable paging or call kernel)
+
+Here, the GDT (gdtr) must define a code descriptor at selector 0x08 (base=0, 32-bit code, limit=4GB) and a data descriptor at 0x10. In Intel’s terminology, the GDTR holds the base/limit of the GDT
+cdrdv2-public.intel.com
+. For flat segmentation, we set base=0 and limit=0xFFFFF (4GB) with appropriate access flags. The key is that after the far jump, the CPU is in CPL=0 protected mode
+cdrdv2-public.intel.com
+, and we can execute 32-bit code.
+Kernel Entry Point and Segment Setup
+
+Our kernel’s entry (in C) will be called from the protected-mode bootstrap. Typically we write an _start in assembly (as above) that jumps to a C function like kernel_main(). In 32-bit protected mode we usually use a flat GDT: one code segment (executable, base=0) and one data segment (read/write). Each descriptor is 8 bytes; e.g. for NASM:
+
+; gdt.asm – define GDT: null, code, data
+gdt_start:
+    dd 0x00000000  ; null descriptor (8 bytes)
+    dd 0x00000000
+
+    dd 0x0000FFFF  ; code segment: limit=0xFFFFF, base=0
+    dd 0x00CF9A00  ; access=0x9A (code), gran=0xCF (4K gran, 32-bit)
+    dw 0x0000      ; (continued fields of above descriptor)
+    dw 0x0000
+
+    dd 0x0000FFFF  ; data segment: limit=0xFFFFF, base=0
+    dd 0x00CF9200  ; access=0x92 (data R/W), gran=0xCF
+    dw 0x0000
+    dw 0x0000
+
+gdtr:
+    dw gdt_end - gdt_start - 1  ; limit
+    dd gdt_start               ; base
+gdt_end:
+
+Load this with lgdt [gdtr] before enabling protected mode. In C, you might define an equivalent array of 64-bit descriptors and load with assembly lgdt. Once in protected mode, segment selectors 0x08 (code) and 0x10 (data) refer to these descriptors.
+
+After entering protected mode, the CPU does not automatically update DS/SS/etc.; they retain their old real-mode values until we reload them
+cdrdv2-public.intel.com
+. That’s why we explicitly move 0x10 into DS, ES, etc., as shown above.
+Basic Memory (Paging)
+
+With protected mode enabled, we typically also enable paging. Intel SDM states “Paging is controlled by the PG flag in CR0. When set, paging is enabled”
+cdrdv2-public.intel.com
+. In 32-bit mode without PAE, one typically creates a page directory and tables (identity-mapped at 4KB pages) and then:
+
+    ; (in protected mode) enable paging (example)
+    ; Assume CR3 is loaded with page-directory base (points to 0 identity-mapping).
+    mov eax, cr4
+    or eax, 0x00000010   ; optional: set PAE=1 for >32-bit (if doing IA-32e later)
+    mov cr4, eax
+    mov eax, cr0
+    or eax, 0x80000000   ; set PG bit
+    mov cr0, eax         ; paging enabled
+
+When CR0.PG=1, the MMU uses our page tables. (With PAE=0 and LME=0, this is standard 32-bit paging.)
+
+For 64-bit IA-32e mode, Intel requires that CR4.PAE=1 (to enable large physical addresses) and the EFER MSR bit 8 (LME) be set
+cdrdv2-public.intel.com
+before enabling PG
+cdrdv2-public.intel.com
+. Specifically, the extended feature register EFER controls long mode: its “IA-32e mode enable” bit must be 1 to enter 64-bit mode
+cdrdv2-public.intel.com
+. The step sequence is: set CR4.PAE=1, set IA32_EFER.LME=1, then set CR0.PG=1. (UEFI typically starts in long mode so this is only needed for BIOS booting to 64-bit.)
+
+The CR3 register holds the base of our page directory (or PML4 in 64-bit)
+cdrdv2-public.intel.com
+. In protected mode kernel code, one often identity-maps at least low memory so code can jump to high addresses.
+Kernel Entry in C
+
+After these mode switches, we jump to a C routine (e.g. kernel_main() or efi_main() in UEFI). For a BIOS-loaded kernel, we might write:
+
+// kernel.c – runs in 32-bit protected mode
+void putc(char c);
+extern void init_paging();  // setup identity page tables (if desired)
+
+void kernel_main() {
+    // Here CS/DS/etc are already flat segments.
+    init_paging(); // optional: enable paging as above
+    putc('K');     // print to VGA or serial
+    while(1);      // infinite loop
+}
+
+The kernel_main name (or _start) is just a C function declared with no arguments; the bootloader assembly should jump to it after mode setup. One might need an entry assembly stub to set up C stack pointer and call it.
+Text Output (VGA BIOS)
+
+In 16-bit code we used INT 0x10. In 32-bit protected mode on BIOS, we can still use BIOS video interrupts (via real-mode emulation, if interrupt is available) or simply write to VGA memory at 0xB8000 for text modes
+en.wikipedia.org
+. For example, writing a character:
+
+// write character to VGA text mode at (row, col), with attribute attr (color)
+#define VGA_TEXT_MODE_BUFFER ((volatile unsigned short*)0xB8000)
+void putc(char c) {
+    static int pos = 0;
+    VGA_TEXT_MODE_BUFFER[pos++] = (0x07 << 8) | c;  // black on grey text
+}
+
+This uses the known VGA text buffer location (physical 0xB8000)
+en.wikipedia.org
+. No official Intel doc is cited here, but the address is a de-facto standard.
+UEFI Boot: 64-bit Entry and GOP Graphics
+
+On UEFI systems, the firmware loads our bootloader as a PE/COFF executable in a 64-bit environment (IA-32e mode). Our “bootloader” can be written in C (linked with EFI stubs). UEFI provides Boot Services to read disks, and the Graphics Output Protocol (GOP) for drawing on screen. Unlike BIOS, we do not get a real-mode jump; instead, we define an efi_main entry:
+
+// efi_loader.c – UEFI bootloader entry point (64-bit)
+#include <efi.h>
+#include <efilib.h>
+
+EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+    // Initialize UEFI Library (sets global ST, BS pointers)
+    InitializeLib(ImageHandle, SystemTable);
+
+    // Locate GOP (Graphics Output Protocol) interface
+    EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = NULL;
+    EFI_GUID gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+    uefi_call_wrapper(SystemTable->BootServices->LocateProtocol, 3, &gopGuid, NULL, (void**)&gop);
+
+    // Set video mode if desired (e.g., highest resolution)
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
+    UINTN SizeOfInfo;
+    uefi_call_wrapper(gop->QueryMode, 4, gop, gop->Mode->MaxMode - 1, &SizeOfInfo, &Info);
+    uefi_call_wrapper(gop->SetMode, 2, gop, gop->Mode->MaxMode - 1);
+
+    // Draw a pixel (e.g., white) at (100, 100)
+    UINT32 *frame = (UINT32*) gop->Mode->FrameBufferBase;
+    int width = gop->Mode->Info->PixelsPerScanLine;
+    frame[100 * width + 100] = 0xFFFFFF;  // white pixel
+
+    // Print text to UEFI console
+    uefi_call_wrapper(SystemTable->ConOut->OutputString, 2, SystemTable->ConOut, L"Hello from UEFI!\n");
+
+    // Exit boot services and jump to kernel if desired...
+    while (1);
+}
+
+This example uses UEFI calls to locate GOP (by its GUID) and set a video mode, then writes directly to the frame buffer. The EFI_GRAPHICS_OUTPUT_PROTOCOL provides an abstraction for frame-buffer graphics (analogous to a VESA or DirectFB interface)
+dox.ipxe.org
+. The EFI System Table (SystemTable) gives access to console I/O (OutputString) and boot services.
+
+Under UEFI, by default the CPU is already in 64-bit mode (on x86_64 systems), and segmentation is flat (all segment bases are zero, 64-bit CS=0x10, etc). We only need minimal GDT (often UEFI has its own, and we can ignore it in simple kernels). If writing our own kernel, we typically exit boot services and then set up a new GDT/paging for our OS as in the BIOS path (with PAE/LME to enable our long mode page tables).
+Entering 64-bit Long Mode (BIOS path)
+
+If booting via BIOS and wanting a 64-bit kernel, after entering protected mode we must enable IA-32e (long) mode. According to Intel SDM, the steps are: (1) enable CR4.PAE (bit 5)
+cdrdv2-public.intel.com
+, (2) load PAE-compatible page tables (with PML4, PDPT, etc.), (3) set IA32_EFER.LME (bit 8) = 1
+cdrdv2-public.intel.com
+via WRMSR, and (4) set CR0.PG = 1 to enable paging. When this sequence completes, the CPU is in 64-bit mode (with RFLAGS.CPL=0, 64-bit CS selector loaded by a far jump). An assembly snippet might look like:
+
+; (Continuing from protected mode in NASM)
+; Assume GDT already has a 64-bit code/data descriptor (type=0x2A/0x22).
+mov eax, cr4
+or eax, 1<<5          ; set CR4.PAE = 1
+mov cr4, eax
+
+; Set up 64-bit page tables (not shown: create PML4 with identity map)
+mov eax, pml4_base
+mov cr3, eax
+
+; Enable long mode in EFER MSR (IA32_EFER = 0xC0000080)
+mov ecx, 0xC0000080
+rdmsr
+or eax, 1<<8          ; IA-32e Mode Enable
+wrmsr
+
+mov eax, cr0
+or eax, 1<<31         ; set PG
+mov cr0, eax          ; paging enabled; now in long mode
+
+jmp 0x08:long_mode_entry  ; far jump to 64-bit code segment
+[BITS 64]
+long_mode_entry:
+    ; Now 64-bit CS/DS/SS, etc. Use 64-bit registers.
+
+This follows the Intel guideline that CR4.PAE and EFER.LME define entry into IA-32e mode
+cdrdv2-public.intel.com
+cdrdv2-public.intel.com
+. Once in 64-bit mode, segment limits are disabled (all segments are flat), and we can use full 64-bit addresses.
+Setting Up the GDT and IDT
+
+In protected/long modes, the CPU uses the GDT for segment descriptor information. The GDTR register (Global Descriptor Table Register) holds the base and limit of the GDT
+cdrdv2-public.intel.com
+. Each segment descriptor is 8 bytes specifying base, limit, and access flags. At minimum, a flat 64-bit OS uses:
+
+    Null descriptor (selector 0x00, unused).
+
+    Kernel code segment (selector 0x08): base=0, limit=0xFFFFF, access=0x9A (execute/read), granularity=0xAF (or 0xCF) for 4K, 64-bit.
+
+    Kernel data segment (selector 0x10): base=0, limit=0xFFFFF, access=0x92 (read/write), granularity=0xAF (or 0xCF).
+
+For 64-bit code segments, the “L” bit in the descriptor is set, and usually P (present) and DPL=0. After loading such a GDT with lgdt, a far jump to selector 0x08 ensures CS uses the 64-bit code segment. Then DS/ES/etc can be set to 0x10.
+
+The Interrupt Descriptor Table (IDT) is also loaded with LIDT, but a simple kernel may use a flat default or leave it to firmware. (Our minimal OS could even not use interrupts at first.)
+Output Summary
+
+    BIOS Bootloader: Raw 16-bit code must be 512 bytes with signature
+    cs.uaf.edu
+    . It runs at 0x7C00, uses BIOS interrupts (e.g. INT 0x10) to interact with hardware
+    cs.uaf.edu
+    , and typically loads a protected-mode kernel in C.
+
+    Protected Mode Transition: Use LGDT/MOV CR0,PE/JMP sequence
+    cdrdv2-public.intel.com
+    cdrdv2-public.intel.com
+    to switch to 32-bit. Set up a simple flat GDT as above.
+
+    Paging: CR0.PG enables paging
+    cdrdv2-public.intel.com
+    ; CR3 holds page table base
+    cdrdv2-public.intel.com
+    . For 64-bit, CR4.PAE and IA32_EFER.LME are required
+    cdrdv2-public.intel.com
+    cdrdv2-public.intel.com
+    .
+
+    UEFI Bootloader: An EFI application in C (entry efi_main) runs in 64-bit mode by default. Use UEFI Boot Services to load files and protocols. For graphics, use the Graphics Output Protocol (GOP) to draw pixels on the frame buffer
+    dox.ipxe.org
+    . Text can be output via SystemTable->ConOut->OutputString.
+
+    Kernel Entry: After mode switches, jump to a C function (e.g. kernel_main). The C code can assume flat 32/64-bit segments. Basic C runtime must be set up (stack, etc.).
+
+Each step should be accompanied by referencing Intel’s manuals and UEFI documents for exact flag meanings and call conventions. For example, Intel SDM (Vol. 3A) Section 10.9.1 details protected-mode entry
+cdrdv2-public.intel.com
+, and Volume 4 describes MSRs like EFER
+cdrdv2-public.intel.com
+. The UEFI Specification describes EFI_SYSTEM_TABLE, EFI_GRAPHICS_OUTPUT_PROTOCOL, etc., though full citations of the spec are beyond this guide’s scope. In practice, tutorial and OSDev resources (and references like Ralph Brown’s Interrupt List for BIOS interrupts) fill in the implementation details.
+References
+
+    Intel 64/IA-32 Architectures Software Developer’s Manual, Vol. 3A (System Programming Guide) – Sections on Mode Switching and Paging
+    cdrdv2-public.intel.com
+    cdrdv2-public.intel.com
+    .
+
+    Intel SDM Vol. 3A/4 – Descriptions of GDT, CR0/CR4, EFER (MSR) and IA-32e (Long) Mode
+    cdrdv2-public.intel.com
+    cdrdv2-public.intel.com
+    .
+
+    UEFI Specification – EFI System Table, Boot Services, Graphics Output Protocol (GOP).
+
+    Ralph Brown’s Interrupt List – BIOS interrupts for screen and disk I/O.
+
+    OS development literature (OSDev Wiki, tutorials) for practical examples of 16-bit assembly and bootloader coding (e.g. BIOS INT 0x10 for text output
+    cs.uaf.edu
+    ).
+
