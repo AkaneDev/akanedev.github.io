@@ -1,0 +1,61 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+    <title>Chatroom</title>
+    <style>
+    #chatbox {
+    width: 500px;
+    height: 300px;
+    border: 1px solid black;
+    overflow-y: scroll;
+    }
+    </style>
+ </head>
+ <body>
+    <h1>Chatroom</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="message">
+    <button onclick="sendMessage()">Send</button>
+    <script>
+    const chatbox = document.getElementById('chatbox');
+    const messageInput = document.getElementById('message');
+    const API_URL = 'YOUR_API_URL_HERE'; // Replace with your API URL
+ 
+
+    async function loadChat() {
+    const response = await fetch(API_URL + '/messages');
+    const messages = await response.json();
+    chatbox.innerHTML = '';
+    messages.forEach(message => {
+    const messageElement = document.createElement('p');
+    messageElement.textContent = message.sender + ': ' + message.text;
+    chatbox.appendChild(messageElement);
+    });
+    chatbox.scrollTop = chatbox.scrollHeight;
+    }
+ 
+
+    async function sendMessage() {
+    const messageText = messageInput.value;
+    await fetch(API_URL + '/messages', {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+    sender: 'User', // Replace with actual user identification
+    text: messageText
+    })
+    });
+    messageInput.value = '';
+    loadChat();
+    }
+ 
+
+    // Load chat every 5 seconds
+    setInterval(loadChat, 5000);
+    loadChat();
+    </script>
+ </body>
+ </html>
+ ```
