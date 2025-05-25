@@ -56,16 +56,16 @@
             console.log("Supabase loaded");
             let currentGhost;
             let devmodewasenabled = false;
-            window.jagtetheriu = function() {
+            window.disable_ = function() {
                 if (devmodetrue) {
                     devmodetrue = false;
                 }
                 else {
-                    devmodetrue = true;
+                    devmodetrue = false;
                 }
                 devmodewasenabled = true;
             }
-            window.DevCheats = function() {
+            window.enable_ = function() {
                 if (devmodetrue) {
                     return currentGhost.name;
                 }
@@ -325,14 +325,6 @@
                 setCookie("player_name", name);
                 return name;
             }
-
-            setInterval(() => {
-                let dvgh = document.getElementById('devGhost')
-                if (dvgh !== null) {
-                    dvgh.innerText = "Ghost is: " + "None Ya";
-                }
-            }, 1000);
-
         </script>
     </section>
 </body>
