@@ -2,130 +2,193 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>404</title>
+  <title>SCP Foundation Terminal</title>
   <style>
-    body {
-      margin: 0;
-      background-color: black;
-      color: #33ff33;
-      font-family: 'Courier New', Courier, monospace;
-      padding: 1rem;
-      overflow: hidden;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #terminal {
-      flex-grow: 1;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      line-height: 1.3;
-      text-shadow: 0 0 5px #33ff33;
-      animation: flicker 0.2s infinite alternate;
-    }
-
-    input {
-      background: black;
-      border: none;
-      color: #33ff33;
-      font-family: monospace;
-      font-size: 1rem;
-      width: 100%;
-      outline: none;
-      caret-color: #33ff33;
-      text-shadow: 0 0 5px #33ff33;
-    }
-
-    ::selection {
-      background: #33ff33;
-      color: black;
-    }
-
-    /* CRT scanlines */
-    body::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0) 0px,
-        rgba(0, 0, 0, 0) 2px,
-        rgba(0, 255, 0, 0.05) 2px,
-        rgba(0, 255, 0, 0.05) 3px
-      );
-      z-index: 999;
-    }
-
-    @keyframes flicker {
-      0% { opacity: 1; }
-      100% { opacity: 0.97; }
-    }
+    html,body{margin:0;height:100%;background:#000;color:#33ff33;
+      font-family:'Courier New',monospace;display:flex;flex-direction:column}
+    #terminal{flex-grow:1;padding:1rem;overflow-y:auto;white-space:pre-wrap;
+      line-height:1.3;text-shadow:0 0 5px #33ff33;animation:flicker .2s infinite alternate}
+    #command{background:#000;border:none;color:#33ff33;font-family:inherit;font-size:1rem;
+      padding:.5rem;width:100%;outline:none;caret-color:#33ff33;text-shadow:0 0 5px #33ff33}
+    body::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;
+      pointer-events:none;z-index:999;
+      background:repeating-linear-gradient(to bottom,
+        rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,
+        rgba(0,255,0,.05) 2px,rgba(0,255,0,.05) 3px)}
+    @keyframes flicker{0%{opacity:1}100%{opacity:.97}}
   </style>
 </head>
 <body>
-  <div id="terminal">SCP FOUNDATION SECURE TERMINAL v4.2.1\nLOGIN REQUIRED\n</div>
-  <input id="command" autofocus>
+  <div id="terminal">SCP FOUNDATION SECURE TERMINAL v4.2.1<br>LOGIN REQUIRED<br></div>
+  <input id="command" autofocus autocomplete="off" placeholder="Type command here…">
 
   <script>
     const terminal = document.getElementById("terminal");
-    const input = document.getElementById("command");
+    const input    = document.getElementById("command");
 
-    const commands = {
-      login: () => "AUTHORIZATION ACCEPTED\nWELCOME, DR. ██████",
-      help: () => "AVAILABLE COMMANDS:\nlogin - Access system\nlist - List SCP files\nview SCP-049 - View SCP file\nclear - Clear terminal",
-      list: () => "SCP-049 - The Plague Doctor\nSCP-173 - The Sculpture\nSCP-682 - Hard to Destroy Reptile\nSCP-███ - Redacted",
-      "view SCP-049": () => "SCP-049 FILE ACCESS GRANTED\nCLASS: Euclid\nDESCRIPTION: Humanoid entity wearing plague doctor garments...\n\n[REDACTED]",
-      clear: () => {
-        terminal.innerText = '';
-        return '';
-      }
+    /* ====== session & security flags ====== */
+    let isLoggedIn        = false;
+    let _isLoggedIn     = false; // for initial login check
+    let awaitingPassword  = false;
+    const correctPasswordHash = "b728da4767ae24798b18ca6c287183ba48584b9a7146f89a5c4f3b26b8124cf0";
+    const otherHash = "7011e9afbd5f5cfa3719618f3c8d174b5cf978879fdab12e43328cf020eb4fd0";
+    let failedAttempts    = 0;
+    const maxAttempts     = 3;
+    let maskedInput       = "";
+
+    /* ====== virtual read-only FS ====== */
+    const vfs = {
+      "/mnt/networkshare/scpfs/info.txt"     : "SCP FOUNDATION SECURE FILESYSTEM\nAll files are read-only.",
+      "/mnt/networkshare/scpfs/scp-049.txt"  : "SCP-049 – Plague Doctor\nObject Class: Euclid\nStatus: Contained",
+      "/mnt/networkshare/scpfs/scp-173.txt"  : "SCP-173 – Sculpture\nObject Class: Euclid\nStatus: Active",
     };
 
-    function typeOut(text, speed = 15, callback) {
-      let i = 0;
-      function printChar() {
-        if (i < text.length) {
-          terminal.innerText += text.charAt(i);
-          terminal.scrollTop = terminal.scrollHeight;
-          i++;
-          setTimeout(printChar, speed);
-        } else if (callback) {
-          callback();
-        }
-      }
-      printChar();
+    const secretVfs = {
+        "/mnt/blackbox/log-913.txt": "[SECURE LOG: EXPUNGED]\nSubject 913 breach detected...\nFootage corrupt. Decryption in progress.\n\n\n\n\n\n",
+        "/mnt/blackbox/eaihshe.log": "[CORRUPTED DATA] ONLY READ ABLE TEXT: 'Not correct, Look closer..... {err: ZWBIN}​‌‌‌​​‌​​‌‌​​‌​‌​‌‌​‌‌​‌​‌‌​‌‌‌‌​‌‌‌​‌​​​‌‌​​‌​‌​‌​​​​​‌​‌‌​​​‌‌​‌‌​​​‌‌​‌‌​​‌​‌​‌‌‌​​‌‌​‌‌‌​​‌‌​‌​​​​‌‌​‌‌​‌‌‌‌​‌‌​​‌​​​‌‌​​‌​‌​​‌‌‌​‌​​​‌​​​​​​​‌‌​​​‌​​‌‌​​​​​​‌‌​​‌​​​‌‌​​‌​​​‌‌‌​​​​​‌‌​​‌‌​​‌‌​​​‌'[CORRUPTED DATA]\n",
+    };
+
+
+    /* ====== helpers ====== */
+    function typeOut(text,speed=10,cb){
+      let i=0;(function printer(){
+        if(i<text.length){terminal.innerText+=text.charAt(i);terminal.scrollTop=terminal.scrollHeight;i++;setTimeout(printer,speed);}
+        else if(cb)cb();
+      })();
+    }
+    async function sha256Hex(txt){
+      const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(txt));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
     }
 
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        const cmd = input.value.trim();
-        input.disabled = true;
+    /* ====== built-in commands (no args) ====== */
+    const basicCmds={
+      help: ()=>`AVAILABLE COMMANDS:
+login                 - Access system
+logout                - End session
+list                  - List SCP files
+view SCP-049          - View SCP file
+ls /mnt/scpfs         - List files in mounted read-only drive
+read <path>           - Read file in /mnt/scpfs (RO)
+level                 - Show current access level
+clear                 - Clear terminal`,
+      list: ()=>"SCP-049 - The Plague Doctor\nSCP-173 - The Sculpture\nSCP-682 - Hard to Destroy Reptile\nSCP-███ - Redacted",
+      level:()=> "ACCESS LEVEL: 3\nAUTHORIZED PERSONNEL ONLY",
+      logout:()=>{isLoggedIn=false;return"LOGOUT SUCCESSFUL\nSEE YOU SOON, ████████████";},
+      hello: ()=>{if(isLoggedIn) return "hello, █████████████, We have been Observing you.....\nDon't Dissapoint Us, See you soon\n"; else return "INVALID COMMAND. TYPE 'help'\n";},
+      clear:()=>{terminal.innerText="";return"";}
+    };
 
-        terminal.innerText += `\n> ${cmd}\n`;
-
-        const response = commands[cmd] ? commands[cmd]() : "INVALID COMMAND. TYPE 'help'\n";
-        input.value = '';
-        if (cmd === 'clear') {
-          input.disabled = false;
-          return;
+    /* ====== main input handler ====== */
+    input.addEventListener("keydown",async e=>{
+      /* ---------- PASSWORD ENTRY MODE ---------- */
+      if(awaitingPassword){
+        if(e.key==="Enter"){
+          const pass=maskedInput; maskedInput=""; terminal.innerText+="*".repeat(pass.length)+"\n";
+          input.value=""; input.disabled=true;
+          const hash=await sha256Hex(pass);
+          console.log("Password hash:",hash); // For debugging, remove in production
+          console.log("Password inserted:",pass); // For debugging, remove in production
+          if(hash===correctPasswordHash){
+            isLoggedIn=true; awaitingPassword=false; failedAttempts=0;
+            typeOut("ACCESS GRANTED\nWELCOME, ████████████\n",10,()=>{input.disabled=false;input.focus();});
+          }else if(hash===otherHash){
+            isLoggedIn=true; awaitingPassword=false; failedAttempts=0; _isLoggedIn=true;
+            typeOut("UNEXPECTED USER: ERROR: 0x2f6d6e742f626c61636b626f78\n",10,()=>{input.disabled=false;input.focus();typeOut("WELCOME, [DELETED USER]\n",20,()=>{input.disabled=false;input.focus();});});
+          }else{
+            failedAttempts++; awaitingPassword=(failedAttempts<maxAttempts);
+            const msg=failedAttempts>=maxAttempts?"TOO MANY FAILED ATTEMPTS — TERMINAL LOCKED\n":"INCORRECT PASSWORD\n";
+            typeOut(msg,10,()=>{input.disabled=false;input.focus();});
+          }
+        }else if(e.key==="Backspace"){
+          maskedInput=maskedInput.slice(0,-1); setTimeout(()=>input.value="*".repeat(maskedInput.length),0);
+        }else if(e.key.length===1){
+          maskedInput+=e.key; setTimeout(()=>input.value="*".repeat(maskedInput.length),0);
         }
-
-        typeOut(response + '\n', 10, () => {
-          input.disabled = false;
-          input.focus();
-        });
+        e.preventDefault(); return;
       }
+
+      /* ---------- NORMAL MODE ---------- */
+      if(e.key!=="Enter")return;
+
+      const entry=input.value.trim();
+      input.value=""; input.disabled=true;
+      terminal.innerText+=`\n> ${entry}\n`;
+
+      /* pre-auth commands */
+      if(entry==="login"){
+        if(isLoggedIn)        {typeOut("ALREADY LOGGED IN\n",10,()=>{input.disabled=false;input.focus();});}
+        else if(failedAttempts>=maxAttempts){typeOut("TERMINAL LOCKED\n",10,()=>{input.disabled=false;input.focus();});}
+        else{awaitingPassword=true; maskedInput=""; typeOut("ENTER PASSWORD: ",10,()=>{input.disabled=false;input.focus();});}
+        return;
+      }
+      if(entry==="level"&&!isLoggedIn){
+        typeOut("ACCESS LEVEL: 0\nUNAUTHORIZED\n",10,()=>{input.disabled=false;input.focus();}); return;
+      }
+      if(!isLoggedIn && !["help","clear"].includes(entry.split(" ")[0])){
+        typeOut("ACCESS DENIED.\n",10,()=>{input.disabled=false;input.focus();}); return;
+      }
+
+      if(_isLoggedIn && entry==="logout"){
+        typeOut("LOGOUT SUCCESSFUL\nSEE YOU SOON, [DATA EXPUNGED]\n",10,()=>{input.disabled=false;input.focus();}); return;
+      }
+
+      if(_isLoggedIn && entry==="hello"){
+        typeOut("No secrets here ;)",10,()=>{input.disabled=false;input.focus();}); return;
+      }
+
+      /* command parsing with args */
+      const [cmd,...args]=entry.split(" ");
+      let output;
+      switch(cmd){
+        case "ls":
+            const dir = args[0];
+            const fullVfs = _isLoggedIn ? {...vfs, ...secretVfs} : vfs;
+            if (dir === "/mnt/networkshare/scpfs" || dir === "/mnt/networkshare/scpfs/") {
+                output = Object.keys(fullVfs)
+                .filter(p => p.startsWith("/mnt/networkshare/scpfs/"))
+                .map(p => p.replace("/mnt/networkshare/scpfs/", ""))
+                .join("\n") || "";
+            } else if (dir === "/mnt/blackbox" && _isLoggedIn) {
+                output = Object.keys(secretVfs).map(p => p.replace("/mnt/blackbox/", "")).join("\n");
+            } else {
+                output = "ACCESS RESTRICTED OR DIRECTORY NOT FOUND\n";
+            }
+            break;
+
+        case "read":
+            const path = args[0];
+            const combinedVfs = _isLoggedIn ? {...vfs, ...secretVfs} : vfs;
+            output = path?.startsWith("/mnt/") ? (combinedVfs[path] || "FILE NOT FOUND\n") : "ACCESS RESTRICTED\n";
+            break;
+        
+        case "decode":
+            if (!_isLoggedIn) {
+                output = "ACCESS DENIED.\n";
+            } else {
+                const encoded = args.join(" ");
+                try {
+                const decoded = atob(encoded);
+                output = `DECODED TEXT:\n${decoded}`;
+                } catch {
+                output = "INVALID BASE64 INPUT";
+                }
+            }
+            break;
+
+        case"view":
+          if(args[0]==="SCP-049") output="SCP-049 FILE ACCESS GRANTED\nCLASS: Euclid\nDESCRIPTION: Humanoid entity resembling a plague doctor. Capable of speech and obsessed with 'curing' the Pestilence.\n";
+          else output="SCP FILE NOT FOUND\n";
+          break;
+        default:
+          output=basicCmds[cmd]?basicCmds[cmd]():"INVALID COMMAND. TYPE 'help'\n";
+      }
+
+      typeOut(output+"\n",10,()=>{input.disabled=false;input.focus();});
     });
 
-    // Auto scroll bottom on resize
-    window.addEventListener('resize', () => {
-      terminal.scrollTop = terminal.scrollHeight;
-    });
+    /* keep focus */
+    document.addEventListener("click",()=>input.focus());
   </script>
 </body>
 </html>
