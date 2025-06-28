@@ -153,7 +153,7 @@
                         list.innerHTML = '';
                         data.forEach(entry => {
                             const li = document.createElement('li');
-                            li.textContent = `${entry.player_name}: Score: ${entry.score.toFixed(2)}, Time: ${(entry.time_taken / 1000).toFixed(2)}s, Attempts: ${entry.attempts}, Hints: ${entry.Hints}`;
+                            li.textContent = `${entry.player_name}: Score: ${entry.score.toFixed(2)}, Time: ${(entry.time_taken / 1000).toFixed(2)}s, Attempts: ${entry.attempts}, Hints: ${entry.hints}`;
                             list.appendChild(li);
                         });
                     });
