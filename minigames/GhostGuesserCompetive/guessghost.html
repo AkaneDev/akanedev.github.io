@@ -6,7 +6,6 @@
     <title>Ghost Guessing</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="../../styles.css">
-    <script src="/imports/supabase-js2.js"></script>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; object-src 'none';">
     <link rel="stylesheet" href="guessghost.css">
     <script defer src="../../script.js"></script>
@@ -52,9 +51,7 @@
         </div>
 
         <script type="module">
-            const { createClient } = supabase;
             let devmodetrue = false;
-            console.log("Supabase loaded");
             let currentGhost;
             let devmodewasenabled = false;
             window.disable_ = function() {
@@ -77,9 +74,6 @@
             };
             let currentevidence = [];
             let startTime = Date.now();
-            // const supabase = 'fuck'
-            // const { createClient } = supabase;
-            const _supabase = createClient('https://xvfchdtczhlnubbrncnk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2ZmNoZHRjemhsbnViYnJuY25rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMDIyMzIsImV4cCI6MjA2MTU3ODIzMn0.PfulBTli6Dcq8xbLb7-bVCt0AYVgVGLkckMNUGv9u5w');
             const BlackListedWords = ["bitch boy", "your mom", "you're mom", "ur mom", "ur mum", "you're mum", "your mum", "youre mom", "youre mum", "straight", "SEX", "gay"]
             const MiniGameghosts = [
             { name: 'Spirit', evidence: ['EMF Level 5', 'Spirit Box', 'Ghost Writing'] },
@@ -133,20 +127,6 @@
                 ghostlist.innerHTML = listghost.join('<br>');
             }
 
-            function calculateScore(timeTaken, attempts, hints) {
-                // Ensure all weights are positive to contribute to a positive score
-                const timeWeight = 1 / (timeTaken / 1000 + 1); // Invert time, add 1 to avoid division by zero
-                const attemptWeight = 100 / (attempts + 1);    // Invert attempts, add 1 to avoid division by zero
-                const hintWeight = 50 / (hints + 1);       // Invert hints, add 1 to avoid division by zero
-
-                const score = timeWeight + attemptWeight + hintWeight;
-                if (devmodewasenabled) {
-                    console.log("DevMode")
-                    return 0;
-                }
-                return score;
-            }
-
             function setCookie(name, value, days = 365) {
                 const date = new Date();
                 date.setTime(date.getTime() + (days*24*60*60*1000)); // expires in N days
@@ -166,11 +146,9 @@
 
 
             function fetchLeaderboard() {
-                _supabase.from('leaderboard')
-                    .select('*')
-                    .order('score', { ascending: false }) // Order by the new score column
-                    .limit(10)
-                    .then(({ data }) => {
+                fetch("https://phasmoapi.akanedev.au/scores")
+                    .then(res => res.json())
+                    .then(data => {
                         const list = document.getElementById('leaderboard-list');
                         list.innerHTML = '';
                         data.forEach(entry => {
@@ -276,26 +254,32 @@
                     if (playerName) {
                        
                         playerName = playerName.toLocaleLowerCase();
-                        let score = calculateScore(timeTaken, totalAttempts, currentevidence.length);
 
                         if (devmodewasenabled) {
                             playerName = playerName + "(DEVELOPER MODE)"
                         }
                        
 
-                        _supabase.from('leaderboard').upsert({
-                            player_name: playerName,
-                            time_taken: timeTaken,
-                            attempts: totalAttempts,
-                            Hints: currentevidence.length,
-                            score: score  // Store the calculated score
-                        }, {
-                            onConflict: ['player_name'] // tells Supabase what to match on
-                        }).then(response => {
-                            console.log("Submitted to leaderboard:", response);
-                            // Optionally refresh leaderboard display
+                        fetch("https://phasmoapi.akanedev.au/scores", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                player_name: playerName,
+                                time_taken: timeTaken,
+                                attempts: totalAttempts,
+                                hints: currentevidence.length,
+                                devmodewasenabled: devmodewasenabled
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log("Submitted to leaderboard:", data);
                             fetchLeaderboard();
                         });
+                    } else {
+                        console.error("Player name is not set.");
                     }
                     message = `Correct! The ghost is ${currentGhost.name}.`;
                     evidence = `Evidence: ${currentGhost.evidence.join(', ')}`;
