@@ -31,7 +31,7 @@
     let _isLoggedIn     = false; // for initial login check
     let awaitingPassword  = false;
     const correctPasswordHash = "b728da4767ae24798b18ca6c287183ba48584b9a7146f89a5c4f3b26b8124cf0";
-    const otherHash = "7011e9afbd5f5cfa3719618f3c8d174b5cf978879fdab12e43328cf020eb4fd0";
+    const otherHash = "db6db6a6d73863d7745eee40fbe64977d6589fb60f7c787f70c385d92a448360";
     let failedAttempts    = 0;
     const maxAttempts     = 3;
     let maskedInput       = "";
@@ -69,7 +69,7 @@ logout                - End session
 list                  - List SCP files
 view SCP-049          - View SCP file
 ls /mnt/scpfs         - List files in mounted read-only drive
-read <path>           - Read file in /mnt/scpfs (RO)
+read <path>           - Read file in /mnt/networkshare/scpfs (RO)
 level                 - Show current access level
 clear                 - Clear terminal`,
       list: ()=>"SCP-049 - The Plague Doctor\nSCP-173 - The Sculpture\nSCP-682 - Hard to Destroy Reptile\nSCP-███ - Redacted",
