@@ -133,6 +133,20 @@ body {
     text-align: center;
 }
 
+#new-thingannouncement {
+    text-align: center;
+}
+
+.new-announcement-card {
+    background: rgb(107, 107, 107);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 600px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
 .project-list {
     display: flex;
     justify-content: center;
