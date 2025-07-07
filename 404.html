@@ -73,7 +73,7 @@ read <path>           - Read file in /mnt/networkshare/scpfs (RO)
 level                 - Show current access level
 clear                 - Clear terminal`,
       list: ()=>"SCP-049 - The Plague Doctor\nSCP-173 - The Sculpture\nSCP-682 - Hard to Destroy Reptile\nSCP-███ - Redacted",
-      level:()=> "ACCESS LEVEL: 3\nAUTHORIZED PERSONNEL ONLY",
+      level:()=> {if(isLoggedIn) return "ACCESS LEVEL: 3\nAUTHORIZED PERSONNEL ONLY"; else if (_isLoggedIn) return "ACCESS LEVEL: 5\nADMINISTRATOR USER"; else return "ACCESS LEVEL: 0\nUNAUTHORIZED\n";},
       logout:()=>{isLoggedIn=false;return"LOGOUT SUCCESSFUL\nSEE YOU SOON, ████████████";},
       hello: ()=>{if(isLoggedIn) return "hello, █████████████, We have been Observing you.....\nDon't Dissapoint Us, See you soon\n"; else return "INVALID COMMAND. TYPE 'help'\n";},
       clear:()=>{terminal.innerText="";return"";}
