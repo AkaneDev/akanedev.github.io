@@ -58,7 +58,7 @@
                 document.getElementById('version').innerHTML = `<small>Version: ${data.version} — ${data.description}</small>`;
             })
             .catch(() => {
-                document.getElementById('version').innerHTML = '<small>Failed to load version info</small>';
+                document.getElementById('version').innerHTML = '<small>Failed to load version info (Akane could be playing n64 or the device used to host it is dead)</small>';
             });
 
             // Fetch and show changelog info
@@ -73,7 +73,7 @@
                 }
             })
             .catch(() => {
-                document.getElementById('changelog').innerHTML = '<small>Failed to load changelog</small>';
+                document.getElementById('changelog').innerHTML = '<small>Failed to load changelog (Akane could be playing n64 or the device used to host it is dead)</small>';
             });
 
             let devmodetrue = false;
@@ -181,6 +181,11 @@
                             li.textContent = `${entry.player_name}: Score: ${entry.score.toFixed(2)}, Time: ${(entry.time_taken / 1000).toFixed(2)}s, Attempts: ${entry.attempts}, Hints: ${entry.hints}`;
                             list.appendChild(li);
                         });
+                    })
+                    .catch(() => {
+                        const li = document.createElement('li');
+                        li.textContent = `Hey Scores cannot be gotten, Akane could be playing n64 or the device used to host it has died`;
+                        list.appendChild(li);
                     });
             }
 
