@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function fetchLiveStatus() {
       try {
-        const res = await fetch("https://live-checker.akane-4f4.workers.dev/");
+        const res = await fetch("https://api.akanedev.au/livechecker/twitch");
         const data = await res.json();
 
         const list = document.getElementById("streamlist");
@@ -68,9 +68,17 @@ document.addEventListener("DOMContentLoaded", function () {
             a.innerHTML = `<h4>${user.user}</h4>
             <p>Status: ${user.live ? "LIVE" : "OFFLINE"}</p>`
             a.className = `project-card`
-          list.appendChild(a);
+            list.appendChild(a);
         });
       } catch (err) {
+        const list = document.getElementById("streamlist");
+        list.innerHTML = ""; // Clear previous content
+
+        const a = document.createElement("div");
+        a.innerHTML = `<h4>Please Wait for me to update our backend</h4>
+        <p>Status: ERR</p>`
+        a.className = `project-card`
+        list.appendChild(a);
         console.error("Failed to fetch live status:", err);
       }
     }
