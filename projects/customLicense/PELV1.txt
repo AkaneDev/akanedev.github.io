@@ -1,4 +1,5 @@
 People’s Engine License (PEL) v1.0
+- Original License Author AkaneDev
 Preamble
 This license is designed to keep the engine source code free, open, and modifiable by anyone — forever.
 At the same time, it respects creators’ freedom to license their own games and content however they wish.
