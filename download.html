@@ -15,8 +15,8 @@
             const params = new URLSearchParams(window.location.search);
             const file = params.get('file');
             if (file) {
-                // Basic validation: only allow safe filenames (no slashes, etc.)
-                if (/^[\w\-.]+$/.test(file)) {
+                // Allow subfolders, but block ".." and absolute paths
+                if (/^(?!.*\.\.)(?!\/)[\w\-./]+$/.test(file)) {
                     window.location.href = `/cdn/${encodeURIComponent(file)}`;
                 } else {
                     document.getElementById('download-message').textContent = 'Invalid file parameter.';
