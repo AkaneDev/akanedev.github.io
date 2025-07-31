@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Download</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <link rel="stylesheet" href="/styles.css">
+    <script src='main.js'></script>
+    <script defer src="/script.js"></script>
+    <script>
+        // On page load, check for ?file= param and redirect to /cdn/
+        window.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const file = params.get('file');
+            if (file) {
+                // Basic validation: only allow safe filenames (no slashes, etc.)
+                if (/^[\w\-.]+$/.test(file)) {
+                    window.location.href = `/cdn/${encodeURIComponent(file)}`;
+                } else {
+                    document.getElementById('download-message').textContent = 'Invalid file parameter.';
+                }
+            }
+        });
+    </script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <h1>Download</h1>
+        <p id="download-message">Preparing your download...</p>
+    </section>
+</body>
+</html>
