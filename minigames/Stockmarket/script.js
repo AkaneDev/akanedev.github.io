@@ -1,10 +1,23 @@
 // --- Utilities ---
-function setCookie(name, value, days = 365) {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+function setStorage(name, value) {
+  try {
+    localStorage.setItem(name, value);
+  } catch (e) {
+    // Fallback to cookies if localStorage fails
+    const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+  }
 }
 
-function getCookie(name) {
+function getStorage(name) {
+  try {
+    const value = localStorage.getItem(name);
+    if (value !== null) return value;
+  } catch (e) {
+    // Fallback to cookies
+  }
+  
+  // Cookie fallback
   return document.cookie.split('; ').reduce((r, v) => {
     const parts = v.split('=');
     return parts[0] === name ? decodeURIComponent(parts[1]) : r;
@@ -44,12 +57,12 @@ function getPrice(symbol, isoTime) {
 }
 
 // --- Stocks ---
-const STOCKS = ["AAPL", "TSLA", "AMZN", "GOOG", "MSFT", "NVDA", "NFLX", "SOULS"];
+const STOCKS = ["AAPL", "TSLA", "AMZN", "GOOG", "MSFT", "NVDA", "NFLX", "SOULS", "OATS"];
 const TIME_SEGMENT = new Date().toISOString().slice(0, 16); // minutely
 
 // --- Player State ---
 function getState() {
-  const saved = getCookie("market-state");
+  const saved = getStorage("market-state");
   let state;
   if (saved) {
     state = JSON.parse(saved);
@@ -68,12 +81,12 @@ function getState() {
     };
     STOCKS.forEach(s => state.holdings[s] = []);
   }
-  setCookie("market-state", JSON.stringify(state));
+  setStorage("market-state", JSON.stringify(state));
   return state;
 }
 
 function saveState(state) {
-  setCookie("market-state", JSON.stringify(state));
+  setStorage("market-state", JSON.stringify(state));
 }
 
 function buy(symbol, price, qty = 1) {
@@ -484,7 +497,7 @@ function redeemGiftCode() {
   }
 
   // Check if code was already redeemed
-  const redeemedCodes = JSON.parse(getCookie('redeemed-gifts') || '[]');
+  const redeemedCodes = JSON.parse(getStorage('redeemed-gifts') || '[]');
   if (redeemedCodes.includes(code)) {
     resultDiv.innerHTML = '<span style="color:#ff8080;">This gift code has already been redeemed!</span>';
     return;
@@ -513,7 +526,7 @@ function redeemGiftCode() {
 
   // Mark code as redeemed
   redeemedCodes.push(code);
-  setCookie('redeemed-gifts', JSON.stringify(redeemedCodes));
+  setStorage('redeemed-gifts', JSON.stringify(redeemedCodes));
 
   saveState(state);
   render();
