@@ -138,12 +138,10 @@ function render() {
       <td>${owned}</td>
       <td>${avgBought !== "-" ? "$" + avgBought : "-"}</td>
       <td>
-        <input type="number" id="buyQty-${symbol}" value="${qtyInputs[symbol]?.buy || 1}" min="1" style="width:50px;">
-        <button onclick="buy('${symbol}', ${price}, document.getElementById('buyQty-${symbol}').value)">Buy</button>
+        <button onclick="openTradeModal('buy','${symbol}')">Buy</button>
       </td>
       <td>
-        <input type="number" id="sellQty-${symbol}" value="${qtyInputs[symbol]?.sell || 1}" min="1" max="${owned}" style="width:50px;">
-        <button onclick="sell('${symbol}', ${price}, document.getElementById('sellQty-${symbol}').value)">Sell</button>
+        <button onclick="openTradeModal('sell','${symbol}')">Sell</button>
       </td>
       <td><button onclick="showGraph('${symbol}')">📈</button></td>
     `;
@@ -158,47 +156,59 @@ function getCurrentTimeSegment() {
 let chartInstance = null;
 
 function showGraph(symbol) {
-  const ctx = document.getElementById('stockGraph').getContext('2d');
-  const now = new Date();
-  const labels = [];
-  const data = [];
-  // Show last 60 minutes
-  for (let i = 59; i >= 0; i--) {
-    const t = new Date(now.getTime() - i * 60000);
-    const iso = t.toISOString().slice(0, 16);
-    labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0'));
-    data.push(getPrice(symbol, iso));
-  }
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: symbol + ' Price (last hour)',
-        data,
-        borderColor: '#00d2ff',
-        backgroundColor: 'rgba(0,210,255,0.1)',
-        tension: 0.2,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      scales: {
-        x: { display: true },
-        y: { display: true }
-      }
-    }
-  });
+  // Show modal first so canvas is visible and has correct size
   document.getElementById('graphModal').style.display = 'flex';
+
+  // Give the browser a moment to render the modal and canvas
+  setTimeout(() => {
+    const ctx = document.getElementById('stockGraph').getContext('2d');
+    const now = new Date();
+    const labels = [];
+    const data = [];
+    // Show last 60 minutes
+    for (let i = 59; i >= 0; i--) {
+      const t = new Date(now.getTime() - i * 60000);
+      const iso = t.toISOString().slice(0, 16);
+      labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0'));
+      data.push(getPrice(symbol, iso));
+    }
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: symbol + ' Price (last hour)',
+          data,
+          borderColor: '#00d2ff',
+          backgroundColor: 'rgba(0,210,255,0.1)',
+          tension: 0.2,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        scales: {
+          x: { display: true },
+          y: { display: true }
+        }
+      }
+    });
+  }, 50); // 50ms delay to ensure canvas is rendered
 }
 
 function closeGraph() {
+  if (chartInstance) {
+    chartInstance.destroy();
+    chartInstance = null;
+  }
   document.getElementById('graphModal').style.display = 'none';
 }
 
 // --- Dev Panel & Konami Code ---
-const KONAMI = [38,38,40,40,37,39,37,39,66,65];
+const KONAMI = [38,38,40,40,37,39,37,39];
 let konamiPos = 0;
 
 document.addEventListener('keydown', function(e) {
@@ -262,6 +272,18 @@ function devSetOwned(symbol) {
   openDevPanel();
 }
 
+function devReset() {
+  // Reset state to initial values
+  const state = {
+    money: 1000,
+    holdings: {}
+  };
+  STOCKS.forEach(s => state.holdings[s] = []);
+  saveState(state);
+  render();
+  openDevPanel();
+}
+
 // Initial load
 render();
 
@@ -269,3 +291,74 @@ render();
 // setInterval(render, 60 * 1000);
 // Optionally, update every second for a smoother UI (but prices only change each minute)
 setInterval(render, 1000);
+
+let tradeModalState = null;
+
+function openTradeModal(type, symbol) {
+  const state = getState();
+  const nowPrice = getPrice(symbol, getCurrentTimeSegment());
+  const max = type === "buy"
+    ? Math.floor(state.money / nowPrice)
+    : state.holdings[symbol].length;
+  tradeModalState = {
+    type,
+    symbol,
+    price: nowPrice,
+    max
+  };
+  document.getElementById('tradeTitle').textContent =
+    (type === "buy" ? "Buy " : "Sell ") + symbol;
+  document.getElementById('tradeInfo').innerHTML =
+    `Price: <b>$${nowPrice}</b><br>` +
+    (type === "buy"
+      ? `You can afford: <b>${max}</b>`
+      : `You own: <b>${max}</b>`);
+  document.getElementById('tradeAmount').value = max > 0 ? 1 : 0;
+  document.getElementById('tradeAmount').min = max > 0 ? 1 : 0;
+  document.getElementById('tradeAmount').max = max;
+  document.getElementById('tradeError').textContent = "";
+  document.getElementById('tradeModal').style.display = 'flex';
+
+  // Set confirm button handler
+  document.getElementById('tradeConfirmBtn').onclick = function() {
+    const amt = Math.max(1, Math.min(max, parseInt(document.getElementById('tradeAmount').value) || 0));
+    if (amt < 1 || amt > max) {
+      document.getElementById('tradeError').textContent = "Invalid amount.";
+      return;
+    }
+    if (type === "buy") {
+      doBuy(symbol, nowPrice, amt);
+    } else {
+      doSell(symbol, nowPrice, amt);
+    }
+    closeTradeModal();
+  };
+}
+
+function closeTradeModal() {
+  document.getElementById('tradeModal').style.display = 'none';
+  tradeModalState = null;
+}
+
+function doBuy(symbol, price, qty) {
+  const state = getState();
+  const totalCost = price * qty;
+  if (state.money >= totalCost) {
+    state.money -= totalCost;
+    for (let i = 0; i < qty; i++) {
+      state.holdings[symbol].push(price);
+    }
+    saveState(state);
+    render();
+  }
+}
+
+function doSell(symbol, price, qty) {
+  const state = getState();
+  if (state.holdings[symbol].length >= qty) {
+    state.money += price * qty;
+    state.holdings[symbol].splice(0, qty);
+    saveState(state);
+    render();
+  }
+}
