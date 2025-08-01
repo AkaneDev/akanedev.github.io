@@ -16,7 +16,7 @@ function getStorage(name) {
   } catch (e) {
     // Fallback to cookies
   }
-  
+
   // Cookie fallback
   return document.cookie.split('; ').reduce((r, v) => {
     const parts = v.split('=');
@@ -118,6 +118,20 @@ function sell(symbol, price, qty = 1) {
   }
 }
 
+// --- Net Worth Calculation ---
+function calculateNetWorth(state) {
+  let stockValue = 0;
+  STOCKS.forEach(symbol => {
+    const currentPrice = getPrice(symbol, getCurrentTimeSegment());
+    stockValue += state.holdings[symbol].length * currentPrice;
+  });
+  return {
+    cash: state.money,
+    stockValue: stockValue,
+    netWorth: state.money + stockValue
+  };
+}
+
 // --- Render ---
 function render() {
   const state = getState();
@@ -134,6 +148,14 @@ function render() {
   });
 
   document.getElementById("wallet").textContent = `💰 Balance: $${state.money.toFixed(2)}`;
+
+  // Update wallet display with net worth
+  const netWorthData = calculateNetWorth(state);
+  document.getElementById("wallet").innerHTML = `
+    💰 Balance: $${netWorthData.cash.toFixed(2)}<br>
+    📈 Stock Value: $${netWorthData.stockValue.toFixed(2)}<br>
+    💎 <strong>Net Worth: $${netWorthData.netWorth.toFixed(2)}</strong>
+  `;
 
   const tbody = document.getElementById("stockTable");
   tbody.innerHTML = "";
