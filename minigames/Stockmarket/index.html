@@ -29,6 +29,17 @@
       <canvas id="stockGraph" width="400" height="200"></canvas>
     </div>
   </div>
+  <div id="devPanel" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000c;z-index:2000;align-items:center;justify-content:center;">
+    <div style="background:#222;padding:30px 20px 20px 20px;border-radius:12px;min-width:320px;max-width:90vw;position:relative;">
+      <button onclick="closeDevPanel()" style="position:absolute;top:10px;right:10px;">✖</button>
+      <h2 style="color:#00d2ff;margin-top:0;">Dev Panel</h2>
+      <div>
+        <label>Money: <input type="number" id="devMoney" style="width:100px;"></label>
+        <button onclick="devSetMoney()">Set</button>
+      </div>
+      <div id="devStocks" style="margin-top:20px;"></div>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>

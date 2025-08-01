@@ -197,6 +197,71 @@ function closeGraph() {
   document.getElementById('graphModal').style.display = 'none';
 }
 
+// --- Dev Panel & Konami Code ---
+const KONAMI = [38,38,40,40,37,39,37,39,66,65];
+let konamiPos = 0;
+
+document.addEventListener('keydown', function(e) {
+  if (e.keyCode === KONAMI[konamiPos]) {
+    konamiPos++;
+    if (konamiPos === KONAMI.length) {
+      openDevPanel();
+      konamiPos = 0;
+    }
+  } else {
+    konamiPos = 0;
+  }
+});
+
+function openDevPanel() {
+  const state = getState();
+  document.getElementById('devPanel').style.display = 'flex';
+  document.getElementById('devMoney').value = state.money;
+
+  // Build stock controls
+  let html = '<table style="width:100%;color:#fff;"><tr><th>Stock</th><th>Owned</th><th>Set Owned</th></tr>';
+  for (const symbol of STOCKS) {
+    html += `<tr>
+      <td>${symbol}</td>
+      <td id="devOwned-${symbol}">${state.holdings[symbol].length}</td>
+      <td>
+        <input type="number" id="devSet-${symbol}" value="${state.holdings[symbol].length}" min="0" style="width:60px;">
+        <button onclick="devSetOwned('${symbol}')">Set</button>
+      </td>
+    </tr>`;
+  }
+  html += '</table>';
+  document.getElementById('devStocks').innerHTML = html;
+}
+
+function closeDevPanel() {
+  document.getElementById('devPanel').style.display = 'none';
+}
+
+function devSetMoney() {
+  const state = getState();
+  state.money = parseFloat(document.getElementById('devMoney').value) || 0;
+  saveState(state);
+  render();
+  openDevPanel();
+}
+
+function devSetOwned(symbol) {
+  const state = getState();
+  const qty = Math.max(0, parseInt(document.getElementById('devSet-' + symbol).value) || 0);
+  const current = state.holdings[symbol].length;
+  if (qty > current) {
+    // Add at current price
+    const price = getPrice(symbol, getCurrentTimeSegment());
+    for (let i = 0; i < qty - current; i++) state.holdings[symbol].push(price);
+  } else if (qty < current) {
+    state.holdings[symbol].splice(0, current - qty);
+  }
+  saveState(state);
+  render();
+  openDevPanel();
+}
+
 // Initial load
 render();
 
