@@ -24,6 +24,33 @@ function getStorage(name) {
   }, '');
 }
 
+// --- Stock-specific storage utilities ---
+function getStockHoldings(symbol) {
+  const stockData = getStorage(`market-stock-${symbol}`);
+  return stockData ? JSON.parse(stockData) : [];
+}
+
+function setStockHoldings(symbol, holdings) {
+  setStorage(`market-stock-${symbol}`, JSON.stringify(holdings));
+}
+
+function cleanupOldStockData() {
+  // Remove storage entries for stocks that no longer exist
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('market-stock-')) {
+        const symbol = key.replace('market-stock-', '');
+        if (!STOCKS.includes(symbol)) {
+          localStorage.removeItem(key);
+        }
+      }
+    });
+  } catch (e) {
+    // Ignore errors in cleanup
+  }
+}
+
 // --- PRNG ---
 function mulberry32(a) {
   return function () {
@@ -62,47 +89,93 @@ const TIME_SEGMENT = new Date().toISOString().slice(0, 16); // minutely
 
 // --- Player State ---
 function getState() {
-  const saved = getStorage("market-state");
+  const savedMain = getStorage("market-main");
   let state;
   let isReturningPlayer = false;
   
-  if (saved) {
-    state = JSON.parse(saved);
+  if (savedMain) {
+    // Load main state
+    const mainState = JSON.parse(savedMain);
     isReturningPlayer = true;
     
-    // Add new stocks with [] if missing
-    STOCKS.forEach(s => {
-      if (!(s in state.holdings)) state.holdings[s] = [];
-    });
-    // Remove stocks that no longer exist
-    Object.keys(state.holdings).forEach(s => {
-      if (!STOCKS.includes(s)) delete state.holdings[s];
-    });
-    // Add lastInterest timestamp if missing (set to current time for existing players)
-    if (!state.lastInterest) {
-      state.lastInterest = Date.now();
-    }
-  } else {
-    // New player - set lastInterest to current time (no retroactive interest)
     state = {
-      money: 1000,
-      holdings: {},
-      lastInterest: Date.now()
+      money: mainState.money || 1000,
+      lastInterest: mainState.lastInterest || Date.now(),
+      holdings: {}
     };
-    STOCKS.forEach(s => state.holdings[s] = []);
+    
+    // Load each stock separately
+    STOCKS.forEach(symbol => {
+      const stockData = getStorage(`market-stock-${symbol}`);
+      if (stockData) {
+        state.holdings[symbol] = JSON.parse(stockData);
+      } else {
+        state.holdings[symbol] = [];
+      }
+    });
+    
+  } else {
+    // Check for legacy storage format
+    const legacySaved = getStorage("market-state");
+    if (legacySaved) {
+      // Migrate from old format
+      const legacyState = JSON.parse(legacySaved);
+      isReturningPlayer = true;
+      
+      state = {
+        money: legacyState.money || 1000,
+        lastInterest: legacyState.lastInterest || Date.now(),
+        holdings: {}
+      };
+      
+      // Migrate stock data
+      STOCKS.forEach(symbol => {
+        state.holdings[symbol] = legacyState.holdings[symbol] || [];
+      });
+      
+      // Save in new format and remove old
+      saveState(state);
+      try {
+        localStorage.removeItem("market-state");
+      } catch (e) {
+        // Ignore errors when removing legacy data
+      }
+      
+    } else {
+      // New player - set lastInterest to current time (no retroactive interest)
+      state = {
+        money: 1000,
+        holdings: {},
+        lastInterest: Date.now()
+      };
+      STOCKS.forEach(s => state.holdings[s] = []);
+    }
   }
+
+  // Clean up old stock data
+  cleanupOldStockData();
 
   // Only check for interest payment if this is a returning player
   if (isReturningPlayer) {
     state = checkAndPayInterest(state);
   }
 
-  setStorage("market-state", JSON.stringify(state));
+  saveState(state);
   return state;
 }
 
 function saveState(state) {
-  setStorage("market-state", JSON.stringify(state));
+  // Save main state (money, lastInterest)
+  const mainState = {
+    money: state.money,
+    lastInterest: state.lastInterest
+  };
+  setStorage("market-main", JSON.stringify(mainState));
+  
+  // Save each stock separately
+  STOCKS.forEach(symbol => {
+    setStorage(`market-stock-${symbol}`, JSON.stringify(state.holdings[symbol] || []));
+  });
 }
 
 // --- Interest System ---
@@ -279,7 +352,7 @@ function render() {
   const nextInterestTime = getNextInterestTime(state);
 
   document.getElementById("wallet").innerHTML = `
-    � Balaonce: $${netWorthData.cash.toFixed(2)}<br>
+    💰 Balance: $${netWorthData.cash.toFixed(2)}<br>
     📈 Stock Value: $${netWorthData.stockValue.toFixed(2)}<br>
     💎 <strong>Net Worth: $${netWorthData.netWorth.toFixed(2)}</strong><br>
     🏦 Next Interest: ${nextInterestTime}
