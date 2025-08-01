@@ -64,8 +64,12 @@ const TIME_SEGMENT = new Date().toISOString().slice(0, 16); // minutely
 function getState() {
   const saved = getStorage("market-state");
   let state;
+  let isReturningPlayer = false;
+  
   if (saved) {
     state = JSON.parse(saved);
+    isReturningPlayer = true;
+    
     // Add new stocks with [] if missing
     STOCKS.forEach(s => {
       if (!(s in state.holdings)) state.holdings[s] = [];
@@ -74,19 +78,140 @@ function getState() {
     Object.keys(state.holdings).forEach(s => {
       if (!STOCKS.includes(s)) delete state.holdings[s];
     });
+    // Add lastInterest timestamp if missing (set to current time for existing players)
+    if (!state.lastInterest) {
+      state.lastInterest = Date.now();
+    }
   } else {
+    // New player - set lastInterest to current time (no retroactive interest)
     state = {
       money: 1000,
-      holdings: {}
+      holdings: {},
+      lastInterest: Date.now()
     };
     STOCKS.forEach(s => state.holdings[s] = []);
   }
+
+  // Only check for interest payment if this is a returning player
+  if (isReturningPlayer) {
+    state = checkAndPayInterest(state);
+  }
+
   setStorage("market-state", JSON.stringify(state));
   return state;
 }
 
 function saveState(state) {
   setStorage("market-state", JSON.stringify(state));
+}
+
+// --- Interest System ---
+function checkAndPayInterest(state) {
+  const now = Date.now();
+  const threeHours = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+  const interestRate = 0.02; // 2% interest every 3 hours
+  
+  // Fixed start date: 10/10/2010 @ 12:00am UTC
+  const startDate = new Date('2010-10-10T00:00:00.000Z').getTime();
+  
+  // Calculate total periods since start date
+  const totalPeriodsSinceStart = Math.floor((now - startDate) / threeHours);
+  
+  // Calculate periods since last interest payment
+  const lastInterestPeriod = Math.floor((state.lastInterest - startDate) / threeHours);
+  const periodsToProcess = totalPeriodsSinceStart - lastInterestPeriod;
+  
+  if (periodsToProcess > 0 && state.money > 0) {
+    // Calculate compound interest for offline periods
+    let totalInterestEarned = 0;
+    let currentMoney = state.money;
+    
+    for (let i = 0; i < periodsToProcess; i++) {
+      const periodInterest = currentMoney * interestRate;
+      totalInterestEarned += periodInterest;
+      currentMoney += periodInterest;
+    }
+    
+    state.money = currentMoney;
+    state.lastInterest = startDate + (totalPeriodsSinceStart * threeHours);
+    
+    // Show interest notification
+    showInterestNotification(totalInterestEarned, periodsToProcess);
+  } else if (periodsToProcess > 0) {
+    // Update timestamp even if no money to earn interest on
+    state.lastInterest = startDate + (totalPeriodsSinceStart * threeHours);
+  }
+  
+  return state;
+}
+
+function getNextInterestTime(state) {
+  const now = Date.now();
+  const threeHours = 3 * 60 * 60 * 1000;
+  const startDate = new Date('2010-10-10T00:00:00.000Z').getTime();
+  
+  // Calculate the next interest payment time based on the fixed schedule
+  const totalPeriodsSinceStart = Math.floor((now - startDate) / threeHours);
+  const nextPaymentTime = startDate + ((totalPeriodsSinceStart + 1) * threeHours);
+  const timeUntil = nextPaymentTime - now;
+
+  if (timeUntil <= 0) {
+    return "Now!";
+  }
+
+  const hours = Math.floor(timeUntil / (60 * 60 * 1000));
+  const minutes = Math.floor((timeUntil % (60 * 60 * 1000)) / (60 * 1000));
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else {
+    return `${minutes}m`;
+  }
+}
+
+function showInterestNotification(amount, periods) {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4caf50;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    font-weight: bold;
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  notification.innerHTML = `
+    💰 Interest Earned!<br>
+    +$${amount.toFixed(2)} (${periods} period${periods > 1 ? 's' : ''})
+  `;
+
+  // Add CSS animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.body.appendChild(notification);
+
+  // Remove notification after 4 seconds
+  setTimeout(() => {
+    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 4000);
 }
 
 function buy(symbol, price, qty = 1) {
@@ -151,10 +276,13 @@ function render() {
 
   // Update wallet display with net worth
   const netWorthData = calculateNetWorth(state);
+  const nextInterestTime = getNextInterestTime(state);
+
   document.getElementById("wallet").innerHTML = `
-    💰 Balance: $${netWorthData.cash.toFixed(2)}<br>
+    � Balaonce: $${netWorthData.cash.toFixed(2)}<br>
     📈 Stock Value: $${netWorthData.stockValue.toFixed(2)}<br>
-    💎 <strong>Net Worth: $${netWorthData.netWorth.toFixed(2)}</strong>
+    💎 <strong>Net Worth: $${netWorthData.netWorth.toFixed(2)}</strong><br>
+    🏦 Next Interest: ${nextInterestTime}
   `;
 
   const tbody = document.getElementById("stockTable");
