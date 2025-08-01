@@ -57,7 +57,7 @@ function getPrice(symbol, isoTime) {
 }
 
 // --- Stocks ---
-const STOCKS = ["AAPL", "TSLA", "AMZN", "GOOG", "MSFT", "NVDA", "NFLX", "SOULS", "OATS"];
+const STOCKS = ["AAPL", "TSLA", "AMZN", "GOOG", "MSFT", "NVDA", "NFLX", "SOULS"];
 const TIME_SEGMENT = new Date().toISOString().slice(0, 16); // minutely
 
 // --- Player State ---
