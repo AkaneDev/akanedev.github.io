@@ -9,6 +9,7 @@
 <body>
   <h1>Virtual Stock Market Simulator</h1>
   <div id="wallet"></div>
+  <button onclick="openGiftModal()" style="margin:10px 0;background:#ff9800;">🎁 Gift Codes</button>
   <table>
     <thead>
       <tr>
@@ -49,6 +50,27 @@
       <label>Amount: <input type="number" id="tradeAmount" min="1" value="1" style="width:80px;"></label>
       <button id="tradeConfirmBtn" style="margin-left:10px;">Confirm</button>
       <div id="tradeError" style="color:#ff8080;margin-top:10px;"></div>
+    </div>
+  </div>
+  <div id="giftModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000a;z-index:1500;align-items:center;justify-content:center;">
+    <div style="background:#222;padding:24px 20px 20px 20px;border-radius:12px;min-width:400px;max-width:90vw;position:relative;">
+      <button onclick="closeGiftModal()" style="position:absolute;top:10px;right:10px;">✖</button>
+      <h2 style="color:#00d2ff;margin-top:0;">🎁 Gift Codes</h2>
+      <div style="margin-bottom:20px;">
+        <h3 style="color:#fff;margin-bottom:10px;">Create Gift Code</h3>
+        <div style="margin-bottom:10px;">
+          <label style="color:#fff;">Money: $<input type="number" id="giftMoney" min="0" value="100" style="width:80px;"></label>
+        </div>
+        <div id="giftStocks" style="margin-bottom:10px;"></div>
+        <button onclick="generateGiftCode()" style="background:#4caf50;">Generate Code</button>
+        <div id="generatedCode" style="margin-top:10px;word-break:break-all;"></div>
+      </div>
+      <div>
+        <h3 style="color:#fff;margin-bottom:10px;">Redeem Gift Code</h3>
+        <input type="text" id="redeemCode" placeholder="Enter gift code" style="width:250px;">
+        <button onclick="redeemGiftCode()" style="margin-left:10px;background:#2196f3;">Redeem</button>
+        <div id="redeemResult" style="margin-top:10px;"></div>
+      </div>
     </div>
   </div>
   <script src="script.js"></script>

@@ -44,7 +44,7 @@ function getPrice(symbol, isoTime) {
 }
 
 // --- Stocks ---
-const STOCKS = ["AAPL", "TSLA", "AMZN", "GOOG", "MSFT", "NVDA", "NFLX"];
+const STOCKS = ["AAPL", "TSLA", "AMZN", "GOOG", "MSFT", "NVDA", "NFLX", "SOULS"];
 const TIME_SEGMENT = new Date().toISOString().slice(0, 16); // minutely
 
 // --- Player State ---
@@ -208,10 +208,10 @@ function closeGraph() {
 }
 
 // --- Dev Panel & Konami Code ---
-const KONAMI = [38,38,40,40,37,39,37,39];
+const KONAMI = [38, 38, 40, 40, 37, 39, 37, 39];
 let konamiPos = 0;
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   if (e.keyCode === KONAMI[konamiPos]) {
     konamiPos++;
     if (konamiPos === KONAMI.length) {
@@ -235,7 +235,7 @@ function openDevPanel() {
       <td>${symbol}</td>
       <td id="devOwned-${symbol}">${state.holdings[symbol].length}</td>
       <td>
-        <input type="number" id="devSet-${symbol}" value="${state.holdings[symbol].length}" min="0" style="width:60px;">
+        <input type="number" id="devSet-${symbol}" value="${state.holdings[symbol].length}" style="width:60px;">
         <button onclick="devSetOwned('${symbol}')">Set</button>
       </td>
     </tr>`;
@@ -258,15 +258,20 @@ function devSetMoney() {
 
 function devSetOwned(symbol) {
   const state = getState();
-  const qty = Math.max(0, parseInt(document.getElementById('devSet-' + symbol).value) || 0);
+  const qty = parseInt(document.getElementById('devSet-' + symbol).value) || 0;
   const current = state.holdings[symbol].length;
-  if (qty > current) {
-    // Add at current price
+
+  // Clear current holdings first
+  state.holdings[symbol] = [];
+
+  // Add the desired quantity at current price
+  if (qty > 0) {
     const price = getPrice(symbol, getCurrentTimeSegment());
-    for (let i = 0; i < qty - current; i++) state.holdings[symbol].push(price);
-  } else if (qty < current) {
-    state.holdings[symbol].splice(0, current - qty);
+    for (let i = 0; i < qty; i++) {
+      state.holdings[symbol].push(price);
+    }
   }
+
   saveState(state);
   render();
   openDevPanel();
@@ -320,7 +325,7 @@ function openTradeModal(type, symbol) {
   document.getElementById('tradeModal').style.display = 'flex';
 
   // Set confirm button handler
-  document.getElementById('tradeConfirmBtn').onclick = function() {
+  document.getElementById('tradeConfirmBtn').onclick = function () {
     const amt = Math.max(1, Math.min(max, parseInt(document.getElementById('tradeAmount').value) || 0));
     if (amt < 1 || amt > max) {
       document.getElementById('tradeError').textContent = "Invalid amount.";
@@ -361,4 +366,188 @@ function doSell(symbol, price, qty) {
     saveState(state);
     render();
   }
+}
+
+// --- Gift Code System ---
+function encodeGift(giftData) {
+  // Simple base64 encoding with obfuscation
+  const json = JSON.stringify(giftData);
+  const encoded = btoa(json);
+  // Add prefix and some scrambling
+  return 'GIFT-' + encoded.split('').reverse().join('');
+}
+
+function decodeGift(giftCode) {
+  try {
+    if (!giftCode.startsWith('GIFT-')) return null;
+    const encoded = giftCode.substring(5).split('').reverse().join('');
+    const json = atob(encoded);
+    return JSON.parse(json);
+  } catch (e) {
+    return null;
+  }
+}
+
+function generateGiftCode() {
+  const money = parseFloat(document.getElementById('giftMoney').value) || 0;
+  const stocks = {};
+  const state = getState();
+
+  // Validate money
+  if (money > state.money) {
+    document.getElementById('generatedCode').innerHTML = '<span style="color:#ff8080;">Not enough money to create this gift!</span>';
+    return;
+  }
+
+  // Validate and collect stock quantities
+  let validationError = false;
+  STOCKS.forEach(symbol => {
+    const qty = parseInt(document.getElementById(`giftStock-${symbol}`).value) || 0;
+    if (qty > 0) {
+      if (qty > state.holdings[symbol].length) {
+        document.getElementById('generatedCode').innerHTML = `<span style="color:#ff8080;">Not enough ${symbol} shares! You only have ${state.holdings[symbol].length}</span>`;
+        validationError = true;
+        return;
+      }
+      stocks[symbol] = qty;
+    }
+  });
+
+  if (validationError) return;
+
+  if (money <= 0 && Object.keys(stocks).length === 0) {
+    document.getElementById('generatedCode').innerHTML = '<span style="color:#ff8080;">Gift must contain money or stocks!</span>';
+    return;
+  }
+
+  // Deduct money from player
+  if (money > 0) {
+    state.money -= money;
+  }
+
+  // Deduct stocks from player (remove oldest shares)
+  Object.entries(stocks).forEach(([symbol, qty]) => {
+    state.holdings[symbol].splice(0, qty);
+  });
+
+  // Save the updated state
+  saveState(state);
+  render();
+
+  const giftData = {
+    money,
+    stocks,
+    timestamp: Date.now()
+  };
+
+  const code = encodeGift(giftData);
+  document.getElementById('generatedCode').innerHTML = `
+    <div style="background:#333;padding:10px;border-radius:5px;margin-top:10px;">
+      <strong style="color:#4caf50;">Gift Code Generated!</strong><br>
+      <code style="color:#00d2ff;font-size:12px;">${code}</code><br>
+      <button onclick="copyToClipboard('${code}')" style="margin-top:5px;font-size:12px;">Copy</button>
+      <div style="color:#ffa726;font-size:11px;margin-top:5px;">
+        Deducted from your account: ${money > 0 ? `$${money.toFixed(2)}` : ''}${money > 0 && Object.keys(stocks).length > 0 ? ', ' : ''}${Object.entries(stocks).map(([s, q]) => `${q} ${s}`).join(', ')}
+      </div>
+    </div>
+  `;
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Code copied to clipboard!');
+  }).catch(() => {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    alert('Code copied to clipboard!');
+  });
+}
+
+function redeemGiftCode() {
+  const code = document.getElementById('redeemCode').value.trim();
+  const resultDiv = document.getElementById('redeemResult');
+
+  if (!code) {
+    resultDiv.innerHTML = '<span style="color:#ff8080;">Please enter a gift code!</span>';
+    return;
+  }
+
+  const giftData = decodeGift(code);
+  if (!giftData) {
+    resultDiv.innerHTML = '<span style="color:#ff8080;">Invalid gift code!</span>';
+    return;
+  }
+
+  // Check if code was already redeemed
+  const redeemedCodes = JSON.parse(getCookie('redeemed-gifts') || '[]');
+  if (redeemedCodes.includes(code)) {
+    resultDiv.innerHTML = '<span style="color:#ff8080;">This gift code has already been redeemed!</span>';
+    return;
+  }
+
+  // Apply the gift
+  const state = getState();
+  let rewardText = [];
+
+  if (giftData.money > 0) {
+    state.money += giftData.money;
+    rewardText.push(`$${giftData.money.toFixed(2)}`);
+  }
+
+  if (giftData.stocks) {
+    Object.entries(giftData.stocks).forEach(([symbol, qty]) => {
+      if (STOCKS.includes(symbol) && qty > 0) {
+        const currentPrice = getPrice(symbol, getCurrentTimeSegment());
+        for (let i = 0; i < qty; i++) {
+          state.holdings[symbol].push(currentPrice);
+        }
+        rewardText.push(`${qty} ${symbol} shares`);
+      }
+    });
+  }
+
+  // Mark code as redeemed
+  redeemedCodes.push(code);
+  setCookie('redeemed-gifts', JSON.stringify(redeemedCodes));
+
+  saveState(state);
+  render();
+
+  resultDiv.innerHTML = `
+    <div style="color:#4caf50;background:#1b5e20;padding:10px;border-radius:5px;">
+      <strong>🎉 Gift Redeemed!</strong><br>
+      You received: ${rewardText.join(', ')}
+    </div>
+  `;
+
+  // Clear the input
+  document.getElementById('redeemCode').value = '';
+}
+
+function openGiftModal() {
+  document.getElementById('giftModal').style.display = 'flex';
+
+  // Build stock quantity inputs
+  let stocksHtml = '';
+  STOCKS.forEach(symbol => {
+    stocksHtml += `
+      <div style="margin-bottom:5px;">
+        <label style="color:#fff;">${symbol}: <input type="number" id="giftStock-${symbol}" min="0" value="0" style="width:60px;"> shares</label>
+      </div>
+    `;
+  });
+  document.getElementById('giftStocks').innerHTML = stocksHtml;
+
+  // Clear previous results
+  document.getElementById('generatedCode').innerHTML = '';
+  document.getElementById('redeemResult').innerHTML = '';
+}
+
+function closeGiftModal() {
+  document.getElementById('giftModal').style.display = 'none';
 }
