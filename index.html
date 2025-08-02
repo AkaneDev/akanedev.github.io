@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AkaneDev</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mainsitestyle.css">
     <link rel="favicon" href="/favicon.ico">
     <script defer src="script.js"></script>
+    <script async custom-element="amp-ad" src="https://cdn.ampproject.org/v0/amp-ad-0.1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -36,146 +38,155 @@
             <a href="thedatabase/index.html">The Database - SCP inspired Story Database</a>
         </div>
     </nav>
-    
-    <header class="hero">
-        <h1>Welcome to AkaneDev's site</h1>
-        <p>Game Development | Tools | Open Source</p>
-        <div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">
-            <a href="https://buymeacoffee.com/akanedev" style="background:#ffdd57;padding:0.5em 1em;border-radius:6px;text-decoration:none;color:#000;font-weight:bold;">
-                ☕ Support Me on Ko-fi
-            </a>
-            <a href="https://discord.gg/Xt5QYasNrz" style="background:#5865F2;padding:0.5em 1em;border-radius:6px;text-decoration:none;color:#fff;font-weight:bold;">
-                💬 Join the Discord
-            </a>
-        </div>
-        <p>Please Be Patient - This Website Is Under Creation</p>
-    </header>
-    <section class="new-thingannouncement"> <!--TODO: Add a way to update this live-->
-        <div class="new-announcement-card">
-            <h2>New Article: <a href="/articles/OldOS/Windows8VLK.html">Windows 8 Volume Licensing Kit (VLK)</a></h2>
-        </div>
-    </section>
-        <!-- <div class="iframe-TopRight">
-        <iframe src="/frames/badge.md"></iframe>
-    </div> -->
-    <section id="projects">
-        <h2>Projects</h2>
-        <div class="project-list">
-            <a href="projects/JSON2LANG.html" class="project-card">
-                <h3>JSON TO LANG</h3>
-                <p>This is a tool that Simply converts a minecraft .JSON file into a .Lang file</p>
-                <p><small>written in python</small></p>
-            </a>
-            <a href="projects/Eyeblight.html" class="project-card">
-                <h3>Eyeblight</h3>
-                <p>Eyeblight is a 2D platformer where the protagonist's eyes grant supernatural abilities that affect gameplay in eerie and thrilling ways.</p>
-                <p><small>????? game</small></p>
-            </a>
-            <a href="projects/customLicense/PELV1.html" class="project-card">
-                <h3>People's Engine License V1.0</h3>
-                <p>A license designed to keep the engine source code free, open, and modifiable by anyone — forever.</p>
-                <p><small>Its a license, idk what else to say</small></p>
-            </a>
-            <a href="projects/panicengine.html" class="project-card">
-                <h3>Panic Engine - Custom Game Engine</h3>
-                <p>This is a Quite Simple Game Engine written to act and behave like a doom style Engine</p>
-                <p><small>written in C++ SDL2</small></p>
-            </a>
-            <a href="projects/impossibutton.html" class="project-card">
-                <h3>Impossabutton</h3>
-                <p>Impossabutton is a fun and challenging game where the goal is to click a button that constantly moves away from your cursor.</p>
-                <p><small>written in Python</small></p>
-            </a>
-            <a href="projects/HowLikely.html" class="project-card">
-                <h3>How Likely?</h3>
-                <p>Find out how secure your system is with this app.</p>
-                <p><small>written in Python</small></p>
-            </a>
-        </div>
-    </section>
+    <div class="main-content">
+        <header class="hero">
+            <h1>Welcome to AkaneDev's site</h1>
+            <p>Game Development | Tools | Open Source</p>
+            <div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">
+                <a href="https://buymeacoffee.com/akanedev" style="background:#ffdd57;padding:0.5em 1em;border-radius:6px;text-decoration:none;color:#000;font-weight:bold;">
+                    ☕ Support Me on Ko-fi
+                </a>
+                <a href="https://discord.gg/Xt5QYasNrz" style="background:#5865F2;padding:0.5em 1em;border-radius:6px;text-decoration:none;color:#fff;font-weight:bold;">
+                    💬 Join the Discord
+                </a>
+            </div>
+            <p>Please Be Patient - This Website Is Under Creation</p>
+        </header>
+        <section class="new-thingannouncement"> <!--TODO: Add a way to update this live-->
+            <div class="new-announcement-card">
+                <h2>New Article: <a href="/articles/OldOS/Windows8VLK.html">Windows 8 Volume Licensing Kit (VLK)</a></h2>
+            </div>
+        </section>
+            <!-- <div class="iframe-TopRight">
+            <iframe src="/frames/badge.md"></iframe>
+        </div> -->
+        <section id="projects">
+            <h2>Projects</h2>
+            <div class="project-list">
+                <a href="projects/JSON2LANG.html" class="project-card">
+                    <h3>JSON TO LANG</h3>
+                    <p>This is a tool that Simply converts a minecraft .JSON file into a .Lang file</p>
+                    <p><small>written in python</small></p>
+                </a>
+                <a href="projects/Eyeblight.html" class="project-card">
+                    <h3>Eyeblight</h3>
+                    <p>Eyeblight is a 2D platformer where the protagonist's eyes grant supernatural abilities that affect gameplay in eerie and thrilling ways.</p>
+                    <p><small>????? game</small></p>
+                </a>
+                <a href="projects/customLicense/PELV1.html" class="project-card">
+                    <h3>People's Engine License V1.0</h3>
+                    <p>A license designed to keep the engine source code free, open, and modifiable by anyone — forever.</p>
+                    <p><small>Its a license, idk what else to say</small></p>
+                </a>
+                <a href="projects/panicengine.html" class="project-card">
+                    <h3>Panic Engine - Custom Game Engine</h3>
+                    <p>This is a Quite Simple Game Engine written to act and behave like a doom style Engine</p>
+                    <p><small>written in C++ SDL2</small></p>
+                </a>
+                <a href="projects/impossibutton.html" class="project-card">
+                    <h3>Impossabutton</h3>
+                    <p>Impossabutton is a fun and challenging game where the goal is to click a button that constantly moves away from your cursor.</p>
+                    <p><small>written in Python</small></p>
+                </a>
+                <a href="projects/HowLikely.html" class="project-card">
+                    <h3>How Likely?</h3>
+                    <p>Find out how secure your system is with this app.</p>
+                    <p><small>written in Python</small></p>
+                </a>
+            </div>
+        </section>
 
-    <section id="projects">
-        <h2>Twitch - (Ad By AkaneDev [aka: I dont get paid to put this here])</h2>
-        <div class="project-list" id="streamlist">
-            
-        </div>
-    </section>
+        <section id="projects">
+            <h2>Twitch - (Ad By AkaneDev [aka: I dont get paid to put this here])</h2>
+            <div class="project-list" id="streamlist">
+                
+            </div>
+        </section>
 
-    <section id="projects">
-        <h2>Minigames</h2>
-        <div class="project-list">
-            <a href="minigames/GhostGuesser/guessghost.html" class="project-card">
-                <h3>Guess the Phasmo-ghost</h3>
-                <p>You guess the ghost from phasmophobia</p>
-                <p><small>written in html, css, js</small></p>
-            </a>
-            <a href="minigames/GhostGuesserCompetive/guessghost.html" class="project-card">
-                <h3>Guess the Phasmo-ghost (Competitive)</h3>
-                <p>You guess the ghost from phasmophobia and compete for the top spot</p>
-                <p><small>written in html, css, js</small></p>
-            </a>
-            <a href="minigames/Impossibutton/index.html" class="project-card">
-                <h3>Impossabutton</h3>
-                <p>Impossabutton is a fun and challenging game where the goal is to click a button that constantly moves away from your cursor.</p>
-                <p><small>written in html, css, js</small></p>
-            </a>
-            <a href="minigames/Stockmarket/index.html" class="project-card">
-                <h3>Virtual Stock Market</h3>
-                <p>Buy and sell stocks in a virtual stock market simulator.</p>
-                <p><small>written in html, css, js</small></p>
-            </a>
-            <a href="/" class="project-card">
-                <h3>Coming Soon</h3>
-                <p class="blur">Lorem ipsum dolor sit amet, consectetur elit.</p>
-                <p class="blur"><small>Lorem ipsum dolor sit amet.</small></p>
-            </a>
-        </div>
-    </section>
+        <section id="projects">
+            <h2>Minigames</h2>
+            <div class="project-list">
+                <a href="minigames/GhostGuesser/guessghost.html" class="project-card">
+                    <h3>Guess the Phasmo-ghost</h3>
+                    <p>You guess the ghost from phasmophobia</p>
+                    <p><small>written in html, css, js</small></p>
+                </a>
+                <a href="minigames/GhostGuesserCompetive/guessghost.html" class="project-card">
+                    <h3>Guess the Phasmo-ghost (Competitive)</h3>
+                    <p>You guess the ghost from phasmophobia and compete for the top spot</p>
+                    <p><small>written in html, css, js</small></p>
+                </a>
+                <a href="minigames/Impossibutton/index.html" class="project-card">
+                    <h3>Impossabutton</h3>
+                    <p>Impossabutton is a fun and challenging game where the goal is to click a button that constantly moves away from your cursor.</p>
+                    <p><small>written in html, css, js</small></p>
+                </a>
+                <a href="minigames/Stockmarket/index.html" class="project-card">
+                    <h3>Virtual Stock Market</h3>
+                    <p>Buy and sell stocks in a virtual stock market simulator.</p>
+                    <p><small>written in html, css, js</small></p>
+                </a>
+                <a href="/" class="project-card">
+                    <h3>Coming Soon</h3>
+                    <p class="blur">Lorem ipsum dolor sit amet, consectetur elit.</p>
+                    <p class="blur"><small>Lorem ipsum dolor sit amet.</small></p>
+                </a>
+            </div>
+        </section>
 
-    <section id="projects">
-        <h2>Creative Writing - <a href="/articles/changes/WhatsHappeningToCreativeWriting.html">Going Away Soon</a></h2>
-        <div class="project-list">
-            <a href="/stories/ProtocolDeltaTheLastDays.html" class="project-card">
-                <h3>Protocol Delta: The Last Days</h3>
-                <p>A Quick SCP Inspired Horror Story</p>
-                <p><small>1021 Words in total</small></p>
-            </a>
-        </div>
-    </section>
+        <section id="projects">
+            <h2>Creative Writing - <a href="/articles/changes/WhatsHappeningToCreativeWriting.html">Going Away Soon</a></h2>
+            <div class="project-list">
+                <a href="/stories/ProtocolDeltaTheLastDays.html" class="project-card">
+                    <h3>Protocol Delta: The Last Days</h3>
+                    <p>A Quick SCP Inspired Horror Story</p>
+                    <p><small>1021 Words in total</small></p>
+                </a>
+            </div>
+        </section>
 
-    <section id="projects">
-        <h2>Articles</h2>
-        <div class="project-list">
-            <a href="/articles/Exploits/RCE/RemoteCodeExploit.html" class="project-card">
-                <h3>Remote Code Exploit</h3>
-                <p>An in-depth look at Remote Code Execution (RCE), including its definition, how it works, examples of attacks, and mitigation strategies.</p>
-                <p><small>Written By AkaneDev</small></p>
-            </a>
-            <a href="/articles/Exploits/VMEscape/VmEscape.html" class="project-card">
-                <h3>VM Escape</h3>
-                <p>An in-depth look at VM Escape, including its definition, how it works, examples of attacks, and mitigation strategies.</p>
-                <p><small>Written By AkaneDev</small></p>
-            </a>
-            <a href="/articles/changes/WhatsHappeningToCreativeWriting.html" class="project-card">
-                <h3>What's Happening to Creative Writing on This Site?</h3>
-                <p>I'm reworking how creative writings are presented to offer a clearer and more engaging experience.</p>
-                <p><small>Written By AkaneDev</small></p>
-            </a>
-            <a href="/articles/OldOS/Windows8VLK.html" class="project-card">
-                <h3>Windows 8 Volume Licensing Kit (VLK)</h3>
-                <p>A rare piece of software history: the Windows 8 Volume Licensing Kit, including its physical description, rarity, and technical details.</p>
-                <p><small>Written By AkaneDev</small></p>
-            </a>
-        </div>
-    </section>
+        <section id="projects">
+            <h2>Articles</h2>
+            <div class="project-list">
+                <a href="/articles/Exploits/RCE/RemoteCodeExploit.html" class="project-card">
+                    <h3>Remote Code Exploit</h3>
+                    <p>An in-depth look at Remote Code Execution (RCE), including its definition, how it works, examples of attacks, and mitigation strategies.</p>
+                    <p><small>Written By AkaneDev</small></p>
+                </a>
+                <a href="/articles/Exploits/VMEscape/VmEscape.html" class="project-card">
+                    <h3>VM Escape</h3>
+                    <p>An in-depth look at VM Escape, including its definition, how it works, examples of attacks, and mitigation strategies.</p>
+                    <p><small>Written By AkaneDev</small></p>
+                </a>
+                <a href="/articles/changes/WhatsHappeningToCreativeWriting.html" class="project-card">
+                    <h3>What's Happening to Creative Writing on This Site?</h3>
+                    <p>I'm reworking how creative writings are presented to offer a clearer and more engaging experience.</p>
+                    <p><small>Written By AkaneDev</small></p>
+                </a>
+                <a href="/articles/OldOS/Windows8VLK.html" class="project-card">
+                    <h3>Windows 8 Volume Licensing Kit (VLK)</h3>
+                    <p>A rare piece of software history: the Windows 8 Volume Licensing Kit, including its physical description, rarity, and technical details.</p>
+                    <p><small>Written By AkaneDev</small></p>
+                </a>
+            </div>
+        </section>
 
-    <section id="projects" class="hidden">
-        <h1>Change Log</h1>
-        {{ include "changelog.md" }}
-    </section>
+        <section id="projects" class="hidden">
+            <h1>Change Log</h1>
+            {{ include "changelog.md" }}
+        </section>
+    </div> <!-- End of main-content -->
 
     <footer class="footer">
         <p class="padding">&copy; 2025 AkaneDev</p>
+        <amp-ad
+            layout="fixed"
+            width="728"
+            height="100"
+            type="adsense"
+            data-ad-client="ca-pub-5264852906907125"
+            data-ad-slot="4846057947">
+        </amp-ad>
     </footer>
 </body>
 </html>

@@ -1,0 +1,19 @@
+/* Make body a column flex container */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* full viewport height */
+  margin: 0;
+  font-family: 'Montserrat', sans-serif; /* keep your font */
+}
+
+/* Make main content take all remaining space */
+.main-content {
+  flex: 1;
+}
+
+/* Footer styling */
+.footer {
+  padding: 1em;
+  text-align: center;
+}
