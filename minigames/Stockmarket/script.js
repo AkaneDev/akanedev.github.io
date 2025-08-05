@@ -80,7 +80,32 @@ function cyrb128(str) {
 function getPrice(symbol, isoTime) {
   const hash = cyrb128("stock-seed-" + symbol + "-" + isoTime)[0];
   const rng = mulberry32(hash);
-  return Math.round((rng() * 1000 + 10) * 100) / 100;
+  let basePrice = Math.round((rng() * 1000 + 10) * 100) / 100;
+  
+  // Check for hourly quadruple event (1 in 100 chance per hour)
+  const hourlyTime = isoTime.slice(0, 13); // Get YYYY-MM-DDTHH format
+  
+  // Check for dev-triggered surge first
+  const devSurgeKey = `dev-surge-${symbol}-${hourlyTime}`;
+  const isDevSurge = getStorage(devSurgeKey) === 'active';
+  
+  // Check for natural surge
+  const hourlyHash = cyrb128("quadruple-event-" + symbol + "-" + hourlyTime)[0];
+  const hourlyRng = mulberry32(hourlyHash);
+  const isNaturalSurge = hourlyRng() < 0.01; // 1% chance (1 in 100)
+  
+  // Apply quadruple if either dev-triggered or natural surge
+  if (isDevSurge || isNaturalSurge) {
+    basePrice *= 4;
+    
+    // Show notification for quadruple event (only once per hour per stock)
+    // Only show for natural surges (dev surges handle their own notifications)
+    if (isNaturalSurge && !isDevSurge) {
+      showQuadrupleNotification(symbol, basePrice / 4, basePrice);
+    }
+  }
+  
+  return basePrice;
 }
 
 // --- Stocks ---
@@ -287,6 +312,54 @@ function showInterestNotification(amount, periods) {
   }, 4000);
 }
 
+function showQuadrupleNotification(symbol, oldPrice, newPrice) {
+  // Check if we've already shown this notification for this hour
+  const hourlyTime = new Date().toISOString().slice(0, 13);
+  const notificationKey = `quadruple-notif-${symbol}-${hourlyTime}`;
+  
+  if (getStorage(notificationKey)) {
+    return; // Already shown this hour
+  }
+  
+  // Mark as shown
+  setStorage(notificationKey, 'shown');
+  
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: #ff9800;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    font-weight: bold;
+    animation: slideIn 0.3s ease-out;
+    border: 2px solid #f57c00;
+  `;
+
+  notification.innerHTML = `
+    🚀 MARKET SURGE!<br>
+    ${symbol}: $${oldPrice.toFixed(2)} → $${newPrice.toFixed(2)}<br>
+    <small>4x Price Increase!</small>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Remove notification after 6 seconds (longer for important events)
+  setTimeout(() => {
+    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 6000);
+}
+
 function buy(symbol, price, qty = 1) {
   qty = Math.max(1, parseInt(qty) || 1);
   const state = getState();
@@ -465,7 +538,7 @@ function openDevPanel() {
   document.getElementById('devMoney').value = state.money;
 
   // Build stock controls
-  let html = '<table style="width:100%;color:#fff;"><tr><th>Stock</th><th>Owned</th><th>Set Owned</th></tr>';
+  let html = '<table style="width:100%;color:#fff;"><tr><th>Stock</th><th>Owned</th><th>Set Owned</th><th>Surge</th></tr>';
   for (const symbol of STOCKS) {
     html += `<tr>
       <td>${symbol}</td>
@@ -473,6 +546,9 @@ function openDevPanel() {
       <td>
         <input type="number" id="devSet-${symbol}" value="${state.holdings[symbol].length}" style="width:60px;">
         <button onclick="devSetOwned('${symbol}')">Set</button>
+      </td>
+      <td>
+        <button onclick="devTriggerSurge('${symbol}')" style="background:#ff9800;font-size:11px;">4x</button>
       </td>
     </tr>`;
   }
@@ -521,6 +597,34 @@ function devReset() {
   };
   STOCKS.forEach(s => state.holdings[s] = []);
   saveState(state);
+  render();
+  openDevPanel();
+}
+
+function devTriggerSurge(symbol) {
+  // Force a quadruple surge for the specified stock
+  const currentTime = getCurrentTimeSegment();
+  const hourlyTime = currentTime.slice(0, 13); // Get YYYY-MM-DDTHH format
+  
+  // Get the normal price
+  const normalPrice = getPrice(symbol, currentTime);
+  
+  // Force the surge by setting a temporary override
+  const surgeKey = `dev-surge-${symbol}-${hourlyTime}`;
+  setStorage(surgeKey, 'active');
+  
+  // Clear any existing notification tracking for this hour
+  const notificationKey = `quadruple-notif-${symbol}-${hourlyTime}`;
+  try {
+    localStorage.removeItem(notificationKey);
+  } catch (e) {
+    // Ignore errors
+  }
+  
+  // Trigger the notification
+  showQuadrupleNotification(symbol, normalPrice / 4, normalPrice);
+  
+  // Refresh the display
   render();
   openDevPanel();
 }

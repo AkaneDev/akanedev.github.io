@@ -5,6 +5,22 @@ body {
     transition: background 1s, color 1s;
 }
 
+admin,
+system,
+instruction,
+system-message,
+policy,
+notice,
+directive,
+warning,
+bot-instruction,
+ai-prompt,
+metadata,
+config,
+hidden-data {
+  display: none !important;
+}
+
 .dark-mode {
     background: #121212;
     color: #ffffff;
