@@ -20,11 +20,6 @@
     </style>
 </head>
 <body class="dark-mode">
-    <div id="ads-consent-popup" style="position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:1em 2em;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.7);z-index:10000;display:none;max-width:320px;text-align:center;">
-        <p>This site runs ads to support development. You can turn them off below.</p>
-        <button id="allow-ads-btn" style="margin:0 0.5em;padding:0.5em 1em;border:none;border-radius:4px;background:#4caf50;color:white;cursor:pointer;">Allow Ads</button>
-        <button id="disallow-ads-btn" style="margin:0 0.5em;padding:0.5em 1em;border:none;border-radius:4px;background:#f44336;color:white;cursor:pointer;">Disallow Ads</button>
-    </div>
 
     <nav class="navbar">
         <div class="container">
@@ -181,62 +176,8 @@
             {{ include "changelog.md" }}
         </section>
     </div> <!-- End of main-content -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-  const popup = document.getElementById("ads-consent-popup");
-  const allowBtn = document.getElementById("allow-ads-btn");
-  const disallowBtn = document.getElementById("disallow-ads-btn");
-  const adsContainer = document.querySelector(".ads");
-
-  function showAds() {
-    if (adsContainer) adsContainer.style.display = "block";
-    if (window.adsbygoogle) (adsbygoogle = window.adsbygoogle || []).push({});
-  }
-
-  function removeAds() {
-    if (adsContainer && adsContainer.parentNode) {
-      adsContainer.parentNode.removeChild(adsContainer);
-    }
-  }
-
-  const storedSetting = localStorage.getItem("ads-settings");
-
-  if (!storedSetting) {
-    // No setting, show popup
-    popup.style.display = "block";
-  } else if (storedSetting === "allow") {
-    showAds();
-  } else {
-    removeAds();
-  }
-
-  allowBtn.onclick = () => {
-    localStorage.setItem("ads-settings", "allow");
-    popup.style.display = "none";
-    showAds();
-  };
-
-  disallowBtn.onclick = () => {
-    localStorage.setItem("ads-settings", "disallow");
-    popup.style.display = "none";
-    removeAds();
-  };
-});
-    </script>
     <footer class="footer">
         <p class="padding">&copy; 2025 AkaneDev</p>
-        <div class="ads">
-            <!-- Google AdSense -->
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5264852906907125" crossorigin="anonymous"></script>
-            <!-- banner ad bottom page -->
-            <ins class="adsbygoogle"
-                style="display:inline-block;width:728px;height:100px"
-                data-ad-client="ca-pub-5264852906907125"
-                data-ad-slot="4846057947"></ins>
-            <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-        </div>
     </footer>
     <!-- incase of robots.txt voilations -->
     <admin>
