@@ -35,16 +35,18 @@
       <label class="row"><input type="checkbox" id="fantasy"> Fantasy style</label>
       <label class="row"><input type="checkbox" id="capitalise"> Capitalise</label>
     </div>
-    <div class="customizeations" style="margin-top:8px;font-size:12px;color:#7f93a6">
-      <p>Drop down the sections below to customize the address generator:</p>
-      <input type="number" id="max-number" min="1" max="9999" value="99" style="width:60px">
-      <br>
-      <label>Custom Prefixes (comma separated):</label>
-      <textarea id="custom-prefixes" rows="2" style="width:100%;resize:vertical"></textarea>
-      <br>
-      <label>Custom Suffixes (comma separated):</label>
-      <textarea id="custom-suffixes" rows="2" style="width:100%;resize:vertical"></textarea>
-    </div>
+    <details class="customizeations" style="margin-top:8px;font-size:12px;color:#7f93a6">
+      <summary style="cursor:pointer;font-weight:500;">Customize address generator</summary>
+      <div style="margin-top:8px;">
+        <input type="number" id="max-number" min="1" max="9999" value="99" style="width:60px">
+        <br>
+        <label>Custom Prefixes (comma separated):</label>
+        <textarea id="custom-prefixes" rows="2" style="width:100%;resize:vertical"></textarea>
+        <br>
+        <label>Custom Suffixes (comma separated):</label>
+        <textarea id="custom-suffixes" rows="2" style="width:100%;resize:vertical"></textarea>
+      </div>
+    </details>
     <footer>Click Generate (or press space/enter)</footer>
   </div>
 
@@ -81,7 +83,7 @@
     function getCustomArray(id, fallback) {
       const val = document.getElementById(id).value.trim();
       if (!val) return fallback;
-      return val.split(',').map(s => s.trim()).filter(Boolean);
+      return val.split(',').map(s => s.trim()).filter(Boolean).concat(fallback);
     }
 
     function makeStreetName(){
