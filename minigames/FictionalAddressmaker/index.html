@@ -29,15 +29,23 @@
     <div class="controls">
       <button id="gen">Generate</button>
       <button id="copy">Copy</button>
-      <!-- add a way for people to add a max street number, by default its 99 -->
-      <input type="number" id="max-number" min="1" max="9999" value="99" style="width:60px">
+      
       <div style="flex:1"></div>
       <label class="row"><input type="checkbox" id="numberChkbox"> Numbered</label>
       <label class="row"><input type="checkbox" id="fantasy"> Fantasy style</label>
       <label class="row"><input type="checkbox" id="capitalise"> Capitalise</label>
     </div>
-
-    <footer>Click Generate (or press space/enter) — change name parts inside the script to customize.</footer>
+    <div class="customizeations" style="margin-top:8px;font-size:12px;color:#7f93a6">
+      <p>Drop down the sections below to customize the address generator:</p>
+      <input type="number" id="max-number" min="1" max="9999" value="99" style="width:60px">
+      <br>
+      <label>Custom Prefixes (comma separated):</label>
+      <textarea id="custom-prefixes" rows="2" style="width:100%;resize:vertical"></textarea>
+      <br>
+      <label>Custom Suffixes (comma separated):</label>
+      <textarea id="custom-suffixes" rows="2" style="width:100%;resize:vertical"></textarea>
+    </div>
+    <footer>Click Generate (or press space/enter)</footer>
   </div>
 
   <script>
@@ -70,17 +78,22 @@
         return Math.floor(Math.random() * max) + 1;
     }
 
+    function getCustomArray(id, fallback) {
+      const val = document.getElementById(id).value.trim();
+      if (!val) return fallback;
+      return val.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
     function makeStreetName(){
-      // combine prefix+suffix e.g. raven + wood -> ravenwood
-      const p = pick(prefixes);
-      const s = pick(suffixes);
+      // Use custom arrays if provided
+      const pArr = getCustomArray('custom-prefixes', prefixes);
+      const sArr = getCustomArray('custom-suffixes', suffixes);
+      const p = pick(pArr);
+      const s = pick(sArr);
       if (Math.random() < 0.15){
-        // 15% chance of rare prefix or suffix
         if (Math.random() < 0.5){
-          // rare prefix
           return pick(rareprefixes) + s;
         } else {
-          // rare suffix
           return p + pick(raresuffixes);
         }
       }
@@ -112,10 +125,11 @@
 
     function show(){
       if (fantasyCheckbox.checked){
-        // Fantasy style address generation
         function makeFantasyStreetName(){
-          const p = pick(FantasyPrefixes);
-          const s = pick(FantasySuffixes);
+          const pArr = getCustomArray('custom-prefixes', FantasyPrefixes);
+          const sArr = getCustomArray('custom-suffixes', FantasySuffixes);
+          const p = pick(pArr);
+          const s = pick(sArr);
           if (Math.random() < 0.15){
             if (Math.random() < 0.5){
               return pick(rareFantasyPrefixes) + s;
