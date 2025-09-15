@@ -25,6 +25,7 @@ body { display:flex; flex-direction:column; justify-content:center; align-items:
 
 <script>
 const canvas = document.getElementById('canvas');
+const apiPrefix = 'https://api.akanedev.au'; // Adjust if neede
 const colors = document.querySelectorAll('.color');
 let currentColor = 'red';
 const gridSize = 32;
@@ -39,7 +40,7 @@ for(let i=0; i<gridSize*gridSize; i++){
 colors.forEach(c => c.addEventListener('click', () => currentColor = c.dataset.color));
 
 async function loadCanvas() {
-    const res = await fetch('/place');
+    const res = await fetch(apiPrefix + '/place');
     const data = await res.json(); 
     Object.entries(data).forEach(([index, color]) => {
         const pixel = canvas.querySelector(`.pixel[data-index='${index}']`);
@@ -53,7 +54,7 @@ canvas.addEventListener('click', async (e) => {
         const index = e.target.dataset.index;
         e.target.style.background = currentColor;
 
-        await fetch(`/place/${index}`, {
+        await fetch(apiPrefix + `/place/${index}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ color: currentColor })
