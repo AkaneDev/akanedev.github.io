@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Code Execution (RCE) - AkaneDev</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="favicon" href="/favicon.ico">
+    <script defer src="/script.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <a href="mailto:akane@akanedev.au" class="logo">AkaneDev</a>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    
+    <header class="hero">
+        <h1>Nintendo's Invalid Patents, US:12,403,397 and US:12,409,387</h1>
+        <p>This is a page not about the patents but about the games that are prior art of the 2 recent Nintnedo patents</p>
+        <p><small>written by <a href="https://aka   nedev.au/github">AkaneDev</a></small></p>
+        <!-- sucks to suck nintendo -->
+    </header>
+    
+    <section id="content">
+        <h2>What is prior art</h2>
+        <p>Prior art refers to any evidence that an invention or idea was already known before a patent application was filed. It can include previous patents, publications, products, or public demonstrations that show the concept is not new. If prior art exists, it can be used to challenge the validity of a patent by proving the invention is not original.</p>
+        
+        <div>
+            <details>
+            <summary>Prior art for patent US 12,403,397</summary>
+            <p>Final Fantasy VI - 1994 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_VI">Link</a></p>
+<p>Final Fantasy VII - 1997 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_VII">Link</a></p>
+<p>Final Fantasy VIII - 1999 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_VIII">Link</a></p>
+<p>Final Fantasy IX - 2000 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_IX">Link</a></p>
+<p>Final Fantasy X - 2001 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_X">Link</a></p>
+<p>Final Fantasy Tactics - 1997 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_Tactics">Link</a></p>
+<p>Final Fantasy XI - 2002 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_XI">Link</a></p>
+<p>Final Fantasy XIV - 2010/2013 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_XIV">Link</a></p>
+
+<p>Diablo - 1996 - <a href="https://en.wikipedia.org/wiki/Diablo_(video_game)">Link</a></p>
+<p>Diablo II - 2000 - <a href="https://en.wikipedia.org/wiki/Diablo_II">Link</a></p>
+<p>Diablo III - 2012 - <a href="https://en.wikipedia.org/wiki/Diablo_III">Link</a></p>
+
+<p>World of Warcraft - 2004 - <a href="https://en.wikipedia.org/wiki/World_of_Warcraft">Link</a></p>
+<p>Final Fantasy XIV (Reborn/ARR) - 2013 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_XIV">Link</a></p>
+
+<p>Persona 3 - 2006 - <a href="https://en.wikipedia.org/wiki/Persona_3">Link</a></p>
+<p>Persona 4 - 2008 - <a href="https://en.wikipedia.org/wiki/Persona_4">Link</a></p>
+<p>Persona 5 - 2016 - <a href="https://en.wikipedia.org/wiki/Persona_5">Link</a></p>
+<p>Shin Megami Tensei III: Nocturne - 2003 - <a href="https://en.wikipedia.org/wiki/Shin_Megami_Tensei_III:_Nocturne">Link</a></p>
+
+<p>Shin Megami Tensei (series, early titles) - 1992 onward - <a href="https://en.wikipedia.org/wiki/Shin_Megami_Tensei">Link</a></p>
+<p>Digimon World - 1999 - <a href="https://en.wikipedia.org/wiki/Digimon_World">Link</a></p>
+<p>Digimon Story: Cyber Sleuth - 2015 - <a href="https://en.wikipedia.org/wiki/Digimon_Story:_Cyber_Sleuth">Link</a></p>
+
+<p>Temtem - 2022 - <a href="https://en.wikipedia.org/wiki/Temtem">Link</a></p>
+<p>Palworld - 2024 - <a href="https://en.wikipedia.org/wiki/Palworld">Link</a></p>
+
+<p>Summoners War: Sky Arena - 2014 - <a href="https://en.wikipedia.org/wiki/Summoners_War:_Sky_Arena">Link</a></p>
+<p>Summon Night (series) - 2000 onward - <a href="https://en.wikipedia.org/wiki/Summon_Night">Link</a></p>
+
+<p>Monster Rancher - 1997 - <a href="https://en.wikipedia.org/wiki/Monster_Rancher">Link</a></p>
+<p>Monster Rancher 2 - 1999 - <a href="https://en.wikipedia.org/wiki/Monster_Rancher_2">Link</a></p>
+
+<p>Path of Exile - 2013 - <a href="https://en.wikipedia.org/wiki/Path_of_Exile">Link</a></p>
+<p>Torchlight - 2009 - <a href="https://en.wikipedia.org/wiki/Torchlight">Link</a></p>
+<p>Torchlight II - 2012 - <a href="https://en.wikipedia.org/wiki/Torchlight_II">Link</a></p>
+
+<p>Guild Wars 2 - 2012 - <a href="https://en.wikipedia.org/wiki/Guild_Wars_2">Link</a></p>
+<p>Elder Scrolls V: Skyrim - 2011 - <a href="https://en.wikipedia.org/wiki/The_Elder_Scrolls_V:_Skyrim">Link</a></p>
+
+<p>Baldur's Gate II: Shadows of Amn - 2000 - <a href="https://en.wikipedia.org/wiki/Baldur%27s_Gate_II:_Shadows_of_Amn">Link</a></p>
+<p>Neverwinter Nights - 2002 - <a href="https://en.wikipedia.org/wiki/Neverwinter_Nights">Link</a></p>
+
+<p>League of Legends - 2009 - <a href="https://en.wikipedia.org/wiki/League_of_Legends">Link</a></p>
+<p>Dota 2 - 2013 - <a href="https://en.wikipedia.org/wiki/Dota_2">Link</a></p>
+<p>Heroes of the Storm - 2015 - <a href="https://en.wikipedia.org/wiki/Heroes_of_the_Storm">Link</a></p>
+
+<p>Kingdom Hearts II - 2005 - <a href="https://en.wikipedia.org/wiki/Kingdom_Hearts_II">Link</a></p>
+<p>Marvel's Midnight Suns - 2022 - <a href="https://en.wikipedia.org/wiki/Marvel%27s_Midnight_Suns">Link</a></p>
+            </details>
+            <details>
+            <summary>Prior art for patent US 12,409,387</summary>
+            <p>Drakan: Order of the Flame - 1999 - <a href="https://en.wikipedia.org/wiki/Drakan:_Order_of_the_Flame">Link</a></p>
+<p>Monster Hunter Stories - 2016 - <a href="https://en.wikipedia.org/wiki/Monster_Hunter_Stories">Link</a></p>
+<p>Monster Hunter Stories 2: Wings of Ruin - 2021 - <a href="https://en.wikipedia.org/wiki/Monster_Hunter_Stories_2:_Wings_of_Ruin">Link</a></p>
+<p>Final Fantasy XV - 2016 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_XV">Link</a></p>
+<p>Final Fantasy XIV - 2010/2013 - <a href="https://en.wikipedia.org/wiki/Final_Fantasy_XIV">Link</a></p>
+<p>World of Warcraft - 2004 - <a href="https://en.wikipedia.org/wiki/World_of_Warcraft">Link</a></p>
+<p>Guild Wars 2 - 2012 - <a href="https://en.wikipedia.org/wiki/Guild_Wars_2">Link</a></p>
+<p>The Elder Scrolls V: Skyrim - 2011 - <a href="https://en.wikipedia.org/wiki/The_Elder_Scrolls_V:_Skyrim">Link</a></p>
+<p>Star Wars: Knights of the Old Republic - 2003 - <a href="https://en.wikipedia.org/wiki/Star_Wars:_Knights_of_the_Old_Republic">Link</a></p>
+<p>The Witcher 3: Wild Hunt - 2015 - <a href="https://en.wikipedia.org/wiki/The_Witcher_3:_Wild_Hunt">Link</a></p>
+<p>Red Dead Redemption 2 - 2018 - <a href="https://en.wikipedia.org/wiki/Red_Dead_Redemption_2">Link</a></p>
+<p>Assassin's Creed Odyssey - 2018 - <a href="https://en.wikipedia.org/wiki/Assassin%27s_Creed_Odyssey">Link</a></p>
+<p>Assassin's Creed Valhalla - 2020 - <a href="https://en.wikipedia.org/wiki/Assassin%27s_Creed_Valhalla">Link</a></p>
+<p>The Legend of Zelda: Breath of the Wild - 2017 - <a href="https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild">Link</a></p>
+<p>Horizon Zero Dawn - 2017 - <a href="https://en.wikipedia.org/wiki/Horizon_Zero_Dawn">Link</a></p>
+<p>Horizon Forbidden West - 2022 - <a href="https://en.wikipedia.org/wiki/Horizon_Forbidden_West">Link</a></p>
+<p>Just Cause 3 - 2015 - <a href="https://en.wikipedia.org/wiki/Just_Cause_3">Link</a></p>
+<p>Just Cause 4 - 2018 - <a href="https://en.wikipedia.org/wiki/Just_Cause_4">Link</a></p>
+<p>Sky: Children of the Light - 2019 - <a href="https://en.wikipedia.org/wiki/Sky:_Children_of_the_Light">Link</a></p>
+<p>Genshin Impact - 2020 - <a href="https://en.wikipedia.org/wiki/Genshin_Impact">Link</a></p>
+<p>No Man's Sky - 2016 - <a href="https://en.wikipedia.org/wiki/No_Man%27s_Sky">Link</a></p>
+<p>Elite Dangerous - 2014 - <a href="https://en.wikipedia.org/wiki/Elite_Dangerous">Link</a></p>
+<p>Star Citizen - 2012 (alpha) - <a href="https://en.wikipedia.org/wiki/Star_Citizen">Link</a></p>
+<p>Microsoft Flight Simulator - 2020 - <a href="https://en.wikipedia.org/wiki/Microsoft_Flight_Simulator_(2020_video_game)">Link</a></p>
+<p>Ace Combat 7: Skies Unknown - 2019 - <a href="https://en.wikipedia.org/wiki/Ace_Combat_7:_Skies_Unknown">Link</a></p>
+<p>Star Wars Battlefront II - 2017 - <a href="https://en.wikipedia.org/wiki/Star_Wars_Battlefront_II_(2017_video_game)">Link</a></p>
+
+            </details>
+        </div>
+
+
+    </section>
+
+    <footer class="footer">
+        <p class="padding">&copy; 2025 AkaneDev</p>
+        <p class="padding">Support me on <a class="showlinks" href="https://www.buymeacoffee.com/akane">Buy Me a Coffee</a></p>
+    </footer>
+</body>
+</html>
