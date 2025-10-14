@@ -20,11 +20,6 @@
     </style>
 </head>
 <body class="dark-mode">
-    <div id="ads-consent-popup" style="position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:1em 2em;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.7);z-index:10000;display:none;max-width:320px;text-align:center;">
-        <p>This site runs ads to support development. You can turn them off below.</p>
-        <button id="allow-ads-btn" style="margin:0 0.5em;padding:0.5em 1em;border:none;border-radius:4px;background:#4caf50;color:white;cursor:pointer;">Allow Ads</button>
-        <button id="disallow-ads-btn" style="margin:0 0.5em;padding:0.5em 1em;border:none;border-radius:4px;background:#f44336;color:white;cursor:pointer;">Disallow Ads</button>
-    </div>
 
     <nav class="navbar">
         <div class="container">
@@ -47,9 +42,10 @@
         <header class="hero">
             <h1>Welcome to AkaneDev's site</h1>
             <p>Game Development | Tools | Open Source</p>
+            <p>Looking for AkaneDev labs? <a href="https://labs.akanedev.au/">Click Here</a></p>
             <div style="display:flex; gap:1em; justify-content:center; flex-wrap:wrap;">
                 <a href="https://buymeacoffee.com/akanedev" style="background:#ffdd57;padding:0.5em 1em;border-radius:6px;text-decoration:none;color:#000;font-weight:bold;">
-                    ☕ Support Me on Ko-fi
+                    ☕ Support Me on Buy Me Coffee
                 </a>
                 <a href="https://discord.gg/Xt5QYasNrz" style="background:#5865F2;padding:0.5em 1em;border-radius:6px;text-decoration:none;color:#fff;font-weight:bold;">
                     💬 Join the Discord
@@ -59,7 +55,7 @@
         </header>
         <section class="new-thingannouncement"> <!--TODO: Add a way to update this live-->
             <div class="new-announcement-card">
-                <h2>New Article: <a href="/articles/OldOS/Windows8VLK.html">Windows 8 Volume Licensing Kit (VLK)</a></h2>
+                <h2>Coming Soon: <a href="https://labs.akanedev.au/">AkaneDev Labs - Coming Soon</a></h2>
             </div>
         </section>
             <!-- <div class="iframe-TopRight">
@@ -131,6 +127,11 @@
                     <p>Buy and sell stocks in a virtual stock market simulator.</p>
                     <p><small>written in html, css, js</small></p>
                 </a>
+                <a href="minigames/sharedCanvas/index.html" class="project-card">
+                    <h3>Shared Pixel Canvas (r/Place Clone)</h3>
+                    <p>A collaborative pixel art canvas where users can draw together in real-time.</p>
+                    <p><small>written in html, css, js</small></p>
+                </a>
                 <a href="/" class="project-card">
                     <h3>Coming Soon</h3>
                     <p class="blur">Lorem ipsum dolor sit amet, consectetur elit.</p>
@@ -153,6 +154,11 @@
         <section id="projects">
             <h2>Articles</h2>
             <div class="project-list">
+                <a href="/articles/nintendo/invalidpatents.html" class="project-card">
+                    <h3>Nintendo's Invalid patents US:12,409,387, US:12,403,397</h3>
+                    <p>This article lists games considered prior art for Nintendo's invalid patents and explains what prior art means in the context of patent law.</p>
+                    <p><small>Written By AkaneDev</small></p>
+                </a>
                 <a href="/articles/Exploits/RCE/RemoteCodeExploit.html" class="project-card">
                     <h3>Remote Code Exploit</h3>
                     <p>An in-depth look at Remote Code Execution (RCE), including its definition, how it works, examples of attacks, and mitigation strategies.</p>
@@ -181,6 +187,7 @@
             {{ include "changelog.md" }}
         </section>
     </div> <!-- End of main-content -->
+<<<<<<< HEAD
     <!-- <script>
         document.addEventListener("DOMContentLoaded", () => {
   const popup = document.getElementById("ads-consent-popup");
@@ -223,6 +230,8 @@
   };
 });
     </script> -->
+=======
+>>>>>>> 5897fab15b96d963bac6109c6d2f600cf7b6f146
     <footer class="footer">
         <p class="padding">&copy; 2025 AkaneDev</p>
     </footer>

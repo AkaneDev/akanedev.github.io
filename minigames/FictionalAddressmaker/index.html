@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fictional House Address Generator</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e6eef8;margin:0}
+    .card{background:#111827;padding:28px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.6);width:100%;max-width:520px}
+    h1{font-size:18px;margin:0 0 12px}
+    .output{font-family:monospace;background:#0b1220;padding:18px;border-radius:8px;margin:12px 0;font-size:20px;text-transform:lowercase}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{background:#06b6d4;border:none;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+    button:active{transform:translateY(1px)}
+    label{font-size:13px}
+    .row{display:flex;gap:8px;align-items:center}
+    .small{font-size:13px;color:#9fb0c8}
+    footer{margin-top:10px;font-size:12px;color:#7f93a6}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Fictional House Address Generator</h1>
+    <div class="small">Generates addresses like "12 ravenwood ct"</div>
+
+    <div class="output" id="address">—</div>
+
+    <div class="controls">
+      <button id="gen">Generate</button>
+      <button id="copy">Copy</button>
+      
+      <div style="flex:1"></div>
+      <label class="row"><input type="checkbox" id="numberChkbox"> Numbered</label>
+      <label class="row"><input type="checkbox" id="fantasy"> Fantasy style</label>
+      <label class="row"><input type="checkbox" id="capitalise"> Capitalise</label>
+    </div>
+    <details class="customizeations" style="margin-top:8px;font-size:12px;color:#7f93a6">
+      <summary style="cursor:pointer;font-weight:500;">Customize address generator</summary>
+      <div style="margin-top:8px;">
+        <input type="number" id="max-number" min="1" max="9999" value="99" style="width:60px">
+        <br>
+        <label>Custom Prefixes (comma separated):</label>
+        <textarea id="custom-prefixes" rows="2" style="width:100%;resize:vertical"></textarea>
+        <br>
+        <label>Custom Suffixes (comma separated):</label>
+        <textarea id="custom-suffixes" rows="2" style="width:100%;resize:vertical"></textarea>
+      </div>
+    </details>
+    <footer>Click Generate (or press space/enter)</footer>
+  </div>
+
+  <script>
+    const maxNumberInput = document.getElementById('max-number');
+    // Config: tweak these arrays to change the generator's style
+    const prefixes = [
+      'raven','oak','willow','ember','stone','sun','moon','wind','pine','ash','silver','bramble','wolf','fox','mist','ridge'
+    ];
+    const rareprefixes = ['dragon','shadow','storm','thorn','frost','iron','gold','star','night','fire'];
+    const raresuffixes = ['spire','cliff','peak','fort','cross','vale','hollow','cove','rise','point'];
+    const suffixes = [
+      'wood','field','brook','dale','mere','gate','hill','view','shore','grove','croft','ford','burn','fall','haven'
+    ];
+    const streetTypes = ['st','ave','blvd','ct','ln','rd','way','terr','pl','drive','circle','trail'];
+
+    // Block: Fantasy prefixes and suffixes
+    const FantasyPrefixes = ['dragon','shadow','storm','thorn','frost','iron','gold','star','night','fire'];
+    const FantasySuffixes = ['spire','cliff','peak','fort','cross','vale','hollow','cove','rise','point'];
+    const rareFantasyPrefixes = ['elven','dwarven','orcish','ancient','mystic','enchanted','cursed','sacred','forgotten','hidden'];
+    const rareFantasySuffixes = ['sanctum','citadel','stronghold','keep','bastion','refuge','ascent','descent','expanse','domain'];
+
+    const FantasyStreetTypes = ['village','town','city','borough','shire','hold','haven','port','crossing','fortress','vale','realm','kingdom'];
+    // End Block
+
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function randNumber(){
+        let max = parseInt(maxNumberInput.value, 10) || 99;
+        if (max < 1) max = 1;
+        if (max > 9999) max = 9999;
+        return Math.floor(Math.random() * max) + 1;
+    }
+
+    function getCustomArray(id, fallback) {
+      const val = document.getElementById(id).value.trim();
+      if (!val) return fallback;
+      return val.split(',').map(s => s.trim()).filter(Boolean).concat(fallback);
+    }
+
+    function makeStreetName(){
+      // Use custom arrays if provided
+      const pArr = getCustomArray('custom-prefixes', prefixes);
+      const sArr = getCustomArray('custom-suffixes', suffixes);
+      const p = pick(pArr);
+      const s = pick(sArr);
+      if (Math.random() < 0.15){
+        if (Math.random() < 0.5){
+          return pick(rareprefixes) + s;
+        } else {
+          return p + pick(raresuffixes);
+        }
+      }
+      return p + s;
+    }
+    const numberedCheckbox = document.getElementById('numberChkbox');
+
+    function generate(){
+      if (!numberedCheckbox.checked) {
+        // No street number
+        const name = makeStreetName();
+        const type = pick(streetTypes);
+        const addr = `${name} ${type}`.toLowerCase();
+        return addr;
+      }
+      const num = randNumber();
+      const name = makeStreetName();
+      const type = pick(streetTypes);
+      const addr = `${num} ${name} ${type}`.toLowerCase();
+      return addr;
+    }
+
+    // Fantasy mode
+    const fantasyCheckbox = document.getElementById('fantasy');
+    const out = document.getElementById('address');
+    const genBtn = document.getElementById('gen');
+    const copyBtn = document.getElementById('copy');
+    const capCheckbox = document.getElementById('capitalise');
+
+    function show(){
+      if (fantasyCheckbox.checked){
+        function makeFantasyStreetName(){
+          const pArr = getCustomArray('custom-prefixes', FantasyPrefixes);
+          const sArr = getCustomArray('custom-suffixes', FantasySuffixes);
+          const p = pick(pArr);
+          const s = pick(sArr);
+          if (Math.random() < 0.15){
+            if (Math.random() < 0.5){
+              return pick(rareFantasyPrefixes) + s;
+            } else {
+              return p + pick(rareFantasySuffixes);
+            }
+          }
+          return p + s;
+        }
+        let num;
+        let fantasyAddr;
+        if (numberedCheckbox.checked) {
+          num = randNumber();
+        }
+        else {
+          num = '';
+        }
+        const name = makeFantasyStreetName();
+        const type = pick(FantasyStreetTypes);
+        if (numberedCheckbox.checked) {
+          fantasyAddr = `${num} ${name} ${type}`.toLowerCase();
+        }
+        else {
+          fantasyAddr = `${name} ${type}`.toLowerCase();
+        }
+        if (capCheckbox.checked){
+          fantasyAddr = fantasyAddr.split(' ').map((w,i)=> w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+        }
+        out.textContent = fantasyAddr;
+        return;
+      }
+      let a = generate();
+      if (capCheckbox.checked){
+        // Capitalise each word but keep street type lower-case abbreviation if desired
+        a = a.split(' ').map((w,i)=> w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+      }
+      out.textContent = a;
+    }
+
+    genBtn.addEventListener('click', show);
+    copyBtn.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(out.textContent); copyBtn.textContent = 'Copied!'; setTimeout(()=>copyBtn.textContent='Copy',900); }
+      catch(e){ alert('Copy failed — your browser may block clipboard access.'); }
+    });
+
+    // keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === ' ' || e.key === 'Enter'){
+        e.preventDefault(); show();
+      }
+    });
+
+    // initial sample
+    out.textContent = '12 ravenwood ct';
+  </script>
+</body>
+</html>
