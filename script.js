@@ -56,7 +56,7 @@ function allowdevmode() {
 
 function EnableAprilFools() {
     const confirmAprilFools = prompt("Are you sure you want to enable April Fools mode? This will redirect you to a 404 page. Type 'YES' to confirm.");
-    if (confirmAprilFools === "YES") {
+    if (confirmAprilFools.toLocaleUpperCase() === "YES") {
         isAprilFools = true;
         window.location.replace("/404.html");
     }
