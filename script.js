@@ -9,6 +9,15 @@ let konamiCodePosition = 0;
 var coll = document.getElementsByClassName("collapsible");
 const ghosts = ["Banshee", "Demon", "Deogen", "Goryo", "Hantu", "Jinn", "Mare", "Moroi", "Myling", "Obake", "Oni", "Onryo", "Phantom", "Poltergeist", "Raiju", "Revenant", "Shade", "Spirit", "Thaye", "The Mimic", "The Twins", "Wraith", "Yokai", "Yurei"];
 let ghost = ghosts[Math.floor(Math.random() * ghosts.length)];
+let aprilFools = new Date();
+let isAprilFools = aprilFools.getMonth() === 3 && aprilFools.getDate() === 1;
+
+// redirect all pages to 404 if it is april fools
+if (isAprilFools) {
+    if (window.location.pathname !== "/404.html" && window.location.pathname !== "/site/404.html") {
+        window.location.replace("/404.html");
+    }
+}
 
 document.addEventListener("keydown", function (e) {
     if (e.key === allowdevmodekey[allowdevmodeposition]) {
