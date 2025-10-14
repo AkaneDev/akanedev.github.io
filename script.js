@@ -54,6 +54,14 @@ function allowdevmode() {
     console.log("Allowed Dev Mode")
 }
 
+function EnableAprilFools() {
+    const confirmAprilFools = prompt("Are you sure you want to enable April Fools mode? This will redirect you to a 404 page. Type 'YES' to confirm.");
+    if (confirmAprilFools === "YES") {
+        isAprilFools = true;
+        window.location.replace("/404.html");
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Ghost is: " + ghost);
     const themeToggle = document.getElementById("theme-toggle");
