@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>RTM — Random Text Model Specification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/script.js"></script>
+</head>
+<body class="dark-mode">
+  <nav class="navbar">
+    <div class="container">
+      <a href="mailto:akane@akanedev.au" class="logo">AkaneDev</a>
+      <button id="theme-toggle" aria-label="Toggle theme">☀️</button>
+      <button id="back-button" aria-label="Go back">&larr; Back</button>
+    </div>
+  </nav>
+
+  <main id="content" class="centered-restrained">
+    <header class="hero">
+      <h1>RTM — Random Text Model Specification</h1>
+      <p class="lead">A lightweight standard for constructing pseudo-LLMs that generate random or pattern-based responses without neural inference.</p>
+    </header>
+
+    <section>
+      <h2>1. What is RTM?</h2>
+      <p><strong>Random Text Model (RTM)</strong> is a framework and API standard for creating lightweight, non-AI text generators that simulate conversational AI behavior using randomness, heuristics, or small prediction algorithms instead of large neural networks.</p>
+
+      <p>The goal of RTM is to provide a reproducible and fun way to design fake language models (like <em>CatGPT</em>) for experimentation, parody, or prototyping purposes.</p>
+    </section>
+
+    <section>
+      <h2>2. Core Principles</h2>
+      <ul>
+        <li><strong>No AI required:</strong> RTMs do not rely on deep learning, embeddings, or trained transformers.</li>
+        <li><strong>Predictive illusion:</strong> They create the <em>appearance</em> of intelligence through randomness, keyword triggers, or templated logic.</li>
+        <li><strong>Deterministic chaos:</strong> Outputs are pseudo-random but optionally seeded for reproducibility.</li>
+        <li><strong>Compatibility:</strong> RTMs mimic the <code>/v1/chat/completions</code> format for easy integration with existing clients and UIs.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. RTM API Specification</h2>
+      <h3>Endpoints</h3>
+      <ul>
+        <li><code>GET /v1/models</code> — Lists available RTMs.</li>
+        <li><code>POST /v1/chat/completions</code> — Generates a random or heuristic response to the given input.</li>
+      </ul>
+
+      <h3>Example Request</h3>
+      <pre><code>{
+  "model": "rtm-base",
+  "messages": [
+    {"role": "user", "content": "hello there"}
+  ]
+}</code></pre>
+
+      <h3>Example Response</h3>
+      <pre><code>{
+  "id": "chatcmpl-rtm",
+  "object": "chat.completion",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "As a curious RTM, I calculated that 42% of 'hello there' is cat energy."
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {"prompt_tokens": 2, "completion_tokens": 14}
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>4. RTM Model Types</h2>
+      <ul>
+        <li><strong>RTM-Base:</strong> Simple random templates and Markov chains.</li>
+        <li><strong>RTM-Pattern:</strong> Regex or keyword-driven responses.</li>
+        <li><strong>RTM-Weighted:</strong> Frequency-based word prediction.</li>
+        <li><strong>RTM-Sim:</strong> Simulated reasoning using buzzwords or pseudo-logic.</li>
+        <li><strong>RTM-Themed:</strong> Personality-based variants (e.g., <em>CatGPT</em>).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>5. Behavior & Memory</h2>
+      <p>RTMs may optionally maintain short-term context (“fake memory”) using simple data structures such as arrays, JSON objects, or random seed storage. This is not required but can improve conversational continuity.</p>
+
+      <p>Example behaviors include:</p>
+      <ul>
+        <li>“Mood” randomization per session (e.g., happy, sleepy, chaotic).</li>
+        <li>Seeded pseudo-random responses for repeatable testing.</li>
+        <li>Context echoes — repeating parts of the prompt for illusion of understanding.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>6. Example Implementation</h2>
+      <pre><code>def RTM_generate(prompt):
+    import random
+    moods = ["curious", "chaotic", "sleepy", "serious"]
+    mood = random.choice(moods)
+    templates = [
+        f"As a {mood} RTM, I think '{prompt}' is fascinating.",
+        f"{prompt}? Hmm... sounds philosophical.",
+        f"I computed that 73% of '{prompt}' is fluff.",
+        f"In another universe, '{prompt}' would make sense."
+    ]
+    return random.choice(templates)</code></pre>
+    </section>
+
+    <section>
+      <h2>7. Licensing & Attribution</h2>
+      <p>The RTM standard is open and free to implement in any programming language. Attribution to <strong>AkaneDev</strong> is appreciated but not required.</p>
+    </section>
+
+    <section style="margin-top:1.25rem;">
+      <h2>8. Related Projects</h2>
+      <ul>
+        <li><a href="/projects/catgpt.html">CatGPT</a> — Feline conversational RTM.</li>
+        <li><a href="/projects/rtm-demo.html">RTM Playground</a> — Web interface for testing RTM responses.</li>
+        <li><a href="/projects/specs.html">RTM Developer Guide</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p class="padding">&copy; 2025 AkaneDev</p>
+  </footer>
+</body>
+</html>
