@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3D Matrix Rain — Auto Rotate</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: black; }
+    #info { position: fixed; left: 10px; top: 10px; color: #00ff80; font-family: monospace; font-size: 13px; opacity: 0.95; z-index: 2; }
+  </style>
+</head>
+<body>
+  <!-- <div id="info">Matrix Rain — rotating automatically. Drag to orbit, scroll to zoom, press F for fullscreen.</div> -->
+
+  <script type="module">
+    import * as THREE from 'https://esm.sh/three@0.158.0';
+    import { OrbitControls } from 'https://esm.sh/three@0.158.0/examples/jsm/controls/OrbitControls.js';
+    import { FontLoader } from 'https://esm.sh/three@0.158.0/examples/jsm/loaders/FontLoader.js';
+    import { TextGeometry } from 'https://esm.sh/three@0.158.0/examples/jsm/geometries/TextGeometry.js';
+
+    // === CONFIG ===
+    const MESSAGE = "Starting Soon"; // <-- easily editable
+    const FONT_URL = 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/fonts/helvetiker_regular.typeface.json';
+    const NUM_SPRITES = 2500;
+    const VOLUME = 240;
+    const POOL_SIZE = 300;
+
+    // === SCENE ===
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    scene.fog = new THREE.FogExp2(0x000000, 0.0045);
+
+    const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 2000);
+    camera.position.set(0, 50, 180/2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.autoRotate = true;        // enable auto-rotation
+    controls.autoRotateSpeed = 4;    // slow rotation speed
+    controls.minDistance = 50;
+    controls.maxDistance = 500;
+
+    // === GRID FLOOR ===
+    const grid = new THREE.GridHelper(VOLUME*1.5, VOLUME / 10, 0x00ff80, 0x003300);
+    grid.position.y = -VOLUME / 7;
+    scene.add(grid);
+
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(VOLUME, VOLUME),
+      new THREE.MeshBasicMaterial({ color: 0x002200, transparent: true, opacity: 0.1 })
+    );
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.y = grid.position.y - 0.01;
+    scene.add(plane);
+
+    // === CHARACTER SPRITES ===
+    // const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZﾊﾐﾋｳｼﾅﾓﾆｻﾜｵﾘﾎﾃﾏｹｶｷ'.split('');
+    // const chars = '10'.split('');
+    const chars = 'var,const,func,if,while,true,false,ctx,let,1,0,int,float,double,auto,string,char'.split(',');
+
+    function makeCanvasTexture(ch, baseSize = 128) {
+      // dynamically size the canvas to fit text width
+      const cvs = document.createElement('canvas');
+      const ctx = cvs.getContext('2d');
+
+      // measure text width first using a temporary size
+      ctx.font = 'bold 48px monospace';
+      const metrics = ctx.measureText(ch);
+      const textWidth = metrics.width;
+      const padding = 40;
+
+      // make the canvas at least as big as baseSize, larger if text is wide
+      const size = Math.max(baseSize, textWidth + padding);
+      cvs.width = size;
+      cvs.height = size;
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = 'rgba(0,0,0,0)';
+      ctx.fillRect(0, 0, size, size);
+
+      // scale font to roughly fill height, keeping aspect balance
+      const fontSize = size * 0.6;
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgb(0,255,140)';
+      ctx.fillText(ch, size / 2, size / 2);
+
+      const tex = new THREE.CanvasTexture(cvs);
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+
+      return { texture: tex, canvas: cvs, size };
+    }
+
+
+    const materialPool = [];
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const { texture, canvas } = makeCanvasTexture(chars[Math.floor(Math.random() * chars.length)]);
+      const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending });
+      mat.userCanvas = canvas;
+      materialPool.push(mat);
+    }
+    const randomMat = () => materialPool[Math.floor(Math.random() * materialPool.length)];
+
+    const sprites = [];
+    for (let i = 0; i < NUM_SPRITES; i++) {
+      const s = new THREE.Sprite(randomMat());
+      s.scale.setScalar(0.6 + Math.random() * 2);
+      s.position.set((Math.random() - 0.5) * VOLUME, (Math.random() - 0.5) * VOLUME, (Math.random() - 0.5) * VOLUME);
+      s.userData = { speed: 0.3 + Math.random() * 1.2, resetY: -VOLUME / 2, topY: VOLUME / 2, baseScale: s.scale.x };
+      scene.add(s);
+      sprites.push(s);
+    }
+
+    // === CAMERA MESSAGE ===
+    const fontLoader = new FontLoader();
+    fetch(FONT_URL)
+      .then(r => r.json())
+      .then(fontJson => {
+        const font = fontLoader.parse(fontJson);
+        const geom = new TextGeometry(MESSAGE, { font, size: 14, height: 2, bevelEnabled: false });
+        geom.computeBoundingBox();
+        const width = geom.boundingBox.max.x - geom.boundingBox.min.x;
+        const textMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+        const mesh = new THREE.Mesh(geom, textMat);
+        mesh.position.set(-width / 2, 0, -160);
+        camera.add(mesh);
+        scene.add(camera);
+      });
+
+    // === ANIMATION LOOP ===
+    let last = performance.now();
+    function animate(now = performance.now()) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+
+      // Matrix rain movement
+      for (const s of sprites) {
+        s.position.y -= s.userData.speed * (1 + dt * 30);
+        if (s.position.y < s.userData.resetY - 10) {
+          s.position.y = s.userData.topY + Math.random() * 20;
+          s.position.x = (Math.random() - 0.5) * VOLUME;
+          s.position.z = (Math.random() - 0.5) * VOLUME;
+        }
+        if (Math.random() < 0.004) {
+          const mat = s.material;
+          const cvs = mat.userCanvas;
+          const ctx = cvs.getContext('2d');
+          ctx.clearRect(0, 0, cvs.width, cvs.height);
+          ctx.fillStyle = 'rgb(0,255,140)';
+          ctx.font = 'bold 42px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(chars[Math.floor(Math.random() * chars.length)], cvs.width / 2, cvs.height / 2);
+          mat.map.needsUpdate = true;
+        }
+        const pulse = 1 + Math.abs(Math.sin(now * 0.002 + s.position.x)) * 0.35;
+        s.scale.setScalar(s.userData.baseScale * pulse);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // === EVENTS ===
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'f') {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      }
+    });
+  </script> <!-- really? -->
+</body>
+</html>
