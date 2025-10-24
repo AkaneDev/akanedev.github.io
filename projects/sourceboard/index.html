@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SourceBoard</title>
+<style>
+body { margin:0; font-family:'Segoe UI',sans-serif; background:#1b1b2f; color:#fff; overflow:hidden; }
+#sidebar { position:fixed; left:0; top:0; width:320px; height:100vh; background:#2c2c44; padding:20px; box-sizing:border-box; overflow-y:auto; box-shadow:2px 0 10px rgba(0,0,0,0.5); }
+#sidebar h2 { margin-top:0; text-align:center; color:#4caf50; font-size:24px; }
+#sidebar input, #sidebar textarea, #sidebar select, #sidebar button { width:100%; margin:6px 0; padding:8px; border-radius:6px; border:none; outline:none; font-size:14px; }
+#sidebar input, #sidebar textarea, #sidebar select { background:#3a3a5c; color:#fff; }
+#sidebar button { background:#4caf50; color:white; cursor:pointer; font-weight:bold; }
+#sidebar button:hover { background:#45a049; }
+#canvas-container { position:absolute; left:320px; top:0; right:0; bottom:0; background:#1e1e2f; }
+canvas { display:block; }
+.context-menu { position:absolute; background:#2c2c44; border:1px solid #4caf50; padding:5px 0; display:none; z-index:1000; border-radius:6px; width:150px; }
+.context-menu button { display:block; width:100%; padding:5px 10px; background:none; color:white; border:none; text-align:left; cursor:pointer; }
+.context-menu button:hover { background:#4caf50; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+<h2>SourceBoard</h2>
+
+<!-- Board management -->
+<select id="boardSelect" onchange="switchBoard()"></select>
+<input type="text" id="newBoardName" placeholder="New board name" />
+<button onclick="addBoard()">Add Board</button>
+<button onclick="deleteBoard()">Delete Board</button>
+<button onclick="exportBoard()">Export Board</button>
+<input type="file" id="importFile" style="display:none" onchange="importBoard(event)">
+<button onclick="document.getElementById('importFile').click()">Import Board</button>
+
+<hr>
+
+<!-- Card inputs -->
+<select id="cardType" onchange="updateSidebarFields()">
+  <option value="link">Link Card</option>
+  <option value="text">Text Note</option>
+</select>
+<input type="text" id="title" placeholder="Title" />
+<input type="text" id="url" placeholder="URL (link only)" />
+<textarea id="comments" placeholder="Comments / Text"></textarea>
+<input type="text" id="labels" placeholder="Labels (comma separated)" />
+<button onclick="addCard()">Add Card</button>
+</div>
+
+<div id="canvas-container">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="context-menu" id="contextMenu">
+  <button onclick="editCard()">Edit</button>
+  <button onclick="deleteCard()">Delete</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth - 320;
+canvas.height = window.innerHeight;
+
+let boards = [];
+let currentBoardIndex = 0;
+let dragging = null;
+let offsetX=0, offsetY=0;
+let selectedCard = null;
+const contextMenu = document.getElementById('contextMenu');
+
+// Load boards from storage
+function loadBoards() {
+  boards = JSON.parse(localStorage.getItem('sourceBoardBoards') || '[]');
+  if(boards.length===0){ boards.push({name:'Default Board', cards:[]}); }
+  populateBoardSelect();
+  loadCurrentBoard();
+}
+
+function saveBoards(){
+  if(boards.length>0) boards[currentBoardIndex].cards = boards[currentBoardIndex].cards || [];
+  localStorage.setItem('sourceBoardBoards', JSON.stringify(boards));
+}
+
+function populateBoardSelect(){
+  const sel = document.getElementById('boardSelect');
+  sel.innerHTML='';
+  boards.forEach((b,i)=>{
+    const opt = document.createElement('option'); opt.value=i; opt.innerText=b.name;
+    sel.appendChild(opt);
+  });
+  sel.value=currentBoardIndex;
+}
+
+function switchBoard(){
+  currentBoardIndex = parseInt(document.getElementById('boardSelect').value);
+  loadCurrentBoard();
+}
+
+function loadCurrentBoard(){
+  window.cards = boards[currentBoardIndex].cards;
+  draw();
+}
+
+// Board management
+function addBoard(){
+  const name = document.getElementById('newBoardName').value.trim();
+  if(!name) return alert("Enter board name");
+  boards.push({name, cards:[]});
+  currentBoardIndex = boards.length-1;
+  populateBoardSelect();
+  loadCurrentBoard();
+  saveBoards();
+  document.getElementById('newBoardName').value='';
+}
+
+function deleteBoard(){
+  if(boards.length===0) return;
+  if(!confirm(`Delete board "${boards[currentBoardIndex].name}"?`)) return;
+  boards.splice(currentBoardIndex,1);
+  currentBoardIndex = Math.max(0,currentBoardIndex-1);
+  populateBoardSelect();
+  loadCurrentBoard();
+  saveBoards();
+}
+
+// Card management
+function updateSidebarFields(){
+  const type = document.getElementById('cardType').value;
+  document.getElementById('url').style.display = type==='link' ? 'block':'none';
+  document.getElementById('comments').placeholder = type==='link' ? 'Comments':'Text';
+}
+
+function addCard(){
+  const type = document.getElementById('cardType').value;
+  const title=document.getElementById('title').value.trim();
+  const url=document.getElementById('url').value.trim();
+  const comments=document.getElementById('comments').value.trim();
+  const labels=document.getElementById('labels').value.split(',').map(l=>l.trim()).filter(l=>l);
+  if(!title) return alert("Title required");
+  const card = {x:50,y:50,w:260,h:120,type,title,url:type==='link'?url:'',comments,labels};
+  boards[currentBoardIndex].cards.push(card);
+  loadCurrentBoard();
+  saveBoards();
+  document.getElementById('title').value=''; document.getElementById('url').value=''; document.getElementById('comments').value=''; document.getElementById('labels').value='';
+}
+
+// Draw cards with auto-resize
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const cards = boards[currentBoardIndex].cards;
+  for(const card of cards){
+    const padding=8, lineHeight=18, maxWidth=260-padding*2;
+    let lines = [card.title];
+    if(card.type==='link' && card.url) lines.push(card.url);
+    lines.push(...wrapText(card.type==='text'?card.comments:'Comments: '+card.comments,maxWidth));
+    if(card.labels.length>0) lines.push('Labels: '+card.labels.join(','));
+    card.h = lines.length*lineHeight + padding*2; card.w = 260;
+
+    ctx.fillStyle='#3a3a5c'; ctx.shadowColor='rgba(0,0,0,0.7)'; ctx.shadowBlur=8;
+    ctx.fillRect(card.x,card.y,card.w,card.h);
+    ctx.strokeStyle='#4caf50'; ctx.lineWidth=2; ctx.strokeRect(card.x,card.y,card.w,card.h); ctx.shadowBlur=0;
+
+    ctx.fillStyle='#fff'; ctx.font='bold 14px sans-serif';
+    let y=card.y+padding+14; ctx.fillText(lines[0],card.x+padding,y);
+    ctx.font='12px sans-serif';
+    for(let i=1;i<lines.length;i++){ y+=lineHeight; ctx.fillText(lines[i],card.x+padding,y); }
+  }
+}
+
+function wrapText(text,maxWidth){
+  const words=text.split(' '), lines=[], ctxFont='12px sans-serif';
+  let currentLine='';
+  for(const word of words){
+    const testLine=currentLine ? currentLine+' '+word : word;
+    ctx.font=ctxFont;
+    if(ctx.measureText(testLine).width>maxWidth){ if(currentLine) lines.push(currentLine); currentLine=word; } else currentLine=testLine;
+  }
+  if(currentLine) lines.push(currentLine);
+  return lines;
+}
+
+// Drag & drop
+canvas.addEventListener('mousedown', e=>{
+  const mx=e.clientX-320,my=e.clientY; dragging=null;
+  const cards = boards[currentBoardIndex].cards;
+  for(let i=cards.length-1;i>=0;i--){
+    const c=cards[i];
+    if(mx>c.x && mx<c.x+c.w && my>c.y && my<c.y+c.h){ dragging=c; offsetX=mx-c.x; offsetY=my-c.y; cards.push(cards.splice(i,1)[0]); break;}
+  }
+});
+canvas.addEventListener('mousemove', e=>{ if(dragging){ dragging.x=e.clientX-320-offsetX; dragging.y=e.clientY-offsetY; draw(); }});
+canvas.addEventListener('mouseup',()=>{ dragging=null; saveBoards(); });
+
+// Context menu
+canvas.addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  const mx=e.clientX-320,my=e.clientY;
+  selectedCard=null;
+  const cards = boards[currentBoardIndex].cards;
+  for(let i=cards.length-1;i>=0;i--){ const c=cards[i]; if(mx>c.x&&mx<c.x+c.w&&my>c.y&&my<c.y+c.h){selectedCard=c; break;}}
+  if(selectedCard){ contextMenu.style.left=e.clientX+'px'; contextMenu.style.top=e.clientY+'px'; contextMenu.style.display='block'; } else contextMenu.style.display='none';
+});
+document.addEventListener('click',()=>{ contextMenu.style.display='none'; });
+
+function deleteCard(){ if(!selectedCard) return; boards[currentBoardIndex].cards=boards[currentBoardIndex].cards.filter(c=>c!==selectedCard); selectedCard=null; draw(); saveBoards(); }
+function editCard(){ if(!selectedCard) return;
+  document.getElementById('cardType').value = selectedCard.type; updateSidebarFields();
+  document.getElementById('title').value=selectedCard.title;
+  document.getElementById('url').value=selectedCard.url;
+  document.getElementById('comments').value=selectedCard.comments;
+  document.getElementById('labels').value=selectedCard.labels.join(',');
+  contextMenu.style.display='none'; selectedCard=null;
+}
+
+// Export / Import
+function exportBoard(){
+  const cards = boards[currentBoardIndex].cards;
+  const data = JSON.stringify({name: boards[currentBoardIndex].name, cards});
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=boards[currentBoardIndex].name.replace(/[^a-z0-9]/gi,'_')+".json"; a.click(); URL.revokeObjectURL(url);
+}
+
+function importBoard(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const obj=JSON.parse(e.target.result);
+      if(!obj.name || !Array.isArray(obj.cards)) return alert("Invalid file");
+      boards.push({name: obj.name, cards: obj.cards});
+      currentBoardIndex = boards.length-1;
+      populateBoardSelect();
+      loadCurrentBoard();
+      saveBoards();
+    }catch(err){ alert("Failed to import"); }
+  };
+  reader.readAsText(file);
+}
+
+// Init
+window.addEventListener('resize',()=>{ canvas.width=window.innerWidth-320; canvas.height=window.innerHeight; draw(); });
+loadBoards();
+updateSidebarFields();
+</script>
+</body>
+</html>
