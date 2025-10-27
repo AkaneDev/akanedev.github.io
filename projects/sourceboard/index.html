@@ -13,7 +13,7 @@ body { margin:0; font-family:'Segoe UI',sans-serif; background:#1b1b2f; color:#f
 #sidebar button { background:#4caf50; color:white; cursor:pointer; font-weight:bold; }
 #sidebar button:hover { background:#45a049; }
 #canvas-container { position:absolute; left:320px; top:0; right:0; bottom:0; background:#1e1e2f; overflow:hidden; }
-canvas { display:block; }
+canvas { display:block; cursor:grab; }
 .context-menu { position:absolute; background:#2c2c44; border:1px solid #4caf50; padding:5px 0; display:none; z-index:1000; border-radius:6px; width:150px; }
 .context-menu button { display:block; width:100%; padding:5px 10px; background:none; color:white; border:none; text-align:left; cursor:pointer; }
 .context-menu button:hover { background:#4caf50; }
@@ -70,178 +70,213 @@ canvas.height = window.innerHeight;
 let boards = [];
 let currentBoardIndex = 0;
 let dragging = null;
-let offsetX=0, offsetY=0;
+let offsetX = 0, offsetY = 0;
 let selectedCard = null;
 const contextMenu = document.getElementById('contextMenu');
 let uploadedMediaData = null;
 
+// camera position
+let camX = 0, camY = 0;
+let isPanning = false;
+let panStartX = 0, panStartY = 0;
+let camStartX = 0, camStartY = 0;
+
 // Load boards
 function loadBoards() {
   boards = JSON.parse(localStorage.getItem('sourceBoardBoards') || '[]');
-  if(boards.length===0){ boards.push({name:'Default Board', cards:[]}); }
+  if (boards.length === 0) { boards.push({ name: 'Default Board', cards: [] }); }
   populateBoardSelect();
   loadCurrentBoard();
 }
-function saveBoards(){ localStorage.setItem('sourceBoardBoards', JSON.stringify(boards)); }
-function populateBoardSelect(){
-  const sel=document.getElementById('boardSelect');
-  sel.innerHTML='';
-  boards.forEach((b,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=b.name; sel.appendChild(o); });
-  sel.value=currentBoardIndex;
+function saveBoards() { localStorage.setItem('sourceBoardBoards', JSON.stringify(boards)); }
+function populateBoardSelect() {
+  const sel = document.getElementById('boardSelect');
+  sel.innerHTML = '';
+  boards.forEach((b, i) => { const o = document.createElement('option'); o.value = i; o.textContent = b.name; sel.appendChild(o); });
+  sel.value = currentBoardIndex;
 }
-function switchBoard(){ currentBoardIndex=parseInt(document.getElementById('boardSelect').value); loadCurrentBoard(); }
-function loadCurrentBoard(){ window.cards=boards[currentBoardIndex].cards; draw(); }
+function switchBoard() { currentBoardIndex = parseInt(document.getElementById('boardSelect').value); loadCurrentBoard(); }
+function loadCurrentBoard() { window.cards = boards[currentBoardIndex].cards; draw(); }
 
 // Board ops
-function addBoard(){
-  const name=document.getElementById('newBoardName').value.trim();
-  if(!name) return alert("Enter name");
-  boards.push({name,cards:[]});
-  currentBoardIndex=boards.length-1;
+function addBoard() {
+  const name = document.getElementById('newBoardName').value.trim();
+  if (!name) return alert("Enter name");
+  boards.push({ name, cards: [] });
+  currentBoardIndex = boards.length - 1;
   populateBoardSelect(); loadCurrentBoard(); saveBoards();
-  document.getElementById('newBoardName').value='';
+  document.getElementById('newBoardName').value = '';
 }
-function deleteBoard(){
-  if(!boards.length) return;
-  if(!confirm("Delete this board?")) return;
-  boards.splice(currentBoardIndex,1);
-  currentBoardIndex=Math.max(0,currentBoardIndex-1);
+function deleteBoard() {
+  if (!boards.length) return;
+  if (!confirm("Delete this board?")) return;
+  boards.splice(currentBoardIndex, 1);
+  currentBoardIndex = Math.max(0, currentBoardIndex - 1);
   populateBoardSelect(); loadCurrentBoard(); saveBoards();
 }
 
 // Sidebar
-function updateSidebarFields(){
-  const type=document.getElementById('cardType').value;
-  document.getElementById('url').style.display = (type==='link'||type==='media') ? 'block':'none';
-  document.getElementById('comments').style.display = (type!=='color') ? 'block':'none';
+function updateSidebarFields() {
+  const type = document.getElementById('cardType').value;
+  document.getElementById('url').style.display = (type === 'link' || type === 'media') ? 'block' : 'none';
+  document.getElementById('comments').style.display = (type !== 'color') ? 'block' : 'none';
 }
 
 // Add card
-document.getElementById('mediaFile').addEventListener('change', e=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ uploadedMediaData=reader.result; };
+document.getElementById('mediaFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { uploadedMediaData = reader.result; };
   reader.readAsDataURL(file);
 });
 
-function addCard(){
-  const type=document.getElementById('cardType').value;
-  const title=document.getElementById('title').value.trim() || type.charAt(0).toUpperCase()+type.slice(1);
-  const url=document.getElementById('url').value.trim();
-  const comments=document.getElementById('comments').value.trim();
-  const labels=document.getElementById('labels').value.split(',').map(l=>l.trim()).filter(l=>l);
-  const color=document.getElementById('cardColor').value;
-  const card={x:50,y:50,w:260,h:140,type,title,url,comments,labels,color};
-  if(type==='media' && uploadedMediaData){ card.media=uploadedMediaData; uploadedMediaData=null; }
+function addCard() {
+  const type = document.getElementById('cardType').value;
+  const title = document.getElementById('title').value.trim() || type.charAt(0).toUpperCase() + type.slice(1);
+  const url = document.getElementById('url').value.trim();
+  const comments = document.getElementById('comments').value.trim();
+  const labels = document.getElementById('labels').value.split(',').map(l => l.trim()).filter(l => l);
+  const color = document.getElementById('cardColor').value;
+  const card = { x: camX + 50, y: camY + 50, w: 260, h: 140, type, title, url, comments, labels, color };
+  if (type === 'media' && uploadedMediaData) { card.media = uploadedMediaData; uploadedMediaData = null; }
   boards[currentBoardIndex].cards.push(card);
   saveBoards(); draw();
-  document.getElementById('title').value=''; document.getElementById('url').value=''; document.getElementById('comments').value=''; document.getElementById('labels').value='';
+  document.getElementById('title').value = ''; document.getElementById('url').value = ''; document.getElementById('comments').value = ''; document.getElementById('labels').value = '';
 }
 
-// Draw cards
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const cards=boards[currentBoardIndex].cards;
-  for(const card of cards){
-    const padding=8, lineHeight=18, maxWidth=card.w-padding*2;
-    let lines=[card.title];
-    if(card.type==='link' && card.url) lines.push(card.url);
-    if(card.type==='text') lines.push(...wrapText(card.comments,maxWidth));
-    if(card.labels?.length>0) lines.push('Labels: '+card.labels.join(','));
-    card.h = 100 + (card.type==='text' ? lines.length*lineHeight : 0);
-    ctx.fillStyle=card.color||'#3a3a5c';
-    ctx.shadowColor='rgba(0,0,0,0.7)'; ctx.shadowBlur=8;
-    ctx.fillRect(card.x,card.y,card.w,card.h);
-    ctx.strokeStyle='#4caf50'; ctx.lineWidth=2; ctx.strokeRect(card.x,card.y,card.w,card.h);
-    ctx.shadowBlur=0;
-    ctx.fillStyle='#fff'; ctx.font='bold 14px sans-serif';
-    ctx.fillText(card.title,card.x+padding,card.y+padding+14);
+// Draw
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(-camX, -camY);
+  const cards = boards[currentBoardIndex].cards;
+  for (const card of cards) {
+    const padding = 8, lineHeight = 18, maxWidth = card.w - padding * 2;
+    let lines = [card.title];
+    if (card.type === 'link' && card.url) lines.push(card.url);
+    if (card.type === 'text') lines.push(...wrapText(card.comments, maxWidth));
+    if (card.labels?.length > 0) lines.push('Labels: ' + card.labels.join(','));
+    card.h = 100 + (card.type === 'text' ? lines.length * lineHeight : 0);
+    ctx.fillStyle = card.color || '#3a3a5c';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 8;
+    ctx.fillRect(card.x, card.y, card.w, card.h);
+    ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 2; ctx.strokeRect(card.x, card.y, card.w, card.h);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif';
+    ctx.fillText(card.title, card.x + padding, card.y + padding + 14);
 
-    if(card.type==='link'){
-      ctx.font='12px sans-serif'; ctx.fillText(card.url,card.x+padding,card.y+padding+30);
+    if (card.type === 'link') {
+      ctx.font = '12px sans-serif'; ctx.fillText(card.url, card.x + padding, card.y + padding + 30);
     }
-    if(card.type==='text'){
-      ctx.font='12px sans-serif'; let y=card.y+padding+30;
-      for(const line of wrapText(card.comments,maxWidth)){ y+=lineHeight; ctx.fillText(line,card.x+padding,y); }
+    if (card.type === 'text') {
+      ctx.font = '12px sans-serif'; let y = card.y + padding + 30;
+      for (const line of wrapText(card.comments, maxWidth)) { y += lineHeight; ctx.fillText(line, card.x + padding, y); }
     }
-    if(card.type==='media' && (card.media||card.url)){
-      const img=new Image();
-      img.src=card.media||card.url;
-      img.onload=()=>{ ctx.drawImage(img,card.x+padding,card.y+padding+25,card.w-padding*2,Math.min(img.height*(card.w-padding*2)/img.width,150)); };
+    if (card.type === 'media' && (card.media || card.url)) {
+      const img = new Image();
+      img.src = card.media || card.url;
+      img.onload = () => { ctx.drawImage(img, card.x + padding, card.y + padding + 25, card.w - padding * 2, Math.min(img.height * (card.w - padding * 2) / img.width, 150)); };
     }
-    if(card.type==='color'){
-      ctx.fillStyle=card.color; ctx.fillRect(card.x+padding,card.y+padding+25,card.w-padding*2,80);
+    if (card.type === 'color') {
+      ctx.fillStyle = card.color; ctx.fillRect(card.x + padding, card.y + padding + 25, card.w - padding * 2, 80);
     }
   }
+  ctx.restore();
 }
 
-function wrapText(text,maxWidth){
-  const words=text.split(' '), lines=[]; let currentLine='';
-  ctx.font='12px sans-serif';
-  for(const w of words){
-    const test=currentLine?currentLine+' '+w:w;
-    if(ctx.measureText(test).width>maxWidth){ if(currentLine) lines.push(currentLine); currentLine=w; } else currentLine=test;
+function wrapText(text, maxWidth) {
+  const words = text.split(' '), lines = []; let currentLine = '';
+  ctx.font = '12px sans-serif';
+  for (const w of words) {
+    const test = currentLine ? currentLine + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth) { if (currentLine) lines.push(currentLine); currentLine = w; } else currentLine = test;
   }
-  if(currentLine) lines.push(currentLine);
+  if (currentLine) lines.push(currentLine);
   return lines;
 }
 
-// Drag
-canvas.addEventListener('mousedown', e=>{
-  const mx=e.clientX-320,my=e.clientY;
-  const cards=boards[currentBoardIndex].cards;
-  for(let i=cards.length-1;i>=0;i--){
-    const c=cards[i];
-    if(mx>c.x&&mx<c.x+c.w&&my>c.y&&my<c.y+c.h){
-      dragging=c; offsetX=mx-c.x; offsetY=my-c.y;
-      cards.push(cards.splice(i,1)[0]); break;
+// Drag cards
+canvas.addEventListener('mousedown', e => {
+  const mx = e.clientX - 320 + camX, my = e.clientY + camY;
+  const cards = boards[currentBoardIndex].cards;
+  if (e.button === 1 || e.button === 2) { // middle or right button for panning
+    isPanning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    camStartX = camX;
+    camStartY = camY;
+    canvas.style.cursor = "grabbing";
+    return;
+  }
+  for (let i = cards.length - 1; i >= 0; i--) {
+    const c = cards[i];
+    if (mx > c.x && mx < c.x + c.w && my > c.y && my < c.y + c.h) {
+      dragging = c; offsetX = mx - c.x; offsetY = my - c.y;
+      cards.push(cards.splice(i, 1)[0]); break;
     }
   }
 });
-canvas.addEventListener('mousemove', e=>{ if(dragging){ dragging.x=e.clientX-320-offsetX; dragging.y=e.clientY-offsetY; draw(); }});
-canvas.addEventListener('mouseup', ()=>{ dragging=null; saveBoards(); });
-
-// Context
-canvas.addEventListener('contextmenu', e=>{
-  e.preventDefault();
-  const mx=e.clientX-320,my=e.clientY;
-  const cards=boards[currentBoardIndex].cards;
-  selectedCard=null;
-  for(let i=cards.length-1;i>=0;i--){ const c=cards[i]; if(mx>c.x&&mx<c.x+c.w&&my>c.y&&my<c.y+c.h){selectedCard=c; break;} }
-  if(selectedCard){ contextMenu.style.left=e.clientX+'px'; contextMenu.style.top=e.clientY+'px'; contextMenu.style.display='block'; }
+canvas.addEventListener('mousemove', e => {
+  if (dragging) {
+    const mx = e.clientX - 320 + camX, my = e.clientY + camY;
+    dragging.x = mx - offsetX; dragging.y = my - offsetY;
+    draw();
+  } else if (isPanning) {
+    camX = camStartX - (e.clientX - panStartX);
+    camY = camStartY - (e.clientY - panStartY);
+    draw();
+  }
 });
-document.addEventListener('click',()=>contextMenu.style.display='none');
-function deleteCard(){ if(!selectedCard)return; boards[currentBoardIndex].cards=boards[currentBoardIndex].cards.filter(c=>c!==selectedCard); saveBoards(); draw(); selectedCard=null; }
-function editCard(){
-  if(!selectedCard)return;
-  document.getElementById('cardType').value=selectedCard.type;
-  document.getElementById('title').value=selectedCard.title;
-  document.getElementById('url').value=selectedCard.url;
-  document.getElementById('comments').value=selectedCard.comments;
-  document.getElementById('labels').value=selectedCard.labels.join(',');
-  document.getElementById('cardColor').value=selectedCard.color||'#3a3a5c';
-  contextMenu.style.display='none'; selectedCard=null;
+canvas.addEventListener('mouseup', () => { dragging = null; isPanning = false; canvas.style.cursor = "grab"; saveBoards(); });
+
+// Context menu
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const mx = e.clientX - 320 + camX, my = e.clientY + camY;
+  const cards = boards[currentBoardIndex].cards;
+  selectedCard = null;
+  for (let i = cards.length - 1; i >= 0; i--) {
+    const c = cards[i];
+    if (mx > c.x && mx < c.x + c.w && my > c.y && my < c.y + c.h) { selectedCard = c; break; }
+  }
+  if (selectedCard) {
+    contextMenu.style.left = e.clientX + 'px';
+    contextMenu.style.top = e.clientY + 'px';
+    contextMenu.style.display = 'block';
+  }
+});
+document.addEventListener('click', () => contextMenu.style.display = 'none');
+function deleteCard() { if (!selectedCard) return; boards[currentBoardIndex].cards = boards[currentBoardIndex].cards.filter(c => c !== selectedCard); saveBoards(); draw(); selectedCard = null; }
+function editCard() {
+  if (!selectedCard) return;
+  document.getElementById('cardType').value = selectedCard.type;
+  document.getElementById('title').value = selectedCard.title;
+  document.getElementById('url').value = selectedCard.url;
+  document.getElementById('comments').value = selectedCard.comments;
+  document.getElementById('labels').value = selectedCard.labels.join(',');
+  document.getElementById('cardColor').value = selectedCard.color || '#3a3a5c';
+  contextMenu.style.display = 'none'; selectedCard = null;
 }
 
 // Export/Import
-function exportBoard(){
-  const data=JSON.stringify(boards[currentBoardIndex]);
-  const blob=new Blob([data],{type:"application/json"});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=boards[currentBoardIndex].name+".json";
+function exportBoard() {
+  const data = JSON.stringify(boards[currentBoardIndex]);
+  const blob = new Blob([data], { type: "application/json" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = boards[currentBoardIndex].name + ".json";
   a.click();
 }
-function importBoard(e){
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{ try{ const b=JSON.parse(r.result); boards.push(b); currentBoardIndex=boards.length-1; populateBoardSelect(); loadCurrentBoard(); saveBoards(); }catch{ alert("Invalid file"); } };
+function importBoard(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { const b = JSON.parse(r.result); boards.push(b); currentBoardIndex = boards.length - 1; populateBoardSelect(); loadCurrentBoard(); saveBoards(); } catch { alert("Invalid file"); } };
   r.readAsText(f);
 }
 
 // Init
-window.addEventListener('resize',()=>{ canvas.width=window.innerWidth-320; canvas.height=window.innerHeight; draw(); });
+window.addEventListener('resize', () => { canvas.width = window.innerWidth - 320; canvas.height = window.innerHeight; draw(); });
 loadBoards();
 </script>
 </body>
