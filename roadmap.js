@@ -40,29 +40,6 @@ const roadmap = {
     progress: 45,
     owner: "Akane",
     order: 2
-  },
-  "Frog Reign content update": {
-    done: false,
-    description: "Ship balance tweaks, new mod tools, and Steam page polish.",
-    eta: "Spring 2025",
-    status: "Planned",
-    owner: "Game Team",
-    order: 3
-  },
-  "Labs portal integration": {
-    done: false,
-    description: "Single sign-on between akanedev.au and labs.akanedev.au.",
-    status: "Research",
-    owner: "Infra",
-    order: 4
-  },
-  "Community documentation push": {
-    done: false,
-    description: "Publish tutorials and onboarding for new contributors.",
-    eta: "Rolling",
-    status: "Queued",
-    owner: "Docs Guild",
-    order: 5
   }
 };
 
