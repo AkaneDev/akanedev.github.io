@@ -36,11 +36,11 @@ const roadmap = {
     done: false,
     status: "In Progress",
     description: "Create a transparent roadmap that is easy to maintain.",
-    eta: "Q1 2025",
+    eta: "When I get around to it",
     progress: 45,
     owner: "Akane",
     order: 2
-  }
+  } 
 };
 
 document.addEventListener("DOMContentLoaded", () => {
