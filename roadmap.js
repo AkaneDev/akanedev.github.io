@@ -40,7 +40,7 @@ const roadmap = {
     progress: 45,
     owner: "Akane",
     order: 2
-  } 
+  } // Add new roadmap items here
 };
 
 document.addEventListener("DOMContentLoaded", () => {
