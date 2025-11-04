@@ -34,6 +34,7 @@
             <a href="stories">Story Index</a>
             <a href="/screensaver/scrIndex.html">Screensaver Index</a>
             <a href="projects">Projects</a>
+            <a href="roadmap.html">Roadmap</a>
             <a href="about">About</a>
             <a href="thedatabase/index.html">The Database - SCP inspired Story Database</a>
         </div>
@@ -55,7 +56,7 @@
         </header>
         <section class="new-thingannouncement"> <!--TODO: Add a way to update this live-->
             <div class="new-announcement-card">
-                <h2>Coming Soon: <a href="https://labs.akanedev.au/">AkaneDev Labs - Coming Soon</a></h2>
+                <h2>NEW: <a href="https://akanedev.au/roadmap.html">Akanedev.au and AkanedevLabs Roadmap</a></h2>
             </div>
         </section>
             <!-- <div class="iframe-TopRight">
@@ -198,51 +199,6 @@
             {{ include "changelog.md" }}
         </section>
     </div> <!-- End of main-content -->
-<<<<<<< HEAD
-    <!-- <script>
-        document.addEventListener("DOMContentLoaded", () => {
-  const popup = document.getElementById("ads-consent-popup");
-  const allowBtn = document.getElementById("allow-ads-btn");
-  const disallowBtn = document.getElementById("disallow-ads-btn");
-  const adsContainer = document.querySelector(".ads");
-
-  function showAds() {
-    if (adsContainer) adsContainer.style.display = "block";
-    if (window.adsbygoogle) (adsbygoogle = window.adsbygoogle || []).push({});
-  }
-
-  function removeAds() {
-    if (adsContainer && adsContainer.parentNode) {
-      adsContainer.parentNode.removeChild(adsContainer);
-    }
-  }
-
-  const storedSetting = localStorage.getItem("ads-settings");
-
-  if (!storedSetting) {
-    // No setting, show popup
-    popup.style.display = "block";
-  } else if (storedSetting === "allow") {
-    showAds();
-  } else {
-    removeAds();
-  }
-
-  allowBtn.onclick = () => {
-    localStorage.setItem("ads-settings", "allow");
-    popup.style.display = "none";
-    showAds();
-  };
-
-  disallowBtn.onclick = () => {
-    localStorage.setItem("ads-settings", "disallow");
-    popup.style.display = "none";
-    removeAds();
-  };
-});
-    </script> -->
-=======
->>>>>>> 5897fab15b96d963bac6109c6d2f600cf7b6f146
     <footer class="footer">
         <p class="padding">&copy; 2025 AkaneDev</p>
     </footer>

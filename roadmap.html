@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkaneDev | Roadmap</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mainsitestyle.css">
+    <link rel="stylesheet" href="roadmap.css">
+    <link rel="icon" href="/favicon.ico">
+    <script defer src="script.js"></script>
+    <script defer src="roadmap.js"></script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <a href="mailto:akane@akanedev.au" class="logo">AkaneDev</a>
+            <button id="theme-toggle">🌙</button>
+            <button id="open-menu">☰</button>
+        </div>
+        <div id="menu" class="menu">
+            <a href="stories">Story Index</a>
+            <a href="/screensaver/scrIndex.html">Screensaver Index</a>
+            <a href="projects">Projects</a>
+            <a href="roadmap.html" aria-current="page">Roadmap</a>
+            <a href="about">About</a>
+            <a href="thedatabase/index.html">The Database - SCP inspired Story Database</a>
+        </div>
+    </nav>
+    <main class="main-content roadmap-page">
+        <header class="roadmap-hero">
+            <h1>Product Roadmap</h1>
+            <p class="roadmap-lead">
+                Track what’s on the horizon for AkaneDev. Tweak the roadmap from a single dictionary in <code>roadmap.js</code>.
+            </p>
+        </header>
+        <section aria-label="Roadmap timeline">
+            <div id="roadmap" class="roadmap-wrapper">
+                <!-- Populated at runtime -->
+            </div>
+        </section>
+    </main>
+    <footer class="footer">
+        <span>© <span id="roadmap-year"></span> AkaneDev</span>
+    </footer>
+</body>
+</html>

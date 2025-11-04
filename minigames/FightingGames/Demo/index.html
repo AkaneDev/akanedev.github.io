@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CDN Fighting Game Demo with Gravity</title>
+
+  <script type="module">
+    import * as Phaser from "https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.esm.js";
+
+    class DemoScene extends Phaser.Scene {
+      constructor() {
+        super("demo");
+      }
+
+      preload() {
+        this.load.image(
+          "bg",
+          "https://cdn.jsdelivr.net/gh/photonstorm/phaser3-examples/public/assets/skies/space3.png"
+        );
+        this.load.image(
+          "ground",
+          "https://cdn.jsdelivr.net/gh/photonstorm/phaser3-examples/public/assets/platforms/platform.png"
+        );
+        this.load.spritesheet(
+          "fighter",
+          "https://cdn.jsdelivr.net/gh/photonstorm/phaser3-examples/public/assets/sprites/dude.png",
+          {
+            frameWidth: 32,
+            frameHeight: 48,
+          }
+        );
+      }
+
+      create() {
+        this.add.image(400, 300, "bg");
+
+        // Physics world
+        this.physics.world.setBounds(0, 0, 800, 600);
+
+        // Platforms
+        const platforms = this.physics.add.staticGroup();
+        platforms.create(400, 580, "ground").setScale(2).refreshBody();
+        platforms.create(50, 450, "ground");
+        platforms.create(750, 450, "ground");
+
+        // Players
+        this.player1 = this.physics.add.sprite(300, 400, "fighter").setBounce(0.2);
+        this.player2 = this.physics.add.sprite(500, 400, "fighter").setBounce(0.2);
+
+        this.player1.setCollideWorldBounds(true);
+        this.player2.setCollideWorldBounds(true);
+
+        this.physics.add.collider(this.player1, platforms);
+        this.physics.add.collider(this.player2, platforms);
+        this.physics.add.collider(this.player1, this.player2);
+
+        // Input
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.wasd = this.input.keyboard.addKeys("W,A,S,D,J");
+        this.attackKeys = this.input.keyboard.addKeys("K,L"); // player2 attacks
+
+        // Health
+        this.p1Health = 100;
+        this.p2Health = 100;
+
+        this.healthText = this.add.text(10, 10, this.getHealthText(), { color: "#fff" });
+      }
+
+      getHealthText() {
+        return `P1 Health: ${this.p1Health}\nP2 Health: ${this.p2Health}`;
+      }
+
+      update() {
+        const speed = 160;
+        const jump = 350;
+
+        // Reset velocity
+        this.player1.setVelocityX(0);
+        this.player2.setVelocityX(0);
+
+        // Player1 movement (WASD)
+        if (this.wasd.A.isDown) this.player1.setVelocityX(-speed);
+        else if (this.wasd.D.isDown) this.player1.setVelocityX(speed);
+        if (this.wasd.W.isDown && this.player1.body.touching.down)
+          this.player1.setVelocityY(-jump);
+
+        // Player2 movement (Arrows)
+        if (this.cursors.left.isDown) this.player2.setVelocityX(-speed);
+        else if (this.cursors.right.isDown) this.player2.setVelocityX(speed);
+        if (this.cursors.up.isDown && this.player2.body.touching.down)
+          this.player2.setVelocityY(-jump);
+
+        // Player1 attack (J)
+        if (Phaser.Input.Keyboard.JustDown(this.wasd.J)) {
+          this.attack(this.player1, this.player2, 10);
+        }
+
+        // Player2 attack (K)
+        if (Phaser.Input.Keyboard.JustDown(this.attackKeys.K)) {
+          this.attack(this.player2, this.player1, 10);
+        }
+
+        this.healthText.setText(this.getHealthText());
+      }
+
+      attack(attacker, target, damage) {
+        const distance = Phaser.Math.Distance.Between(
+          attacker.x,
+          attacker.y,
+          target.x,
+          target.y
+        );
+        if (distance < 60) {
+          target.setVelocityY(-200);
+          if (target === this.player1) this.p1Health = Math.max(0, this.p1Health - damage);
+          else this.p2Health = Math.max(0, this.p2Health - damage);
+
+          if (this.p1Health === 0 || this.p2Health === 0) {
+            this.add.text(300, 250, "K.O!", { fontSize: 48, color: "#ff0000" });
+            this.scene.pause();
+          }
+        }
+      }
+    }
+
+    new Phaser.Game({
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      backgroundColor: "#000",
+      physics: {
+        default: "arcade",
+        arcade: { gravity: { y: 500 }, debug: false },
+      },
+      scene: [DemoScene],
+    });
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body></body>
+</html>
+        

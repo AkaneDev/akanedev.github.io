@@ -1,0 +1,205 @@
+:root {
+  --roadmap-line: rgba(88, 101, 242, 0.4);
+  --roadmap-card-bg: rgba(18, 18, 18, 0.85);
+  --roadmap-card-border: rgba(255, 255, 255, 0.08);
+  --roadmap-complete: #3ddc97;
+  --roadmap-progress: #ffb347;
+  --roadmap-planned: #6064ff;
+  --roadmap-shadow: 0 18px 35px rgba(0, 0, 0, 0.25);
+  --roadmap-muted: rgba(255, 255, 255, 0.6);
+}
+
+.light-mode {
+  --roadmap-line: rgba(88, 101, 242, 0.3);
+  --roadmap-card-bg: rgba(255, 255, 255, 0.9);
+  --roadmap-card-border: rgba(0, 0, 0, 0.08);
+  --roadmap-shadow: 0 18px 35px rgba(0, 0, 0, 0.12);
+  --roadmap-muted: rgba(0, 0, 0, 0.6);
+}
+
+.roadmap-page {
+  padding: 120px 24px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.roadmap-hero {
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.roadmap-hero h1 {
+  font-size: clamp(2.4rem, 4vw, 3rem);
+  margin: 0;
+}
+
+.roadmap-lead {
+  font-size: 1.1rem;
+  color: var(--roadmap-muted);
+  margin: 0;
+}
+
+.roadmap-wrapper {
+  max-width: 840px;
+  margin: 0 auto;
+  position: relative;
+  padding-left: 22px;
+}
+
+.roadmap-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 11px;
+  width: 2px;
+  background: linear-gradient(180deg, transparent 0%, var(--roadmap-line) 12%, var(--roadmap-line) 88%, transparent 100%);
+}
+
+.roadmap-empty {
+  text-align: center;
+  color: var(--roadmap-muted);
+}
+
+.roadmap-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.roadmap-item {
+  position: relative;
+  padding: 22px 26px 22px 42px;
+  background: var(--roadmap-card-bg);
+  border: 1px solid var(--roadmap-card-border);
+  border-radius: 16px;
+  box-shadow: var(--roadmap-shadow);
+  backdrop-filter: blur(6px);
+}
+
+.roadmap-item::before {
+  content: "";
+  position: absolute;
+  left: -32px;
+  top: 26px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--roadmap-planned);
+  box-shadow: 0 0 0 4px rgba(96, 100, 255, 0.15);
+}
+
+.roadmap-item.done::before {
+  background: var(--roadmap-complete);
+  box-shadow: 0 0 0 4px rgba(61, 220, 151, 0.18);
+}
+
+.roadmap-item.progress::before {
+  background: var(--roadmap-progress);
+  box-shadow: 0 0 0 4px rgba(255, 179, 71, 0.18);
+}
+
+.roadmap-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 10px;
+  font-size: 1.3rem;
+}
+
+.roadmap-status {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(96, 100, 255, 0.18);
+  color: var(--roadmap-planned);
+  border: 1px solid rgba(96, 100, 255, 0.25);
+}
+
+.roadmap-item.done .roadmap-status {
+  background: rgba(61, 220, 151, 0.2);
+  color: var(--roadmap-complete);
+  border-color: rgba(61, 220, 151, 0.35);
+}
+
+.roadmap-item.progress .roadmap-status {
+  background: rgba(255, 179, 71, 0.2);
+  color: var(--roadmap-progress);
+  border-color: rgba(255, 179, 71, 0.35);
+}
+
+.roadmap-description {
+  margin: 0;
+  line-height: 1.6;
+  color: inherit;
+}
+
+.roadmap-meta {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--roadmap-muted);
+}
+
+.roadmap-meta span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roadmap-progress-bar {
+  margin-top: 16px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(96, 100, 255, 0.2);
+  overflow: hidden;
+}
+
+.roadmap-progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--roadmap-progress);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.roadmap-footer {
+  margin-top: 24px;
+  font-size: 0.8rem;
+  color: var(--roadmap-muted);
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .roadmap-page {
+    padding: 110px 18px 90px;
+  }
+
+  .roadmap-wrapper {
+    padding-left: 18px;
+  }
+
+  .roadmap-item {
+    padding: 18px 20px 18px 38px;
+  }
+
+  .roadmap-item::before {
+    left: -30px;
+  }
+
+  .roadmap-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

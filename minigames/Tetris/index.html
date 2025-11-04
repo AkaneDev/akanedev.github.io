@@ -6,16 +6,135 @@
 <title>Tetris</title>
 <style>
   :root{
-    --bg:#071122;
+    --background:linear-gradient(180deg,#051021 0%,#081529 100%);
+    --text:#e6eef8;
     --panel:#0f1724;
+    --panel-shadow:0 8px 30px rgba(2,6,23,.6);
     --accent:#6ee7b7;
     --muted:#94a3b8;
+    --canvas:#071025;
+    --mini-canvas:#051217;
+    --side-bg:linear-gradient(180deg,rgba(255,255,255,.01),transparent);
+    --card-bg:rgba(255,255,255,.02);
+    --mods-bg:rgba(255,255,255,.02);
+    --button-bg:rgba(255,255,255,.03);
+    --button-bg-hover:rgba(255,255,255,.08);
+    --input-border:rgba(255,255,255,.08);
+    --chooser-bg:#0b1622;
+    --chooser-bg-hover:#12202a;
+    --tetromino-i:#6600ff;
+    --tetromino-j:#3366cc;
+    --tetromino-l:#ff9933;
+    --tetromino-o:#ffcc00;
+    --tetromino-s:#2bfa8a;
+    --tetromino-t:#b76cff;
+    --tetromino-z:#ff5c8a;
+  }
+  body[data-theme="sunset"]{
+    --background:linear-gradient(180deg,#3b0c59 0%,#a21caf 45%,#f97316 100%);
+    --text:#fff7ed;
+    --panel:rgba(52,16,63,.92);
+    --panel-shadow:0 8px 32px rgba(236,72,153,.35);
+    --accent:#fb7185;
+    --muted:#fbb6ce;
+    --canvas:#1f1030;
+    --mini-canvas:#311246;
+    --side-bg:linear-gradient(180deg,rgba(251,113,133,.08),rgba(236,72,153,.04));
+    --card-bg:rgba(251,191,36,.12);
+    --mods-bg:rgba(251,113,133,.12);
+    --button-bg:rgba(249,115,22,.22);
+    --button-bg-hover:rgba(249,115,22,.32);
+    --input-border:rgba(251,191,36,.35);
+    --chooser-bg:rgba(76,29,149,.45);
+    --chooser-bg-hover:rgba(147,51,234,.45);
+    --tetromino-i:#c084fc;
+    --tetromino-j:#818cf8;
+    --tetromino-l:#fb923c;
+    --tetromino-o:#facc15;
+    --tetromino-s:#34d399;
+    --tetromino-t:#f472b6;
+    --tetromino-z:#fb7185;
+  }
+  body[data-theme="ice"]{
+    --background:linear-gradient(180deg,#0f172a 0%,#1d4ed8 100%);
+    --text:#f8fafc;
+    --panel:rgba(15,23,42,.9);
+    --panel-shadow:0 10px 34px rgba(59,130,246,.35);
+    --accent:#38bdf8;
+    --muted:#cbd5f5;
+    --canvas:#0f172a;
+    --mini-canvas:#1e3a8a;
+    --side-bg:linear-gradient(180deg,rgba(96,165,250,.1),rgba(14,165,233,.05));
+    --card-bg:rgba(148,163,184,.15);
+    --mods-bg:rgba(14,165,233,.18);
+    --button-bg:rgba(59,130,246,.24);
+    --button-bg-hover:rgba(59,130,246,.34);
+    --input-border:rgba(191,219,254,.5);
+    --chooser-bg:rgba(30,64,175,.5);
+    --chooser-bg-hover:rgba(37,99,235,.5);
+    --tetromino-i:#38bdf8;
+    --tetromino-j:#2563eb;
+    --tetromino-l:#f59e0b;
+    --tetromino-o:#eab308;
+    --tetromino-s:#22d3ee;
+    --tetromino-t:#6366f1;
+    --tetromino-z:#f472b6;
+  }
+  body[data-theme="halloween"]{
+    --background:linear-gradient(180deg,#130912 0%,#3b0a28 45%,#ff6b00 100%);
+    --text:#fff4e6;
+    --panel:rgba(32,12,24,.92);
+    --panel-shadow:0 10px 38px rgba(255,107,0,.4);
+    --accent:#f97316;
+    --muted:#fdbb74;
+    --canvas:#220714;
+    --mini-canvas:#3d0c1f;
+    --side-bg:linear-gradient(180deg,rgba(255,107,0,.1),rgba(247,115,28,.05));
+    --card-bg:rgba(255,108,0,.18);
+    --mods-bg:rgba(249,115,22,.16);
+    --button-bg:rgba(249,115,22,.24);
+    --button-bg-hover:rgba(249,115,22,.34);
+    --input-border:rgba(231,116,19,.45);
+    --chooser-bg:rgba(89,23,49,.55);
+    --chooser-bg-hover:rgba(124,17,54,.55);
+    --tetromino-i:#f97316;
+    --tetromino-j:#fb7185;
+    --tetromino-l:#facc15;
+    --tetromino-o:#fde68a;
+    --tetromino-s:#fbbf24;
+    --tetromino-t:#d946ef;
+    --tetromino-z:#ef4444;
+  }
+  body[data-theme="christmas"]{
+    --background:linear-gradient(180deg,#032614 0%,#0f4d2b 55%,#bbf7d0 100%);
+    --text:#f5fffb;
+    --panel:rgba(4,30,18,.9);
+    --panel-shadow:0 12px 36px rgba(34,197,94,.35);
+    --accent:#facc15;
+    --muted:#d1fae5;
+    --canvas:#04321b;
+    --mini-canvas:#0f5131;
+    --side-bg:linear-gradient(180deg,rgba(236,253,245,.12),rgba(34,197,94,.08));
+    --card-bg:rgba(74,222,128,.18);
+    --mods-bg:rgba(34,197,94,.18);
+    --button-bg:rgba(220,38,38,.24);
+    --button-bg-hover:rgba(220,38,38,.34);
+    --input-border:rgba(74,222,128,.45);
+    --chooser-bg:rgba(180,16,44,.45);
+    --chooser-bg-hover:rgba(248,113,113,.45);
+    --tetromino-i:#38bdf8;
+    --tetromino-j:#2563eb;
+    --tetromino-l:#f97316;
+    --tetromino-o:#fbbf24;
+    --tetromino-s:#22c55e;
+    --tetromino-t:#a855f7;
+    --tetromino-z:#ef4444;
   }
   *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
   body{
     margin:0;
-    background:linear-gradient(180deg,#051021 0%,#081529 100%);
-    color:#e6eef8;
+    background:var(--background);
+    color:var(--text);
     display:flex;
     align-items:flex-start;
     justify-content:center;
@@ -32,30 +151,42 @@
     flex:1 1 320px;
     display:flex;
     justify-content:center;
+    box-shadow:var(--panel-shadow);
   }
-  canvas{background:#071025;border-radius:8px;display:block;max-width:100%;height:auto;}
+  canvas{background:var(--canvas);border-radius:8px;display:block;max-width:100%;height:auto;}
   .side{
     flex:1 1 300px;
-    background:linear-gradient(180deg,rgba(255,255,255,.01),transparent);
+    background:var(--side-bg);
     padding:1vw;
     border-radius:8px;
     min-width:260px;
   }
   h1{margin:0 0 8px;color:var(--accent);font-size:clamp(1.2rem, 2vw, 1.8rem);}
+  .themeRow{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .select{
+    background:var(--button-bg);
+    color:var(--text);
+    border:1px solid var(--input-border);
+    border-radius:6px;
+    padding:8px 10px;
+    font-size:clamp(0.85rem,1.1vw,1rem);
+  }
+  .select:focus{outline:2px solid var(--accent);outline-offset:2px;}
   .statRow{display:flex;gap:8px;margin-bottom:8px;}
-  .card{flex:1;background:rgba(255,255,255,.02);padding:8px;border-radius:8px;text-align:center;font-size:clamp(0.8rem,1.2vw,1rem);}
-  .smallCanvas{background:#051217;border-radius:6px;display:block;margin:8px auto;max-width:100%;height:auto;}
-  .mods{max-height:200px;overflow:auto;padding:6px;border-radius:6px;background:rgba(255,255,255,.02);font-size:13px;}
+  .card{flex:1;background:var(--card-bg);padding:8px;border-radius:8px;text-align:center;font-size:clamp(0.8rem,1.2vw,1rem);}
+  .smallCanvas{background:var(--mini-canvas);border-radius:6px;display:block;margin:8px auto;max-width:100%;height:auto;}
+  .mods{max-height:200px;overflow:auto;padding:6px;border-radius:6px;background:var(--mods-bg);font-size:13px;}
   .controls{font-size:13px;color:var(--muted);line-height:1.6;margin-top:8px;}
-  .btn{display:inline-block;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.03);cursor:pointer;margin-top:8px;width:100%;font-size:clamp(0.9rem,1.3vw,1rem);}
+  .btn{display:inline-block;padding:10px 12px;border-radius:8px;background:var(--button-bg);cursor:pointer;margin-top:8px;width:100%;font-size:clamp(0.9rem,1.3vw,1rem);color:var(--text);border:1px solid transparent;transition:background .2s ease;}
+  .btn:hover{background:var(--button-bg-hover);}
   .overlay{
     position:fixed;inset:0;background:rgba(0,0,0,.85);
     display:none;align-items:center;justify-content:center;color:#fff;
     flex-direction:column;z-index:99;padding:20px;text-align:center;
   }
-  .choice{background:#0b1622;border-radius:8px;padding:12px;margin:8px;cursor:pointer;
+  .choice{background:var(--chooser-bg);border-radius:8px;padding:12px;margin:8px;cursor:pointer;
           border:1px solid rgba(255,255,255,.03);min-width:260px;width:80%;max-width:320px;}
-  .choice:hover{background:#12202a;}
+  .choice:hover{background:var(--chooser-bg-hover);}
   .muted{color:var(--muted);}
   @media (max-width:900px){
     body{align-items:center;padding:4vw;}
@@ -80,6 +211,10 @@
     </div>
     <div class="side">
       <h1>Tetris</h1>
+      <div class="themeRow">
+        <label class="muted" for="themeSelect">Theme</label>
+        <select id="themeSelect" class="select"></select>
+      </div>
       <div class="statRow">
         <div class="card">Score<br><strong id="score">0</strong></div>
         <div class="card">Level<br><strong id="level">1</strong></div>
@@ -128,46 +263,103 @@ const holdCanvas=document.getElementById('holdCanvas'),holdCtx=holdCanvas.getCon
 const scoreEl=document.getElementById('score'),levelEl=document.getElementById('level'),
       linesEl=document.getElementById('lines'),goalEl=document.getElementById('goal');
 const modsListEl=document.getElementById('modsList'),overlay=document.getElementById('modOverlay');
-
-const SHAPES={I:[[1,1,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]],O:[[1,1],[1,1]],S:[[0,1,1],[1,1,0]],T:[[0,1,0],[1,1,1]],Z:[[1,1,0],[0,1,1]]};
-const COLORS={I:'#60f',J:'#36c',L:'#f93',O:'#fc0',S:'#2bfa8a',T:'#b76cff',Z:'#ff5c8a'};
-
+const themeSelect=document.getElementById('themeSelect');
 let grid=[],current=null,nextPiece=null,hold=null,canHold=true,score=0,level=1,lines=0,goalBase=5;
 let dropInterval=800,dropCounter=0,lastTime=0,paused=false,gameOver=false;
 let activeMods=[],controlsReversed=false;
 
+const THEME_KEY='tetris-theme';
+const THEME_OPTIONS=[
+ {id:'default',label:'Midnight'},
+ {id:'sunset',label:'Sunset Horizon'},
+ {id:'ice',label:'Icebreaker'},
+ {id:'halloween',label:'Halloween Night'},
+ {id:'christmas',label:'Christmas Cheer'}
+];
+const themeColors={canvas:'#071025',miniCanvas:'#051217'};
+const PIECE_TYPES=['I','J','L','O','S','T','Z'];
+const defaultPieceColors={I:'#6600ff',J:'#3366cc',L:'#ff9933',O:'#ffcc00',S:'#2bfa8a',T:'#b76cff',Z:'#ff5c8a'};
+let pieceColors={...defaultPieceColors};
+
+function readThemeColors(){
+ const styles=getComputedStyle(document.body);
+ const canvas=styles.getPropertyValue('--canvas').trim();
+ const mini=styles.getPropertyValue('--mini-canvas').trim();
+ if(canvas)themeColors.canvas=canvas;
+ if(mini)themeColors.miniCanvas=mini;
+ PIECE_TYPES.forEach(type=>{
+  const cssVar=styles.getPropertyValue(`--tetromino-${type.toLowerCase()}`).trim();
+  if(cssVar)pieceColors[type]=cssVar;
+  else pieceColors[type]=defaultPieceColors[type];
+ });
+}
+function applyTheme(themeId){
+ if(!themeId||themeId==='default'){document.body.removeAttribute('data-theme');}
+ else{document.body.setAttribute('data-theme',themeId);}
+ readThemeColors();
+ renderPreviews();
+ drawBoard();
+}
+function initThemes(){
+ if(!themeSelect){readThemeColors();return;}
+ themeSelect.innerHTML='';
+ THEME_OPTIONS.forEach(({id,label})=>{
+  const opt=document.createElement('option');
+  opt.value=id;
+  opt.textContent=label;
+  themeSelect.appendChild(opt);
+ });
+ let saved='default';
+ try{
+  const stored=localStorage.getItem(THEME_KEY);
+  if(stored&&THEME_OPTIONS.some(t=>t.id===stored))saved=stored;
+ }catch(err){}
+ themeSelect.value=saved;
+ applyTheme(saved);
+ themeSelect.addEventListener('change',e=>{
+  const value=e.target.value||'default';
+  applyTheme(value);
+  try{localStorage.setItem(THEME_KEY,value);}catch(err){}
+ });
+}
+initThemes();
+
+const SHAPES={I:[[1,1,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]],O:[[1,1],[1,1]],S:[[0,1,1],[1,1,0]],T:[[0,1,0],[1,1,1]],Z:[[1,1,0],[0,1,1]]};
+
 function makeGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(null));}
 function clone(s){return s.map(r=>r.slice());}
 function makePiece(t=null){const k=Object.keys(SHAPES);const type=t||k[Math.floor(Math.random()*k.length)];
- return {type,shape:clone(SHAPES[type]),x:Math.floor((COLS-SHAPES[type][0].length)/2),y:-1,color:COLORS[type]};}
+ return {type,shape:clone(SHAPES[type]),x:Math.floor((COLS-SHAPES[type][0].length)/2),y:-1};}
 function rotate(mat){const h=mat.length,w=mat[0].length;const o=Array.from({length:w},()=>Array(h).fill(0));
  for(let r=0;r<h;r++)for(let c=0;c<w;c++)o[c][h-1-r]=mat[r][c];return o;}
 function collides(p){for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[0].length;c++){if(!p.shape[r][c])continue;
  let gx=p.x+c,gy=p.y+r;if(gx<0||gx>=COLS||gy>=ROWS)return true;if(gy>=0&&grid[gy][gx])return true;}return false;}
 function merge(p){for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[0].length;c++){if(p.shape[r][c]){
- let gx=p.x+c,gy=p.y+r;if(gy>=0&&gy<ROWS&&gx>=0&&gx<COLS)grid[gy][gx]=p.color;}}}
+ let gx=p.x+c,gy=p.y+r;if(gy>=0&&gy<ROWS&&gx>=0&&gx<COLS)grid[gy][gx]=p.type;}}}
 function clearLines(){let cleared=0;
  for(let r=ROWS-1;r>=0;r--){if(grid[r].every(v=>v)){grid.splice(r,1);grid.unshift(Array(COLS).fill(null));cleared++;r++;}}
  if(cleared){lines+=cleared;score+=cleared*100*level;updateStats();checkLevel();}}
 function drawCell(x,y,c,a=1){ctx.globalAlpha=a;ctx.fillStyle=c;ctx.fillRect(x*BLOCK+1,y*BLOCK+1,BLOCK-2,BLOCK-2);ctx.globalAlpha=1;}
 function drawBoard(){
- ctx.clearRect(0,0,board.width,board.height);ctx.fillStyle='#071025';ctx.fillRect(0,0,board.width,board.height);
- for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c])drawCell(c,r,grid[r][c]);
+ ctx.clearRect(0,0,board.width,board.height);ctx.fillStyle=themeColors.canvas;ctx.fillRect(0,0,board.width,board.height);
+ if(!grid||!grid.length)return;
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r]&&grid[r][c])drawCell(c,r,pieceColors[grid[r][c]]);
  if(current){
   let g={...current,shape:clone(current.shape)};
   while(!collides({...g,y:g.y+1}))g.y++;
-  for(let r=0;r<g.shape.length;r++)for(let c=0;c<g.shape[0].length;c++)if(g.shape[r][c])drawCell(g.x+c,g.y+r,current.color,0.14);
-  for(let r=0;r<current.shape.length;r++)for(let c=0;c<current.shape[0].length;c++)if(current.shape[r][c])drawCell(current.x+c,current.y+r,current.color,1);
+  const curColor=pieceColors[current.type];
+  for(let r=0;r<g.shape.length;r++)for(let c=0;c<g.shape[0].length;c++)if(g.shape[r][c])drawCell(g.x+c,g.y+r,curColor,0.14);
+  for(let r=0;r<current.shape.length;r++)for(let c=0;c<current.shape[0].length;c++)if(current.shape[r][c])drawCell(current.x+c,current.y+r,curColor,1);
  }
  ctx.strokeStyle='rgba(255,255,255,0.03)';for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*BLOCK,0);ctx.lineTo(x*BLOCK,ROWS*BLOCK);ctx.stroke();}
  for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*BLOCK);ctx.lineTo(COLS*BLOCK,y*BLOCK);ctx.stroke();}
 }
 function drawPreview(cvsCtx,piece){const w=cvsCtx.canvas.width,h=cvsCtx.canvas.height;
- cvsCtx.clearRect(0,0,w,h);cvsCtx.fillStyle='#051217';cvsCtx.fillRect(0,0,w,h);if(!piece)return;
+ cvsCtx.clearRect(0,0,w,h);cvsCtx.fillStyle=themeColors.miniCanvas;cvsCtx.fillRect(0,0,w,h);if(!piece)return;
  const cell=Math.min(w/(piece.shape[0].length+1),h/(piece.shape.length+1));
  const ox=(w-piece.shape[0].length*cell)/2,oy=(h-piece.shape.length*cell)/2;
  for(let r=0;r<piece.shape.length;r++)for(let c=0;c<piece.shape[0].length;c++)if(piece.shape[r][c]){
- cvsCtx.fillStyle=piece.color;cvsCtx.fillRect(ox+c*cell+4,oy+r*cell+4,cell-8,cell-8);}}
+ cvsCtx.fillStyle=pieceColors[piece.type];cvsCtx.fillRect(ox+c*cell+4,oy+r*cell+4,cell-8,cell-8);}}
 function spawn(){if(!nextPiece)nextPiece=makePiece();current=nextPiece;nextPiece=makePiece();canHold=true;
  if(collides(current))setTimeout(()=>restart(),100);renderPreviews();}
 function hardDrop(){while(!collides({...current,y:current.y+1}))current.y++;merge(current);clearLines();spawn();}
