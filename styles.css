@@ -265,6 +265,7 @@ hidden-data {
     left: 0;
     width: 100%;
     background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
     padding: 15px;
     text-align: center;
     
