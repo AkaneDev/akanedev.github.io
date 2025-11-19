@@ -296,7 +296,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-function flashbang(duration = 500) {
+document.addEventListener("DOMContentLoaded", () => {
+    const flashEl = document.getElementById("Headshot");
+    if (!flashEl) return;
+    flashEl.addEventListener("click", () => {
+        const duration = parseInt(flashEl.dataset.duration, 10) || undefined;
+        flashbang(duration, '#ff0000');
+    });
+});
+
+function flashbang(duration = 500, color = '#ffffff') {
     const el = document.createElement('div');
     el.id = 'flashbang-overlay';
 
@@ -315,7 +324,7 @@ function flashbang(duration = 500) {
 
     // Enforce white background regardless of external CSS:
     // 1) Inline important rule
-    el.style.setProperty('background-color', '#ffffff', 'important');
+    el.style.setProperty('background-color', color, 'important');
 
     // 2) Add a stylesheet rule with !important as another layer of protection
     const styleEl = document.createElement('style');
