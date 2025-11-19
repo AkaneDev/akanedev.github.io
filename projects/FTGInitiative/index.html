@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fun Text Game Initiative</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/mainsitestyle.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" />
+    <script defer src="/script.js"></script>
+    <style>
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .hero p {
+        max-width: 860px;
+        margin: 0.5em auto 0;
+      }
+
+      .info-section {
+        max-width: 900px;
+        margin: 2rem auto;
+        text-align: left;
+        line-height: 1.7;
+      }
+
+      .project-card.wide {
+        width: 260px;
+        text-align: left;
+      }
+
+      .project-card.wide h3 {
+        margin-top: 0;
+      }
+
+      .link-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+      }
+
+      .link-grid a {
+        background: #333;
+        border-radius: 999px;
+        padding: 0.75rem 1.5rem;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .link-grid a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+      }
+
+      .roadmap {
+        max-width: 900px;
+        margin: 3rem auto 4rem;
+        background: rgba(51, 51, 51, 0.7);
+        border-radius: 18px;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .roadmap h3 {
+        margin-top: 0;
+      }
+
+      .roadmap ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .roadmap li {
+        margin-bottom: 1rem;
+        border-left: 4px solid #ff6ec7;
+        padding-left: 1rem;
+      }
+    </style>
+  </head>
+  <body class="dark-mode">
+    <nav class="navbar">
+      <div class="container">
+        <a href="mailto:akane@akanedev.au" class="logo">AkaneDev</a>
+        <button id="theme-toggle">🌙</button>
+        <button id="open-menu">☰</button>
+      </div>
+      <div id="menu" class="menu">
+        <a href="/stories">Story Index</a>
+        <a href="/screensaver/scrIndex.html">Screensaver Index</a>
+        <a href="/projects">Projects</a>
+        <a href="/roadmap.html">Roadmap</a>
+        <a href="/about">About</a>
+        <a href="/thedatabase/index.html">The Database</a>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <header class="hero">
+        <h1>Fun Text Game Initiative</h1>
+        <p>Text-driven adventures, command-powered sandboxes, and weird narrative toys—polished like the main site, distributed wherever you hang out.</p>
+        <p>Every drop will have matching controls, music cues, and presentation so it feels at home on itch.io, a WASM embed, a desktop launcher, or anything else I link.</p>
+      </header>
+
+      <section class="new-thingannouncement">
+        <div class="new-announcement-card">
+          <h2>Latest:</h2>
+          <p>Toolkit refactor + new adaptive narrator demo are rolling out. Grab the newest links below or on the roadmap.</p>
+          <p><a href="/roadmap.html">Follow the Akanedev roadmap →</a></p>
+        </div>
+      </section>
+
+      <section id="mission" class="info-section">
+        <h2>Building It Like the Main Screen</h2>
+        <p>The main site is a hub for everything I ship, so this initiative leans on the same layout, typography, and tone. That keeps navigation familiar, lets the global theme toggle work everywhere, and makes each story feel like part of one larger feed instead of a side blog.</p>
+      </section>
+
+      <section id="pillars">
+        <h2 class="centered">What Defines FTGI?</h2>
+        <div class="project-list">
+          <div class="project-card wide">
+            <h3>Platform Agnostic Drops</h3>
+            <p>Browser, native, handheld exports, or cloud streams—all share a single changelog and landing CTA.</p>
+          </div>
+          <div class="project-card wide">
+            <h3>Readable First</h3>
+            <p>Big typography, responsive margins, screen reader tags, and input hints tuned for keyboards, controllers, and touch.</p>
+          </div>
+          <div class="project-card wide">
+            <h3>Replay Hooks</h3>
+            <p>Collectible verbs, procedural mood swaps, and exportable transcripts to make sharing runs as easy as linking the page.</p>
+          </div>
+          <div class="project-card wide">
+            <h3>Creator Hand-Offs</h3>
+            <p>Once stable, every chapter posts docs, localization files, and mod notes in the same repo the site links to.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="distribution" class="centered">
+        <h2>Where to Find Builds</h2>
+        <p class="centered-restrained">Each milestone post includes every link in one place so you can pick your favorite platform without hunting. These hubs stay synced whenever I push an update.</p>
+        <div class="link-grid">
+          <!-- <a href="https://akanedev.au" target="_blank" rel="noopener">Direct Web Build</a> -->
+          <a href="https://labs.akanedev.au" target="_blank" rel="noopener">Labs</a>
+          <a href="https://akanedevau.itch.io" target="_blank" rel="noopener">itch.io Collection</a>
+          <a href="https://github.com/akanedev" target="_blank" rel="noopener">Source & Tools</a>
+          <!-- <a href="https://discord.gg/" target="_blank" rel="noopener">Discord Playtests</a> -->
+        </div>
+      </section>
+
+      <section id="roadmap" class="roadmap">
+        <h3>Roadmap Snapshot</h3>
+        <ul>
+          <li><strong>Phase 01 · Toolkit shakeout:</strong> rewrite parser + UI skin, launch first “Mini Mission” pack.</li>
+          <li><strong>Phase 02 · Multi-link launchers:</strong> embed the same CTA stack on itch, WASM landing, and newsletter drops.</li>
+          <li><strong>Phase 03 · Creator docs:</strong> publish story bibles, localization sheets, and automation scripts on GitHub.</li>
+          <li><strong>Phase 04 · Community run:</strong> run a jam + stream showcasing mods, alternate verbs, and accessibility tweaks.</li>
+        </ul>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+        <p>Fun Text Game Initiative · Part of AkaneDev Projects</p>
+      </div>
+    </footer>
+  </body>
+</html>
