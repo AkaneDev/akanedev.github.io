@@ -365,8 +365,7 @@ function flashbang(duration = 500, color = '#ffffff', audiopath = "null") {
         if (audioEl) {
             try {
                 audioEl.pause();
-                audioEl.src = "";
-                audioEl.load();
+                audioEl.removeAttribute('src'); // prevents browser from retrying current page as audio
             } catch (e) { /* ignore */ }
             audioEl = null;
         }
