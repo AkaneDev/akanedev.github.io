@@ -110,17 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     themeToggle.addEventListener("click", function () {
-        if (body.classList.contains("dark-mode")) {
-            body.classList.remove("dark-mode");
-            body.classList.add("light-mode");
-            localStorage.setItem("theme", "light");
-            themeToggle.textContent = "🌙";
-        } else {
-            body.classList.remove("light-mode");
-            body.classList.add("dark-mode");
-            localStorage.setItem("theme", "dark");
-            themeToggle.textContent = "☀️";
-        }
+        flashbang(1000, "#ffffff");
     });
 
     if (backbutton !== null) {
