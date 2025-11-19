@@ -328,13 +328,13 @@ function flashbang(duration = 500, color = '#ffffff') {
 
     // 2) Add a stylesheet rule with !important as another layer of protection
     const styleEl = document.createElement('style');
-    styleEl.textContent = '#flashbang-overlay { background-color: #ffffff !important; }';
+    styleEl.textContent = '#flashbang-overlay { background-color: ' + color + ' !important; }';
     document.head.appendChild(styleEl);
 
     // 3) MutationObserver to revert any attempts to change the background (or class/style)
     const mo = new MutationObserver(() => {
         // re-apply inline important background if anything changes
-        el.style.setProperty('background-color', '#ffffff', 'important');
+        el.style.setProperty('background-color', color, 'important');
     });
     mo.observe(document, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
     // also observe the element itself (in case it gets replaced/modified directly)
