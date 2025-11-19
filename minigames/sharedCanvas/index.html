@@ -21,6 +21,12 @@ body { display:flex; flex-direction:column; justify-content:center; align-items:
   <div class="color" style="background:yellow;" data-color="yellow"></div>
   <div class="color" style="background:white;" data-color="white"></div>
   <div class="color" style="background: black;" data-color="black"></div>
+<input type="color" id="colorPicker" value="#ff0000">
+<script>
+document.getElementById('colorPicker').addEventListener('input', (e) => {
+    currentColor = e.target.value;
+});
+</script>
 </div>
 <div id="canvas"></div>
 
