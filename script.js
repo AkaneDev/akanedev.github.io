@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!flashEl) return;
     flashEl.addEventListener("click", () => {
         const duration = parseInt(flashEl.dataset.duration, 10) || undefined;
-        flashbang(duration, '#ff0000', "/assets/sfx/Headshot.mp3");
+        flashbang(duration, '#ff0000', "https://github.com/AkaneDev/akanedev.github.io/raw/refs/heads/main/assets/sfx/Headshot.mp3");
     });
 });
 
