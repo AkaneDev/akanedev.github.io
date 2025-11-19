@@ -291,14 +291,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!flashEl) return;
     flashEl.addEventListener("click", () => {
         const duration = parseInt(flashEl.dataset.duration, 10) || undefined;
-        flashbang(duration, '#ff0000');
+        flashbang(duration, '#ff0000', "/assets/sfx/Headshot.mp3");
     });
 });
 
-function flashbang(duration = 500, color = '#ffffff') {
+function flashbang(duration = 500, color = '#ffffff', audiopath = "null") {
     const el = document.createElement('div');
     el.id = 'flashbang-overlay';
-
+    let audioenabled = true;
+    let audioEl = null;
+    if (audiopath == null || audiopath === "null" || audiopath === "") {
+        audioenabled = false;
+    }
     // Basic inline styles (positioning, size, stacking)
     Object.assign(el.style, {
         position: 'fixed',
@@ -312,25 +316,39 @@ function flashbang(duration = 500, color = '#ffffff') {
         transition: 'opacity 200ms ease'
     });
 
-    // Enforce white background regardless of external CSS:
-    // 1) Inline important rule
+    // Enforce background color regardless of external CSS:
     el.style.setProperty('background-color', color, 'important');
 
-    // 2) Add a stylesheet rule with !important as another layer of protection
     const styleEl = document.createElement('style');
     styleEl.textContent = '#flashbang-overlay { background-color: ' + color + ' !important; }';
     document.head.appendChild(styleEl);
 
-    // 3) MutationObserver to revert any attempts to change the background (or class/style)
     const mo = new MutationObserver(() => {
-        // re-apply inline important background if anything changes
         el.style.setProperty('background-color', color, 'important');
     });
     mo.observe(document, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] });
-    // also observe the element itself (in case it gets replaced/modified directly)
     mo.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
 
     document.body.appendChild(el);
+
+    // Play audio if provided
+    if (audioenabled) {
+        try {
+            audioEl = new Audio(audiopath);
+            audioEl.preload = 'auto';
+            audioEl.playsInline = true;
+            audioEl.volume = 1;
+            const playPromise = audioEl.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.warn('flashbang: audio playback blocked or failed:', err);
+                });
+            }
+        } catch (e) {
+            console.warn('flashbang: failed to initialize audio:', e);
+            audioEl = null;
+        }
+    }
 
     // Start fade-out so the overlay is visible for (duration - fadeTime)
     const fadeTime = 200;
@@ -339,11 +357,19 @@ function flashbang(duration = 500, color = '#ffffff') {
         setTimeout(() => { el.style.opacity = '0'; }, fadeStart);
     });
 
-    // Cleanup after completion: remove element, stylesheet and observer
+    // Cleanup after completion: remove element, stylesheet, observer and stop audio
     setTimeout(() => {
         try { mo.disconnect(); } catch (e) { /* ignore */ }
         try { styleEl.remove(); } catch (e) { /* ignore */ }
         try { el.remove(); } catch (e) { /* ignore */ }
+        if (audioEl) {
+            try {
+                audioEl.pause();
+                audioEl.src = "";
+                audioEl.load();
+            } catch (e) { /* ignore */ }
+            audioEl = null;
+        }
     }, duration + 50);
 }
 
