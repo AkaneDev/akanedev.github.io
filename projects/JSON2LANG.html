@@ -20,7 +20,7 @@
         <h1>JSON2LANG - Minecraft Language File Backporting Tool</h1>
         <p><strong>Repository:</strong> <a href="https://github.com/AkanesExperiments/JSON2LANG" target="_blank">GitHub</a></p>
         <p><strong>Author:</strong> AkaneDev</p>
-        <p><strong>Version:</strong> <a href="https://github.com/AkanesExperiments/JSON2LANG/releases/tag/v0.1.0-alpha">0.1 alpha</a></p>
+        <p><strong>Version:</strong> <a href="https://github.com/AkanesExperiments/JSON2LANG/releases/tag/v0.2.0-alpha">0.2 alpha</a></p>
         
         <h2>Overview</h2>
         <p>JSON2LANG is a command-line utility designed to <strong>backport Minecraft translation files</strong> from modern JSON-based formats to the legacy <code>.lang</code> format used in <strong>Minecraft Forge 1.12.2</strong>. It automates the conversion process for modders who need compatibility with older versions.</p>
@@ -45,10 +45,11 @@ item.minecraft.diamond=Diamond</code></pre>
         
         <h2>Usage</h2>
         <p>Run JSON2LANG with the following command:</p>
-        <pre><code>jsontolang [-h] input output</code></pre>
+        <pre><code>jsontolang [-h] [--recursive] input output</code></pre>
         
         <h3>Arguments</h3>
         <ul>
+            <li><code>--recursive</code> - turns the input and output into directories and it will recursivly go through and convert all json in that folder to a .lang, doesn't traverse folders</li>
             <li><code>input</code> - Path to the input JSON file.</li>
             <li><code>output</code> - Path where the <code>.lang</code> file will be saved.</li>
         </ul>
@@ -59,11 +60,6 @@ item.minecraft.diamond=Diamond</code></pre>
         <h2>Why Use JSON2LANG?</h2>
         <ul>
             <li><strong>Fast and Efficient</strong> - Converts entire files in seconds.</li>
-        </ul>
-        
-        <h2>Future Improvements</h2>
-        <ul>
-            <li>Batch conversion for multiple files.</li>
         </ul>
         
         <h2>Support Me</h2>

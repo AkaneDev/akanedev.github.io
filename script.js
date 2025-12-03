@@ -11,6 +11,9 @@ const ghosts = ["Banshee", "Demon", "Deogen", "Goryo", "Hantu", "Jinn", "Mare", 
 let ghost = ghosts[Math.floor(Math.random() * ghosts.length)];
 let aprilFools = new Date();
 let isAprilFools = aprilFools.getMonth() === 3 && aprilFools.getDate() === 1;
+const DEV_BGM_STORAGE_KEY = "dev-bgm-state";
+let devBgmAudio = null;
+let devBgmState = loadDevBgmState();
 
 // redirect all pages to 404 if it is april fools
 if (isAprilFools) {
@@ -167,6 +170,23 @@ document.addEventListener("DOMContentLoaded", function () {
                         <button onclick="document.body.classList.remove('dark-mode')">Disable</button>
                     </div>
                     <br>
+                    <button class="collapsible">Sitewide Music (dev only)</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p id="dev-bgm-status">Load a track to start.</p>
+                        <label for="dev-bgm-url">Track URL</label>
+                        <input id="dev-bgm-url" type="text" placeholder="https://..." class="looks-nice" style="width: 100%;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0;">
+                            <button id="dev-bgm-load" class="looks-nice">Load</button>
+                            <button id="dev-bgm-toggle" class="looks-nice">Play</button>
+                            <button id="dev-bgm-stop" class="looks-nice">Stop</button>
+                        </div>
+                        <label for="dev-bgm-volume">Volume</label>
+                        <input id="dev-bgm-volume" type="range" min="0" max="1" step="0.01" style="width: 100%;">
+                        <label style="display: flex; align-items: center; gap: 6px; margin-top: 8px;">
+                            <input type="checkbox" id="dev-bgm-loop" ${devBgmState.loop ? "checked" : ""}>Loop track
+                        </label>
+                    </div>
+                    <br>
                     <button class="looks-nice" id="download-ultrakill">Download Ultrakill</button>
                     <br>
                     <button class="collapsible">Design tools</button>
@@ -208,6 +228,23 @@ document.addEventListener("DOMContentLoaded", function () {
                         <button onclick="document.body.classList.remove('dark-mode')" class="looks-nice">Disable</button>
                     </div>
                     <br>
+                    <button class="collapsible">Sitewide Music (dev only)</button>
+                    <div class="dark-mode" style="display: none;">
+                        <p id="dev-bgm-status">Load a track to start.</p>
+                        <label for="dev-bgm-url">Track URL</label>
+                        <input id="dev-bgm-url" type="text" placeholder="https://..." class="looks-nice" style="width: 100%;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0;">
+                            <button id="dev-bgm-load" class="looks-nice">Load</button>
+                            <button id="dev-bgm-toggle" class="looks-nice">Play</button>
+                            <button id="dev-bgm-stop" class="looks-nice">Stop</button>
+                        </div>
+                        <label for="dev-bgm-volume">Volume</label>
+                        <input id="dev-bgm-volume" type="range" min="0" max="1" step="0.01" style="width: 100%;">
+                        <label style="display: flex; align-items: center; gap: 6px; margin-top: 8px;">
+                            <input type="checkbox" id="dev-bgm-loop" ${devBgmState.loop ? "checked" : ""}>Loop track
+                        </label>
+                    </div>
+                    <br>
                     <button class="collapsible">Page Jump</button>
                     <div class="dark-mode" style="display: none;">
                         <p>Jump to a page:</p>
@@ -233,6 +270,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.appendChild(devWindow);
             // Make the window draggable
             collapsibleSetup();
+            attachDevBgmControls();
             dragElement(devWindow);
         }
         else if (devMode && (allowdevmodeonpage !== null || allowdevmodeonpage !== undefined) && !document.getElementById("dev-window")) {
@@ -244,6 +282,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.body.appendChild(devWindow);
             devMode = false;
             devWindow.remove();
+            stopDevBgm(true);
         }
     }, 1000); // Check every second
 });
@@ -272,9 +311,221 @@ function collapsibleSetup() {
         removeDevWindow[i].addEventListener("click", function() {
             document.getElementById("dev-window").remove();
             devMode = false;
+            stopDevBgm(true);
             console.log("Developer Mode: OFF");
         });
     }
+}
+
+function loadDevBgmState() {
+    try {
+        const saved = localStorage.getItem(DEV_BGM_STORAGE_KEY);
+        if (!saved) {
+            return { url: "", volume: 0.35, loop: true, playing: false };
+        }
+        const parsed = JSON.parse(saved);
+        return {
+            url: typeof parsed.url === "string" ? parsed.url : "",
+            volume: typeof parsed.volume === "number" ? Math.min(Math.max(parsed.volume, 0), 1) : 0.35,
+            loop: !!parsed.loop,
+            playing: false
+        };
+    } catch (e) {
+        console.warn("dev bgm: failed to read saved state", e);
+        return { url: "", volume: 0.35, loop: true, playing: false };
+    }
+}
+
+function persistDevBgmState() {
+    try {
+        localStorage.setItem(DEV_BGM_STORAGE_KEY, JSON.stringify({
+            url: devBgmState.url,
+            volume: devBgmState.volume,
+            loop: devBgmState.loop
+        }));
+    } catch (e) {
+        console.warn("dev bgm: failed to persist state", e);
+    }
+}
+
+function ensureDevBgmAudio() {
+    if (devBgmAudio) {
+        return devBgmAudio;
+    }
+    devBgmAudio = new Audio();
+    devBgmAudio.id = "dev-bgm-audio";
+    devBgmAudio.preload = "auto";
+    devBgmAudio.loop = devBgmState.loop;
+    devBgmAudio.volume = devBgmState.volume;
+    devBgmAudio.playsInline = true;
+    devBgmAudio.addEventListener("play", () => {
+        devBgmState.playing = true;
+        updateDevBgmUI("Playing");
+    });
+    devBgmAudio.addEventListener("pause", () => {
+        if (!devBgmAudio.ended) {
+            devBgmState.playing = false;
+            updateDevBgmUI("Paused");
+        }
+    });
+    devBgmAudio.addEventListener("ended", () => {
+        devBgmState.playing = false;
+        updateDevBgmUI("Reached end of track.");
+    });
+    devBgmAudio.addEventListener("error", () => {
+        devBgmState.playing = false;
+        updateDevBgmUI("Error loading audio.");
+    });
+    return devBgmAudio;
+}
+
+function updateDevBgmUI(statusOverride) {
+    const urlInput = document.getElementById("dev-bgm-url");
+    const volumeInput = document.getElementById("dev-bgm-volume");
+    const loopInput = document.getElementById("dev-bgm-loop");
+    const toggleBtn = document.getElementById("dev-bgm-toggle");
+    const statusEl = document.getElementById("dev-bgm-status");
+
+    if (urlInput) {
+        urlInput.value = devBgmState.url;
+    }
+    if (volumeInput) {
+        volumeInput.value = devBgmState.volume;
+    }
+    if (loopInput) {
+        loopInput.checked = devBgmState.loop;
+    }
+    if (toggleBtn) {
+        toggleBtn.textContent = devBgmState.playing ? "Pause" : "Play";
+    }
+    if (statusEl) {
+        if (statusOverride) {
+            statusEl.textContent = statusOverride;
+        } else if (!devMode) {
+            statusEl.textContent = "Enable developer mode to manage music.";
+        } else if (!devBgmState.url) {
+            statusEl.textContent = "No track loaded.";
+        } else if (devBgmState.playing) {
+            statusEl.textContent = "Playing";
+        } else {
+            statusEl.textContent = "Track loaded. Press play to listen.";
+        }
+    }
+}
+
+function setDevBgmUrl(url) {
+    devBgmState.url = url.trim();
+    devBgmState.playing = false;
+    persistDevBgmState();
+    if (devBgmAudio) {
+        devBgmAudio.pause();
+        devBgmAudio.currentTime = 0;
+        devBgmAudio.src = devBgmState.url || "";
+    }
+    updateDevBgmUI(devBgmState.url ? "Track loaded. Ready to play." : "No track loaded.");
+}
+
+function setDevBgmVolume(value) {
+    const vol = Math.min(Math.max(isNaN(value) ? devBgmState.volume : value, 0), 1);
+    devBgmState.volume = vol;
+    if (devBgmAudio) {
+        devBgmAudio.volume = vol;
+    }
+    persistDevBgmState();
+    updateDevBgmUI();
+}
+
+function setDevBgmLoop(loopEnabled) {
+    devBgmState.loop = !!loopEnabled;
+    if (devBgmAudio) {
+        devBgmAudio.loop = devBgmState.loop;
+    }
+    persistDevBgmState();
+    updateDevBgmUI();
+}
+
+function playDevBgm() {
+    if (!devBgmState.url) {
+        updateDevBgmUI("Add a track URL first.");
+        return;
+    }
+    const audio = ensureDevBgmAudio();
+    audio.src = devBgmState.url;
+    audio.loop = devBgmState.loop;
+    audio.volume = devBgmState.volume;
+    const promise = audio.play();
+    if (promise && typeof promise.then === "function") {
+        promise.then(() => {
+            devBgmState.playing = true;
+            updateDevBgmUI("Playing");
+        }).catch(err => {
+            devBgmState.playing = false;
+            console.warn("dev bgm: playback blocked", err);
+            updateDevBgmUI("Browser blocked autoplay. Press play again.");
+        });
+    } else {
+        devBgmState.playing = true;
+        updateDevBgmUI("Playing");
+    }
+}
+
+function toggleDevBgm() {
+    if (devBgmAudio && !devBgmAudio.paused && !devBgmAudio.ended) {
+        devBgmAudio.pause();
+        devBgmState.playing = false;
+        updateDevBgmUI("Paused");
+        return;
+    }
+    playDevBgm();
+}
+
+function stopDevBgm(force = false) {
+    if (!force && !devMode) {
+        updateDevBgmUI("Developer mode required before controlling music.");
+        return;
+    }
+    if (devBgmAudio) {
+        try {
+            devBgmAudio.pause();
+            devBgmAudio.currentTime = 0;
+        } catch (e) {
+            console.warn("dev bgm: failed to stop audio", e);
+        }
+    }
+    devBgmState.playing = false;
+    updateDevBgmUI("Stopped");
+}
+
+function attachDevBgmControls() {
+    const urlInput = document.getElementById("dev-bgm-url");
+    if (!urlInput) {
+        return;
+    }
+    const loadBtn = document.getElementById("dev-bgm-load");
+    const toggleBtn = document.getElementById("dev-bgm-toggle");
+    const stopBtn = document.getElementById("dev-bgm-stop");
+    const volumeInput = document.getElementById("dev-bgm-volume");
+    const loopInput = document.getElementById("dev-bgm-loop");
+
+    urlInput.value = devBgmState.url;
+    if (loadBtn) {
+        loadBtn.addEventListener("click", () => setDevBgmUrl(urlInput.value));
+    }
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", toggleDevBgm);
+    }
+    if (stopBtn) {
+        stopBtn.addEventListener("click", () => stopDevBgm(true));
+    }
+    if (volumeInput) {
+        volumeInput.value = devBgmState.volume;
+        volumeInput.addEventListener("input", () => setDevBgmVolume(parseFloat(volumeInput.value)));
+    }
+    if (loopInput) {
+        loopInput.checked = devBgmState.loop;
+        loopInput.addEventListener("change", () => setDevBgmLoop(loopInput.checked));
+    }
+    updateDevBgmUI();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -291,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!flashEl) return;
     flashEl.addEventListener("click", () => {
         const duration = parseInt(flashEl.dataset.duration, 10) || undefined;
-        flashbang(duration, '#ff0000', "https://github.com/AkaneDev/akanedev.github.io/raw/refs/heads/main/assets/sfx/Headshot.mp3");
+        flashbang(duration, '#ff0000', "https://akanedev.au/assets/sfx/Headshot.mp3");
     });
 });
 
@@ -316,6 +567,19 @@ function flashbang(duration = 500, color = '#ffffff', audiopath = "null") {
         transition: 'opacity 200ms ease'
     });
 
+    // Play audio if provided
+    if (audioenabled) {
+        try {
+            setDevBgmUrl(audiopath);
+            devBgmState.loop = false;
+            persistDevBgmState();
+            playDevBgm();
+        } catch (e) {
+            console.warn('flashbang: failed to initialize audio:', e);
+            audioEl = null;
+        }
+    }
+
     // Enforce background color regardless of external CSS:
     el.style.setProperty('background-color', color, 'important');
 
@@ -330,25 +594,6 @@ function flashbang(duration = 500, color = '#ffffff', audiopath = "null") {
     mo.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
 
     document.body.appendChild(el);
-
-    // Play audio if provided
-    if (audioenabled) {
-        try {
-            audioEl = new Audio(audiopath);
-            audioEl.preload = 'auto';
-            audioEl.playsInline = true;
-            audioEl.volume = 1;
-            const playPromise = audioEl.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(err => {
-                    console.warn('flashbang: audio playback blocked or failed:', err);
-                });
-            }
-        } catch (e) {
-            console.warn('flashbang: failed to initialize audio:', e);
-            audioEl = null;
-        }
-    }
 
     // Start fade-out so the overlay is visible for (duration - fadeTime)
     const fadeTime = 200;
