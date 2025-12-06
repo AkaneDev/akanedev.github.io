@@ -46,7 +46,6 @@
       text-transform:uppercase;
       filter:drop-shadow(0 6px 18px rgba(0,0,0,0.7));
     }
-    /* reveal mask */
     .secret::before {
       content:attr(data-text);
       position:absolute;
@@ -59,7 +58,6 @@
       clip-path: inset(0 100% 0 0);
       transition: clip-path 900ms cubic-bezier(.2,.9,.2,1);
     }
-    /* a jitter effect to create "it's about to reveal" tension */
     .secret.jitter {
       animation: jitter 900ms ease-in-out 0s 3 alternate;
     }
@@ -70,7 +68,6 @@
       60% { transform: translate(-3px,3px) rotate(-0.3deg); text-shadow: -4px 4px 10px rgba(0,0,0,0.6); }
       100% { transform: translate(0,0) rotate(0); text-shadow: 0 0 0 rgba(0,0,0,0); }
     }
-    /* reveal state */
     .secret.revealed::before {
       clip-path: inset(0 0 0 0);
       transition: clip-path 420ms cubic-bezier(.2,.9,.2,1);
@@ -106,9 +103,6 @@
       box-shadow:0 6px 18px rgba(0,255,213,0.08);
     }
 
-    .sr-only { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
-
-    /* overlay hint before flash */
     #countdown {
       margin-top:12px;
       font-variant-numeric:tabular-nums;
@@ -116,12 +110,48 @@
       font-size:18px;
       height:22px;
     }
+
+    /* Overlay that requires a click to start */
+    #overlay {
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.95));
+      z-index:99999;
+      color:var(--fg);
+      flex-direction:column;
+      gap:18px;
+      padding:24px;
+      box-sizing:border-box;
+    }
+    #overlay .cta {
+      background:transparent;
+      border:2px solid rgba(255,255,255,0.12);
+      padding:18px 28px;
+      border-radius:12px;
+      font-size:20px;
+      cursor:pointer;
+      color:var(--fg);
+    }
+    #overlay .cta.primary {
+      background:var(--accent);
+      color:#001;
+      border: none;
+    }
+    #overlay .small {
+      color:rgba(255,255,255,0.7);
+      font-size:14px;
+      max-width:640px;
+      text-align:center;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="main-content" aria-hidden="true">
     <div class="card">
-      <div id="title" class="secret jitter" data-text="ONE MORE SECOND...">ONE MORE SECOND...</div>
+      <div id="title" class="secret" data-text="ONE MORE SECOND...">ONE MORE SECOND...</div>
       <div id="countdown" aria-live="polite"></div>
       <div class="hint">Something is trying to reveal itself... stay put.</div>
 
@@ -132,6 +162,12 @@
     </div>
   </div>
 
+  <div id="overlay" role="dialog" aria-modal="true" aria-label="Click to reveal">
+    <div class="small">A secret is about to reveal itself.</div>
+    <button id="start-btn" class="cta primary" aria-describedby="start-desc">Click to Reveal</button>
+    <div id="start-desc" class="small">Press Enter or Space to activate.</div>
+  </div>
+
   <script src="/script.js"></script>
   <script>
     (function(){
@@ -139,6 +175,9 @@
       const countdown = document.getElementById('countdown');
       const manual = document.getElementById('manual');
       const replay = document.getElementById('replay');
+      const overlay = document.getElementById('overlay');
+      const startBtn = document.getElementById('start-btn');
+      const mainContent = document.getElementById('main-content');
 
       // parameters
       const jitterRounds = 3;
@@ -149,9 +188,15 @@
 
       let timer = null;
 
-      function startSequence() {
+      function startSequence(userGesture = false) {
+        // make content accessible now
+        mainContent.setAttribute('aria-hidden', 'false');
+
         // ensure initial classes
         title.classList.remove('revealed');
+        // restart jitter by toggling class
+        title.classList.remove('jitter');
+        void title.offsetWidth;
         title.classList.add('jitter');
 
         // countdown display loop
@@ -167,33 +212,45 @@
         // schedule reveal
         setTimeout(() => {
           title.classList.remove('jitter');
-          // change text to final "SECRET" before reveal
           title.setAttribute('data-text', 'SECRET');
           title.textContent = 'SECRET';
-          // force reflow to ensure transition
           void title.offsetWidth;
           title.classList.add('revealed');
         }, jitterRounds * jitterDuration + pauseBeforeReveal);
 
         // schedule the flashbang to run after reveal transition finishes
         setTimeout(() => {
-          // audio path used across the site
           const audio = "https://akanedev.au/assets/sfx/flashbang.mp3";
-          // call flashbang defined in script.js: flashbang(duration, color, audiopath)
           try {
             flashbang(900, '#ffffff', audio);
           } catch (e) {
-            // If flashbang isn't available, fallback to alert and playing audio directly
             try {
               const a = new Audio(audio);
-              a.play().catch(()=>{});
+              // attempt to play only if userGesture is true
+              if (userGesture) a.play().catch(()=>{});
             } catch (err) {}
           }
         }, totalDelay + 50);
       }
 
+      // Remove overlay and start when user clicks the CTA
+      function activateReveal() {
+        overlay.remove();
+        // Some browsers will treat the click as user gesture for audio
+        startSequence(true);
+      }
+
+      startBtn.addEventListener('click', activateReveal);
+      // keyboard activation: Enter/Space triggers start
+      startBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activateReveal();
+        }
+      });
+
+      // manual trigger (for users who already activated overlay)
       manual.addEventListener('click', () => {
-        // immediate flash
         try {
           flashbang(900, '#ffffff', "https://akanedev.au/assets/sfx/flashbang.mp3");
         } catch (e) {
@@ -201,11 +258,28 @@
         }
       });
 
-      replay.addEventListener('click', startSequence);
+      // replay requires a gesture again: show overlay so the browser allows audio
+      replay.addEventListener('click', () => {
+        // re-show overlay to capture another user gesture
+        if (!document.getElementById('overlay')) {
+          const ov = document.createElement('div');
+          ov.id = 'overlay';
+          ov.role = 'dialog';
+          ov.setAttribute('aria-modal','true');
+          ov.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.95));z-index:99999;color:var(--fg);flex-direction:column;gap:18px;padding:24px;box-sizing:border-box;';
+          ov.innerHTML = '<div class="small" style="color:rgba(255,255,255,0.7);font-size:14px;max-width:640px;text-align:center;">Click to replay the reveal with sound.</div><button id="overlay-cta" style="padding:18px 28px;border-radius:12px;border:none;background:var(--accent);color:#001;cursor:pointer;">Replay</button>';
+          document.body.appendChild(ov);
+          document.getElementById('overlay-cta').addEventListener('click', () => {
+            ov.remove();
+            startSequence(true);
+          });
+        }
+      });
 
-      document.addEventListener('DOMContentLoaded', () => {
-        // Kick off after a tiny UX-friendly delay so page paints first
-        setTimeout(startSequence, 240);
+      // Start only after overlay click (do not auto-run)
+      // Expose a tiny hint for accessibility to focus the start button
+      window.addEventListener('DOMContentLoaded', () => {
+        startBtn.focus();
       });
     })();
   </script>
