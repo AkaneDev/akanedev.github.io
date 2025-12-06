@@ -106,14 +106,14 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchLiveStatus();
 
     // Load theme preference
-    if (localStorage.getItem("theme") === "light") {
-        body.classList.remove("dark-mode");
-        body.classList.add("light-mode");
-        themeToggle.textContent = "🌙";
-    }
+    // if (localStorage.getItem("theme") === "light") {
+    //     body.classList.remove("dark-mode");
+    //     body.classList.add("light-mode");
+    //     themeToggle.textContent = "🌙";
+    // }
 
     themeToggle.addEventListener("click", function () {
-        flashbang(1000, "#ffffff");
+        flashbang(1000, "#ffffff", "https://akanedev.au/assets/sfx/flashbang.mp3");
     });
 
     if (backbutton !== null) {
@@ -533,7 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!flashEl) return;
     flashEl.addEventListener("click", () => {
         const duration = parseInt(flashEl.dataset.duration, 10) || undefined;
-        flashbang(duration);
+        flashbang(duration, "#ffffff", "https://akanedev.au/assets/sfx/flashbang.mp3");
     });
 });
 
@@ -554,19 +554,6 @@ function flashbang(duration = 500, color = '#ffffff', audiopath = "null") {
     if (audiopath == null || audiopath === "null" || audiopath === "") {
         audioenabled = false;
     }
-    // Basic inline styles (positioning, size, stacking)
-    Object.assign(el.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        zIndex: '2147483647',
-        pointerEvents: 'none',
-        opacity: '1',
-        transition: 'opacity 200ms ease'
-    });
-
     // Play audio if provided
     if (audioenabled) {
         try {
@@ -579,6 +566,18 @@ function flashbang(duration = 500, color = '#ffffff', audiopath = "null") {
             audioEl = null;
         }
     }
+    // Basic inline styles (positioning, size, stacking)
+    Object.assign(el.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        zIndex: '2147483647',
+        pointerEvents: 'none',
+        opacity: '1',
+        transition: 'opacity 200ms ease'
+    });
 
     // Enforce background color regardless of external CSS:
     el.style.setProperty('background-color', color, 'important');
