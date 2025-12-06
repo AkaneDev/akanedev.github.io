@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mystery</title>
+  <style>
+    :root {
+      --bg:#0b0b0d;
+      --fg:#ffffff;
+      --accent:#00ffd5;
+    }
+    html,body {
+      height:100%;
+      margin:0;
+      background:linear-gradient(180deg, #000 0%, var(--bg) 100%);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color:var(--fg);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .wrap {
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:24px;
+      padding:24px;
+      box-sizing:border-box;
+    }
+    .card {
+      text-align:center;
+      max-width:900px;
+      width:100%;
+    }
+    .secret {
+      font-weight:800;
+      font-size:clamp(28px, 9vw, 96px);
+      line-height:1;
+      letter-spacing: -2px;
+      display:inline-block;
+      position:relative;
+      color:transparent;
+      -webkit-text-stroke: 1px rgba(255,255,255,0.06);
+      text-transform:uppercase;
+      filter:drop-shadow(0 6px 18px rgba(0,0,0,0.7));
+    }
+    /* reveal mask */
+    .secret::before {
+      content:attr(data-text);
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      color:var(--fg);
+      overflow:hidden;
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 900ms cubic-bezier(.2,.9,.2,1);
+    }
+    /* a jitter effect to create "it's about to reveal" tension */
+    .secret.jitter {
+      animation: jitter 900ms ease-in-out 0s 3 alternate;
+    }
+    @keyframes jitter {
+      0% { transform: translate(0,0) rotate(0); text-shadow: 0 0 0 rgba(0,0,0,0); }
+      20% { transform: translate(-8px,2px) rotate(-1deg); text-shadow: -6px 6px 12px rgba(0,0,0,0.6); }
+      40% { transform: translate(6px,-2px) rotate(0.5deg); text-shadow: 6px -6px 12px rgba(0,0,0,0.6); }
+      60% { transform: translate(-3px,3px) rotate(-0.3deg); text-shadow: -4px 4px 10px rgba(0,0,0,0.6); }
+      100% { transform: translate(0,0) rotate(0); text-shadow: 0 0 0 rgba(0,0,0,0); }
+    }
+    /* reveal state */
+    .secret.revealed::before {
+      clip-path: inset(0 0 0 0);
+      transition: clip-path 420ms cubic-bezier(.2,.9,.2,1);
+    }
+
+    .hint {
+      color:rgba(255,255,255,0.65);
+      font-size:14px;
+      margin-top:12px;
+    }
+
+    .controls {
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      margin-top:18px;
+    }
+
+    .btn {
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.12);
+      color:var(--fg);
+      padding:10px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .btn.primary {
+      background:var(--accent);
+      color:#001;
+      border-color:transparent;
+      box-shadow:0 6px 18px rgba(0,255,213,0.08);
+    }
+
+    .sr-only { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+    /* overlay hint before flash */
+    #countdown {
+      margin-top:12px;
+      font-variant-numeric:tabular-nums;
+      color:rgba(255,255,255,0.9);
+      font-size:18px;
+      height:22px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div id="title" class="secret jitter" data-text="ONE MORE SECOND...">ONE MORE SECOND...</div>
+      <div id="countdown" aria-live="polite"></div>
+      <div class="hint">Something is trying to reveal itself... stay put.</div>
+
+      <div class="controls">
+        <button id="manual" class="btn">Trigger Now</button>
+        <button id="replay" class="btn primary">Replay Reveal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/script.js"></script>
+  <script>
+    (function(){
+      const title = document.getElementById('title');
+      const countdown = document.getElementById('countdown');
+      const manual = document.getElementById('manual');
+      const replay = document.getElementById('replay');
+
+      // parameters
+      const jitterRounds = 3;
+      const jitterDuration = 900; // matches CSS jitter duration
+      const pauseBeforeReveal = 350; // small pause before reveal animation
+      const revealToFlashDelay = 420 + 350; // wait for reveal transition to finish before flashing
+      const totalDelay = jitterRounds * jitterDuration + pauseBeforeReveal + revealToFlashDelay;
+
+      let timer = null;
+
+      function startSequence() {
+        // ensure initial classes
+        title.classList.remove('revealed');
+        title.classList.add('jitter');
+
+        // countdown display loop
+        let remaining = Math.ceil(totalDelay/1000);
+        countdown.textContent = `Revealing in ${remaining}…`;
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => {
+          remaining = Math.max(0, remaining - 1);
+          countdown.textContent = remaining > 0 ? `Revealing in ${remaining}…` : '';
+          if (remaining <= 0) { clearInterval(timer); timer = null; }
+        }, 1000);
+
+        // schedule reveal
+        setTimeout(() => {
+          title.classList.remove('jitter');
+          // change text to final "SECRET" before reveal
+          title.setAttribute('data-text', 'SECRET');
+          title.textContent = 'SECRET';
+          // force reflow to ensure transition
+          void title.offsetWidth;
+          title.classList.add('revealed');
+        }, jitterRounds * jitterDuration + pauseBeforeReveal);
+
+        // schedule the flashbang to run after reveal transition finishes
+        setTimeout(() => {
+          // audio path used across the site
+          const audio = "https://akanedev.au/assets/sfx/flashbang.mp3";
+          // call flashbang defined in script.js: flashbang(duration, color, audiopath)
+          try {
+            flashbang(900, '#ffffff', audio);
+          } catch (e) {
+            // If flashbang isn't available, fallback to alert and playing audio directly
+            try {
+              const a = new Audio(audio);
+              a.play().catch(()=>{});
+            } catch (err) {}
+          }
+        }, totalDelay + 50);
+      }
+
+      manual.addEventListener('click', () => {
+        // immediate flash
+        try {
+          flashbang(900, '#ffffff', "https://akanedev.au/assets/sfx/flashbang.mp3");
+        } catch (e) {
+          try { new Audio("https://akanedev.au/assets/sfx/flashbang.mp3").play(); } catch(_) {}
+        }
+      });
+
+      replay.addEventListener('click', startSequence);
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Kick off after a tiny UX-friendly delay so page paints first
+        setTimeout(startSequence, 240);
+      });
+    })();
+  </script>
+</body>
+</html>
