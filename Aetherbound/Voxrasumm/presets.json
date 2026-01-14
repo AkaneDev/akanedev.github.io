@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Wave of Fireball",
+    "runes": ["voryn", "pyra", "vara"]
+  },
+  {
+    "name": "Cone of Fire Shield",
+    "runes": ["sphira", "pyra", "aegra"]
+  },
+  {
+    "name": "Zone of Fire Swords",
+    "runes": ["brivon", "pyra", "tharun"]
+  },
+  {
+    "name": "Wave of Chain Lightning",
+    "runes": ["voryn", "gyrun", "voltis"]
+  },
+  {
+    "name": "Wave of Earth Shards",
+    "runes": ["voryn", "gryyn", "kelys"]
+  },
+  {
+    "name": "Levitate Ally",
+    "runes": ["levira", "friendra"]
+  },
+  {
+    "name": "Dismiss Zone",
+    "runes": ["revoka", "brivon"]
+  },
+  {
+    "name": "Freeze Creature",
+    "runes": ["frosta", "creatra"]
+  },
+  {
+    "name": "Animate Object",
+    "runes": ["animira", "objetta"]
+  },
+  {
+    "name": "Dress Person",
+    "runes": ["vestira", "persona"]
+  },
+  {
+    "name": "Push Object",
+    "runes": ["pushra", "objetta"]
+  },
+  {
+    "name": "Pull Object",
+    "runes": ["pullra", "objetta"]
+  }
+]

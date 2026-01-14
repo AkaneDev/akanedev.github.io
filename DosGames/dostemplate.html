@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>JSDOS-TEMPLATE</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
+    <script src='/main.js'></script>
+    <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+    <script defer src="/script.js"></script>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <h1>TEMPLATE FOR JSDOS</h1>
+        <p>Play Game Below</p>
+        <div id="dos" style="width: 80vw; height: 40vw;"></div>
+
+        <script>
+            Dos(document.getElementById("dos"), {
+                url: "https://v8.js-dos.com/bundles/digger.jsdos",
+            });
+        </script>
+    </section>
+</body>
+</html>
