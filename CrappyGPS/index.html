@@ -10,27 +10,31 @@
 
 <style>
 html, body { height:100%; margin:0; font-family:sans-serif; }
-#container { display:flex; height:100%; flex-direction:row; }
-#sidebar {
-  width:300px;
-  max-width: 90%;
-  padding:10px;
-  background:#f4f4f4;
-  border-right:1px solid #ccc;
-  box-sizing:border-box;
-  overflow-y:auto;
-  transition: transform 0.3s ease-in-out;
-}
-#map { flex:1; }
-input, button { width:100%; margin:5px 0; padding:10px; box-sizing:border-box; font-size:1em; border-radius:5px; border:1px solid #ccc; }
-ul { padding-left:15px; max-height:200px; overflow-y:auto; }
+#map { height:100%; width:100%; position:relative; }
 
-/* Collapsible sidebar button on mobile */
+/* Sidebar floating over map */
+#sidebar {
+  position:absolute;
+  top:10px;
+  left:10px;
+  width:280px;
+  max-width:90%;
+  background:#f4f4f4;
+  padding:10px;
+  border-radius:8px;
+  box-shadow:2px 2px 8px rgba(0,0,0,0.3);
+  z-index:3000;
+  max-height:90%;
+  overflow-y:auto;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+/* Mobile toggle button */
 #toggleSidebar {
   display:none;
   position:absolute;
-  top:10px; left:10px;
-  z-index:3000;
+  top:10px; right:10px;
+  z-index:4000;
   background:#fff;
   border:1px solid #ccc;
   padding:8px 12px;
@@ -38,6 +42,20 @@ ul { padding-left:15px; max-height:200px; overflow-y:auto; }
   border-radius:5px;
   box-shadow:2px 2px 6px rgba(0,0,0,0.2);
 }
+
+/* Inputs and buttons */
+input, button {
+  width:100%;
+  margin:5px 0;
+  padding:10px;
+  box-sizing:border-box;
+  font-size:1em;
+  border-radius:5px;
+  border:1px solid #ccc;
+}
+
+/* Marker list scroll */
+ul { padding-left:15px; max-height:200px; overflow-y:auto; }
 
 /* Context menu */
 #contextMenu {
@@ -52,33 +70,30 @@ ul { padding-left:15px; max-height:200px; overflow-y:auto; }
 #contextMenu div { padding: 8px 12px; cursor: pointer; white-space: nowrap; font-size:1em; }
 #contextMenu div:hover { background: #eee; }
 
-/* Responsive adjustments */
+/* Mobile adjustments */
 @media (max-width:768px){
-  #container { flex-direction:column; }
-  #sidebar { width:100%; max-height:50%; border-right:none; border-bottom:1px solid #ccc; }
+  #sidebar { width:90%; top:50px; left:50%; transform:translateX(-50%); }
   #toggleSidebar { display:block; }
-  #sidebar.hidden { transform: translateY(-105%); }
+  #sidebar.hidden { transform:translate(-50%, -105%); opacity:0; }
 }
 </style>
 </head>
 <body>
 
-<div id="toggleSidebar">☰ Menu</div>
+<div id="map"></div>
 
-<div id="container">
-  <div id="sidebar">
-    <h3>Markers</h3>
-    <input type="text" id="markerName" placeholder="Marker name">
-    <button id="addMarkerBtn">Add Marker at Current Location</button>
-    <hr>
-    <button id="toggleFollow">Detach Camera</button>
-    <hr>
-    <h4>Saved Markers</h4>
-    <ul id="markerList"></ul>
-  </div>
-  <div id="map"></div>
+<div id="sidebar">
+  <h3>Markers</h3>
+  <input type="text" id="markerName" placeholder="Marker name">
+  <button id="addMarkerBtn">Add Marker at Current Location</button>
+  <hr>
+  <button id="toggleFollow">Detach Camera</button>
+  <hr>
+  <h4>Saved Markers</h4>
+  <ul id="markerList"></ul>
 </div>
 
+<div id="toggleSidebar">☰ Menu</div>
 <div id="contextMenu"></div>
 
 <script>
@@ -110,7 +125,7 @@ function addMarker(lat,lng,name){
   document.getElementById('markerList').appendChild(li);
 }
 
-// Button to add marker at current location
+// Add marker at current location
 document.getElementById('addMarkerBtn').addEventListener('click', function(){
   if(!currentMarker) return alert("Waiting for GPS...");
   var name = document.getElementById('markerName').value || 'Marker';
@@ -143,7 +158,7 @@ if("geolocation" in navigator){
   }, function(err){ console.error(err.message); }, { enableHighAccuracy:true, maximumAge:1000, timeout:5000 });
 }
 
-// Context menu for adding marker or copying coordinates
+// Context menu
 var contextMenu = document.getElementById('contextMenu');
 map.on('contextmenu', function(e){
   contextMenu.style.display = 'block';
@@ -177,7 +192,7 @@ document.addEventListener('click', function(){
   contextMenu.style.display = 'none';
 });
 
-// Toggle sidebar for mobile
+// Mobile sidebar toggle
 var sidebar = document.getElementById('sidebar');
 document.getElementById('toggleSidebar').addEventListener('click', function(){
   sidebar.classList.toggle('hidden');
