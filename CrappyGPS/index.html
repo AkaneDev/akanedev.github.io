@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Live Movement Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+html, body { height:100%; margin:0; font-family:sans-serif; }
+#container { display:flex; height:100%; }
+#sidebar { width:300px; padding:10px; background:#f4f4f4; border-right:1px solid #ccc; box-sizing:border-box; }
+#map { flex:1; }
+input, button { width:100%; margin:5px 0; padding:5px; box-sizing:border-box; }
+ul { padding-left:15px; }
+
+/* Context menu */
+#contextMenu {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  z-index: 2000;
+  display: none;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+}
+#contextMenu div { padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+#contextMenu div:hover { background: #eee; }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div id="sidebar">
+    <h3>Markers</h3>
+    <input type="text" id="markerName" placeholder="Marker name">
+    <button id="addMarkerBtn">Add Marker at Current Location</button>
+    <hr>
+    <button id="toggleFollow">Detach Camera</button>
+    <hr>
+    <h4>Saved Markers</h4>
+    <ul id="markerList"></ul>
+  </div>
+  <div id="map"></div>
+</div>
+
+<div id="contextMenu"></div>
+
+<script>
+var map = L.map('map').setView([0,0], 16);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© OpenStreetMap contributors',
+  maxZoom:19
+}).addTo(map);
+
+var follow = true;
+var currentMarker = null;
+var currentCircle = null;
+
+// Path line
+var pathCoords = [];
+var pathLine = L.polyline(pathCoords, {color:'blue', weight:5, opacity:0.7}).addTo(map);
+
+// Saved markers
+var savedMarkers = [];
+
+var toggleBtn = document.getElementById('toggleFollow');
+toggleBtn.addEventListener('click', function(){
+  follow = !follow;
+  toggleBtn.textContent = follow ? "Detach Camera" : "Reattach Camera";
+});
+
+function addMarker(lat,lng,name){
+  var m = L.marker([lat,lng]).addTo(map).bindPopup(name);
+  savedMarkers.push({marker:m,name:name,lat:lat,lng:lng});
+
+  var li = document.createElement('li');
+  li.textContent = name + ` (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+  document.getElementById('markerList').appendChild(li);
+}
+
+// Button to add marker at current location
+document.getElementById('addMarkerBtn').addEventListener('click', function(){
+  if(!currentMarker) return alert("Waiting for GPS...");
+  var name = document.getElementById('markerName').value || 'Marker';
+  addMarker(currentMarker.getLatLng().lat, currentMarker.getLatLng().lng, name);
+  document.getElementById('markerName').value='';
+});
+
+// GPS tracking
+if("geolocation" in navigator){
+  navigator.geolocation.watchPosition(function(pos){
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+
+    // Update current position
+    if(!currentCircle){
+      currentCircle = L.circle([lat,lng], {color:'red', fillColor:'#f03', fillOpacity:0.8, radius:20}).addTo(map);
+    } else currentCircle.setLatLng([lat,lng]);
+
+    if(!currentMarker){
+      currentMarker = L.marker([lat,lng]).addTo(map);
+    } else currentMarker.setLatLng([lat,lng]);
+
+    // Follow camera
+    if(follow) map.setView([lat,lng],16);
+
+    // Add to path
+    pathCoords.push([lat,lng]);
+    pathLine.setLatLngs(pathCoords);
+
+  }, function(err){ console.error(err.message); }, { enableHighAccuracy:true, maximumAge:1000, timeout:5000 });
+}
+
+// Context menu for adding marker or copying coordinates
+var contextMenu = document.getElementById('contextMenu');
+map.on('contextmenu', function(e){
+  contextMenu.style.display = 'block';
+  contextMenu.style.left = e.containerPoint.x + 'px';
+  contextMenu.style.top = e.containerPoint.y + 'px';
+  contextMenu.innerHTML = '';
+
+  var lat = e.latlng.lat;
+  var lng = e.latlng.lng;
+
+  var add = document.createElement('div');
+  add.textContent = "Add Marker Here";
+  add.addEventListener('click', function(){
+    var name = prompt("Marker name:", "Marker") || "Marker";
+    addMarker(lat,lng,name);
+    contextMenu.style.display = 'none';
+  });
+
+  var copy = document.createElement('div');
+  copy.textContent = "Copy Coordinates";
+  copy.addEventListener('click', function(){
+    navigator.clipboard.writeText(`${lat}, ${lng}`);
+    contextMenu.style.display = 'none';
+  });
+
+  contextMenu.appendChild(add);
+  contextMenu.appendChild(copy);
+});
+
+document.addEventListener('click', function(){
+  contextMenu.style.display = 'none';
+});
+</script>
+</body>
+</html>
