@@ -10,11 +10,34 @@
 
 <style>
 html, body { height:100%; margin:0; font-family:sans-serif; }
-#container { display:flex; height:100%; }
-#sidebar { width:300px; padding:10px; background:#f4f4f4; border-right:1px solid #ccc; box-sizing:border-box; }
+#container { display:flex; height:100%; flex-direction:row; }
+#sidebar {
+  width:300px;
+  max-width: 90%;
+  padding:10px;
+  background:#f4f4f4;
+  border-right:1px solid #ccc;
+  box-sizing:border-box;
+  overflow-y:auto;
+  transition: transform 0.3s ease-in-out;
+}
 #map { flex:1; }
-input, button { width:100%; margin:5px 0; padding:5px; box-sizing:border-box; }
-ul { padding-left:15px; }
+input, button { width:100%; margin:5px 0; padding:10px; box-sizing:border-box; font-size:1em; border-radius:5px; border:1px solid #ccc; }
+ul { padding-left:15px; max-height:200px; overflow-y:auto; }
+
+/* Collapsible sidebar button on mobile */
+#toggleSidebar {
+  display:none;
+  position:absolute;
+  top:10px; left:10px;
+  z-index:3000;
+  background:#fff;
+  border:1px solid #ccc;
+  padding:8px 12px;
+  cursor:pointer;
+  border-radius:5px;
+  box-shadow:2px 2px 6px rgba(0,0,0,0.2);
+}
 
 /* Context menu */
 #contextMenu {
@@ -24,12 +47,23 @@ ul { padding-left:15px; }
   z-index: 2000;
   display: none;
   box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+  min-width:150px;
 }
-#contextMenu div { padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+#contextMenu div { padding: 8px 12px; cursor: pointer; white-space: nowrap; font-size:1em; }
 #contextMenu div:hover { background: #eee; }
+
+/* Responsive adjustments */
+@media (max-width:768px){
+  #container { flex-direction:column; }
+  #sidebar { width:100%; max-height:50%; border-right:none; border-bottom:1px solid #ccc; }
+  #toggleSidebar { display:block; }
+  #sidebar.hidden { transform: translateY(-105%); }
+}
 </style>
 </head>
 <body>
+
+<div id="toggleSidebar">☰ Menu</div>
 
 <div id="container">
   <div id="sidebar">
@@ -57,12 +91,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 var follow = true;
 var currentMarker = null;
 var currentCircle = null;
-
-// Path line
 var pathCoords = [];
 var pathLine = L.polyline(pathCoords, {color:'blue', weight:5, opacity:0.7}).addTo(map);
-
-// Saved markers
 var savedMarkers = [];
 
 var toggleBtn = document.getElementById('toggleFollow');
@@ -145,6 +175,12 @@ map.on('contextmenu', function(e){
 
 document.addEventListener('click', function(){
   contextMenu.style.display = 'none';
+});
+
+// Toggle sidebar for mobile
+var sidebar = document.getElementById('sidebar');
+document.getElementById('toggleSidebar').addEventListener('click', function(){
+  sidebar.classList.toggle('hidden');
 });
 </script>
 </body>
