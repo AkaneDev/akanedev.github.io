@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Verify You're Human - Captcha Challenge</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='/styles.css'>
+    <link rel="stylesheet" href="/styles.css">
+    <script src='/script.js' defer></script>
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-2deg); }
+            75% { transform: rotate(2deg); }
+        }
+
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .captcha-container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 3px solid #ff6b6b;
+            border-radius: 10px;
+            background: rgba(255, 107, 107, 0.1);
+            min-height: 400px;
+        }
+
+        .captcha-challenge {
+            animation: slide-in 0.4s ease-out;
+            padding: 20px;
+            background: rgba(100, 100, 100, 0.3);
+            border-radius: 8px;
+            border-left: 5px solid #ff6b6b;
+        }
+
+        .challenge-title {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #444;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-feedback {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .check-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 30px;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .check-item:hover {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: #ff6b6b;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-submit {
+            background: #ff6b6b;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .btn-submit:hover {
+            background: #ff5555;
+            transform: scale(1.05);
+        }
+
+        .error-message {
+            padding: 10px;
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            border-radius: 5px;
+            color: #ff6b6b;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #444;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ff6b6b;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .warning-text {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .motion-track {
+            width: 100%;
+            height: 150px;
+            background: #1a1a1a;
+            border: 2px solid #ff6b6b;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .motion-dot {
+            width: 15px;
+            height: 15px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            position: absolute;
+            left: 0;
+            top: 50%;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .color-box {
+            aspect-ratio: 1;
+            border: 2px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .color-box:hover {
+            border-color: #ff6b6b;
+            transform: scale(1.05);
+        }
+
+        .click-zone {
+            width: 100%;
+            height: 200px;
+            background: #1a1a1a;
+            border: 2px solid #ff6b6b;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .click-target {
+            width: 40px;
+            height: 40px;
+            background: #4caf50;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .click-target:hover {
+            background: #66bb6a;
+            transform: scale(1.2);
+        }
+
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(255, 107, 107, 0.1));
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+        }
+
+        .success-screen h2 {
+            color: #4caf50;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .success-screen p {
+            color: #aaa;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .challenge-counter {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+    <section id="content">
+        <h1>🔒 Verify You're Human</h1>
+        <p style="text-align: center; color: #ff6b6b;">Complete challenges to proceed. There are MANY of them.</p>
+        
+        <div class="captcha-container">
+            <div class="challenge-counter"><span id="challengeCount">1</span> / <span id="totalChallenges">∞</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div id="challengeContainer"></div>
+
+            <div class="button-group" id="buttonGroup" style="display: none;">
+                <button class="btn-submit" onclick="submitChallenge()">Next →</button>
+            </div>
+
+            <p class="warning-text">⚠️ These challenges are intentionally frustrating. This is a parody of annoying captchas!</p>
+            <p class="warning-text" id="focusWarning" style="display: none; color: #ffd700;">⚠️ YOU LOST FOCUS! Progress reset to 0.</p>
+        </div>
+    </section>
+
+    <script>
+        const challengeTemplates = [
+            {
+                name: 'Read Distorted Code',
+                render: (data) => `<p>Enter the distorted text:</p><div style="font-size: 24px; letter-spacing: 10px; font-weight: bold; font-family: Arial Black; filter: skew(-10deg) blur(0.5px); transform: rotate(-5deg); color: #ff6b6b; user-select: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin: 20px 0;">${data.code}</div><input type="text" id="answer" placeholder="6-character code" maxlength="6" style="width: 200px; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                    let code = '';
+                    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+                    return { code };
+                },
+                validate: (data) => document.getElementById('answer').value === data.code
+            },
+            {
+                name: 'Solve the Math',
+                render: (data) => `<div style="font-size: 24px; text-align: center; padding: 20px;"><span>${data.problem}</span> = <input type="number" id="answer" placeholder="?" style="width: 80px; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;"></div>`,
+                setup: () => {
+                    const n1 = Math.floor(Math.random() * 50) + 10;
+                    const n2 = Math.floor(Math.random() * 50) + 10;
+                    const ops = ['+', '-', '*'];
+                    const op = ops[Math.floor(Math.random() * ops.length)];
+                    let ans = op === '+' ? n1 + n2 : op === '-' ? n1 - n2 : n1 * n2;
+                    return { problem: `${n1} ${op} ${n2}`, answer: ans };
+                },
+                validate: (data) => parseInt(document.getElementById('answer').value) === data.answer
+            },
+            {
+                name: 'Slide to Target',
+                render: (data) => `<p>Move slider to <strong>${data.target}</strong>:</p><input type="range" min="0" max="100" value="0" id="slider" class="slider"><div class="slider-feedback">Current: <span id="current">0</span> / Target: ${data.target}</div>`,
+                setup: () => {
+                    setTimeout(() => {
+                        const slider = document.getElementById('slider');
+                        if (slider) slider.addEventListener('input', function() {
+                            const c = document.getElementById('current');
+                            if (c) c.textContent = this.value;
+                        });
+                    }, 50);
+                    return { target: Math.floor(Math.random() * 81) + 10 };
+                },
+                validate: (data) => {
+                    const slider = document.getElementById('slider');
+                    return slider && Math.abs(parseInt(slider.value) - data.target) <= 2;
+                }
+            },
+            {
+                name: 'Select Red Circles',
+                render: (data) => {
+                    let html = '<p>Click all boxes with 🔴:</p><div class="checkbox-grid">';
+                    data.items.forEach(item => {
+                        html += `<div class="check-item" data-id="${item.id}">${item.hasCircle ? '🔴' : '⭕'}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('.check-item').forEach(el => {
+                            el.addEventListener('click', function() {
+                                this.classList.toggle('selected');
+                                this.style.background = this.classList.contains('selected') ? '#ff6b6b' : '';
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const items = [];
+                    for (let i = 0; i < 9; i++) items.push({ id: i, hasCircle: Math.random() > 0.4 });
+                    return { items };
+                },
+                validate: (data) => {
+                    const selected = new Set();
+                    document.querySelectorAll('.check-item.selected').forEach(el => selected.add(parseInt(el.dataset.id)));
+                    const correct = new Set(data.items.filter(i => i.hasCircle).map(i => i.id));
+                    return selected.size === correct.size && Array.from(selected).every(id => correct.has(id));
+                }
+            },
+            {
+                name: 'Follow the Dot',
+                render: (data) => `<p>Follow the red dot for 3 seconds:</p><div class="motion-track" id="track"><div class="motion-dot" id="dot"></div></div>`,
+                setup: () => {
+                    const data = { completed: false, timeOnDot: 0 };
+                    setTimeout(() => {
+                        const track = document.getElementById('track');
+                        const dot = document.getElementById('dot');
+                        if (!track || !dot) return;
+                        let start = Date.now();
+                        function animate() {
+                            const elapsed = (Date.now() - start) / 1000;
+                            const x = (Math.sin(elapsed * 0.5) + 1) / 2 * (track.clientWidth - 15);
+                            const y = (Math.cos(elapsed * 0.3) + 1) / 2 * (track.clientHeight - 15);
+                            dot.style.left = x + 'px';
+                            dot.style.top = y + 'px';
+                            requestAnimationFrame(animate);
+                        }
+                        animate();
+                        track.addEventListener('mousemove', (e) => {
+                            const rect = track.getBoundingClientRect();
+                            const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+                            const dx = parseFloat(dot.style.left) + 7.5, dy = parseFloat(dot.style.top) + 7.5;
+                            const dist = Math.sqrt((mx - dx) ** 2 + (my - dy) ** 2);
+                            if (dist < 30) {
+                                data.timeOnDot += 16;
+                                if (data.timeOnDot > 3000) data.completed = true;
+                            } else {
+                                data.timeOnDot = Math.max(0, data.timeOnDot - 50);
+                            }
+                        });
+                        track.addEventListener('mouseleave', () => { data.timeOnDot = 0; });
+                    }, 50);
+                    return data;
+                },
+                validate: (data) => data.completed
+            },
+            {
+                name: 'Read Rotating Text',
+                render: (data) => `<p>Read the rotating text:</p><div style="font-size: 32px; display: inline-block; animation: wiggle 0.5s infinite;">${data.text}</div><input type="text" id="answer" placeholder="What does it say?" style="width: 200px; padding: 8px; margin-left: 10px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const texts = ['HUMAN', 'VERIFY', 'ROBOT', 'CLICK', 'PROVE', 'SECURITY'];
+                    return { text: texts[Math.floor(Math.random() * texts.length)] };
+                },
+                validate: (data) => document.getElementById('answer').value.toUpperCase() === data.text
+            },
+            {
+                name: 'Find Different Color',
+                render: (data) => {
+                    let html = '<p>Click the different color:</p><div class="color-grid">';
+                    data.colors.forEach((color, i) => {
+                        html += `<div class="color-box" data-index="${i}" style="background: ${color};"></div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('.color-box').forEach(box => {
+                            box.addEventListener('click', function() {
+                                data.selected = parseInt(this.dataset.index);
+                                document.querySelectorAll('.color-box').forEach(b => b.style.border = '2px solid #444');
+                                this.style.border = '3px solid #fff';
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const colors = ['#ff6b6b', '#ff6b6b', '#ff6b6b', '#ff6b6b', '#4caf50', '#ff6b6b'];
+                    for (let i = colors.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [colors[i], colors[j]] = [colors[j], colors[i]];
+                    }
+                    return { colors, selected: null, correctIndex: colors.indexOf('#4caf50') };
+                },
+                validate: (data) => data.selected === data.correctIndex
+            },
+            {
+                name: 'Click the Target',
+                render: (data) => `<p>Click the green circle:</p><div class="click-zone" id="zone"><div class="click-target" id="target" style="left: ${data.x}%; top: ${data.y}%;"></div></div>`,
+                setup: () => {
+                    const data = { x: Math.random() * 80 + 10, y: Math.random() * 80 + 10, clicked: false };
+                    setTimeout(() => {
+                        const target = document.getElementById('target');
+                        if (target) target.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            data.clicked = true;
+                            target.style.background = '#ff6b6b';
+                        });
+                    }, 50);
+                    return data;
+                },
+                validate: (data) => data.clicked
+            },
+            {
+                name: 'Type the Word',
+                render: (data) => `<p>Type the word exactly: <strong style="color: #4caf50; font-size: 20px;">${data.word}</strong></p><input type="text" id="answer" placeholder="Type here" style="width: 100%; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const words = ['ABSOLUTELY', 'PERPLEXITY', 'AUTHENTICATION', 'VERIFICATION', 'ALGORITHM'];
+                    return { word: words[Math.floor(Math.random() * words.length)] };
+                },
+                validate: (data) => document.getElementById('answer').value === data.word
+            },
+            {
+                name: 'Double Click Speed',
+                render: (data) => `<p>Double click the box 5 times:</p><div id="dblclick" style="width: 100%; height: 100px; background: #1a1a1a; border: 2px solid #ff6b6b; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #ff6b6b;">Clicks: <span id="clickCount">0</span>/5</div>`,
+                setup: () => {
+                    const data = { clicks: 0 };
+                    setTimeout(() => {
+                        const dblclick = document.getElementById('dblclick');
+                        if (dblclick) dblclick.addEventListener('dblclick', function() {
+                            data.clicks++;
+                            const count = document.getElementById('clickCount');
+                            if (count) count.textContent = data.clicks;
+                        });
+                    }, 50);
+                    return data;
+                },
+                validate: (data) => data.clicks >= 5
+            },
+            {
+                name: 'Match Pairs',
+                render: (data) => {
+                    let html = '<p>Click matching pairs:</p><div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0;">';
+                    data.pairs.forEach((item, i) => {
+                        html += `<div class="grid-item" data-id="${i}" style="aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 2px solid #444; border-radius: 5px; cursor: pointer; font-size: 28px; transition: all 0.3s; user-select: none;">${item}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        let selected = [];
+                        document.querySelectorAll('.grid-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                if (selected.length < 2 && !this.classList.contains('found')) {
+                                    selected.push({ el: this, id: parseInt(this.dataset.id) });
+                                    this.style.background = '#ff6b6b';
+                                    if (selected.length === 2) {
+                                        const p1 = data.pairs[selected[0].id];
+                                        const p2 = data.pairs[selected[1].id];
+                                        if (p1 === p2) {
+                                            selected[0].el.classList.add('found');
+                                            selected[1].el.classList.add('found');
+                                            data.matched.add(p1);
+                                            selected = [];
+                                        } else {
+                                            setTimeout(() => {
+                                                selected.forEach(s => s.el.style.background = '');
+                                                selected = [];
+                                            }, 500);
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const pairs = ['🐱', '🐱', '🐶', '🐶', '🐭', '🐭', '🐹', '🐹'];
+                    for (let i = pairs.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+                    }
+                    return { pairs, matched: new Set() };
+                },
+                validate: (data) => data.matched.size === 4
+            },
+            {
+                name: 'Remember Sequence',
+                render: (data) => `<p>Remember this sequence:</p><div style="font-size: 32px; text-align: center; padding: 20px; background: rgba(50, 50, 50, 0.5); border-radius: 5px; margin: 15px 0; letter-spacing: 10px; font-weight: bold;">${data.display}</div><p>Type it: <input type="text" id="answer" placeholder="e.g., red green blue yellow" style="width: 100%; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;"></p>`,
+                setup: () => {
+                    const sequences = [
+                        { display: '🟥 🟩 🟦 🟨', answer: 'red green blue yellow' },
+                        { display: '🔵 🟢 🔴 🟡', answer: 'blue green red yellow' },
+                        { display: '⚫ ⚪ 🟣 🟠', answer: 'black white purple orange' },
+                        { display: '🟩 🟥 🟨 🟦', answer: 'green red yellow blue' }
+                    ];
+                    const seq = sequences[Math.floor(Math.random() * sequences.length)];
+                    return { ...seq, matched: new Set() };
+                },
+                validate: (data) => document.getElementById('answer').value.toLowerCase() === data.answer
+            },
+            {
+                name: 'Type Numbers',
+                render: (data) => `<p>Type the numbers shown: <strong style="font-size: 24px; letter-spacing: 10px; color: #4caf50;">${data.numbers}</strong></p><input type="text" id="answer" placeholder="Type with spaces" style="width: 100%; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const numbers = Array.from({length: 6}, () => Math.floor(Math.random() * 10)).join(' ');
+                    return { numbers };
+                },
+                validate: (data) => document.getElementById('answer').value === data.numbers
+            },
+            {
+                name: 'Find the Symbol',
+                render: (data) => {
+                    let html = '<p>Find and click all: <strong>' + data.targetSymbol + '</strong></p><div class="checkbox-grid">';
+                    data.symbols.forEach((sym, i) => {
+                        html += `<div class="check-item" data-id="${i}">${sym}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('.check-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                this.classList.toggle('selected');
+                                this.style.background = this.classList.contains('selected') ? '#ff6b6b' : '';
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const symbolOptions = ['❌', '✓', '⚡', '◆', '●', '■', '▲'];
+                    const targetSymbol = symbolOptions[Math.floor(Math.random() * symbolOptions.length)];
+                    const symbols = [];
+                    const targetCount = Math.floor(Math.random() * 2) + 2;
+                    for (let i = 0; i < 9; i++) {
+                        symbols.push(Math.random() < targetCount / 9 ? targetSymbol : symbolOptions[Math.floor(Math.random() * symbolOptions.length)]);
+                    }
+                    return { targetSymbol, symbols };
+                },
+                validate: (data) => {
+                    const selected = [];
+                    document.querySelectorAll('.check-item.selected').forEach((item, i) => {
+                        if (data.symbols[parseInt(item.dataset.id)] === data.targetSymbol) {
+                            selected.push(parseInt(item.dataset.id));
+                        }
+                    });
+                    const correct = data.symbols.filter(s => s === data.targetSymbol).length;
+                    return selected.length === correct;
+                }
+            },
+            {
+                name: 'Select Fruit',
+                render: (data) => {
+                    let html = '<p>Select all RED fruit:</p><div class="checkbox-grid">';
+                    data.items.forEach((item, i) => {
+                        html += `<div class="check-item" data-id="${i}">${item}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('.check-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                this.classList.toggle('selected');
+                                this.style.background = this.classList.contains('selected') ? '#ff6b6b' : '';
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const items = ['🍎', '🍊', '🍌', '🍓', '🥝', '🍒', '🍑', '🍍', '🥭'];
+                    const correct = ['🍎', '🍓', '🍒'];
+                    return { items, correct };
+                },
+                validate: (data) => {
+                    const selected = [];
+                    document.querySelectorAll('.check-item.selected').forEach((item) => {
+                        selected.push(data.items[parseInt(item.dataset.id)]);
+                    });
+                    return selected.length === data.correct.length && data.correct.every(item => selected.includes(item));
+                }
+            },
+            {
+                name: 'Countdown Timer',
+                render: (data) => `<p>Click when the timer reaches 0:</p><div style="font-size: 48px; text-align: center; color: #ff6b6b; font-weight: bold; margin: 30px 0; animation: pulse 1s infinite;" id="timer">5</div><button class="btn-submit" id="submitBtn" style="display: none; margin-top: 20px;">Click Here</button>`,
+                setup: () => {
+                    const data = { readyToSubmit: false };
+                    let count = 5;
+                    const interval = setInterval(() => {
+                        count--;
+                        const timer = document.getElementById('timer');
+                        if (timer) timer.textContent = count;
+                        if (count === 0) {
+                            clearInterval(interval);
+                            const timer = document.getElementById('timer');
+                            const btn = document.getElementById('submitBtn');
+                            if (timer) timer.style.display = 'none';
+                            if (btn) {
+                                btn.style.display = 'block';
+                                btn.onclick = () => { data.readyToSubmit = true; };
+                            }
+                        }
+                    }, 1000);
+                    return data;
+                },
+                validate: (data) => data.readyToSubmit
+            },
+            {
+                name: 'Pattern Click',
+                render: (data) => {
+                    let html = '<p>Click the boxes in order: 1, 2, 3, 4</p><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0;">';
+                    data.pattern.forEach((num, i) => {
+                        html += `<div class="check-item" data-num="${num}" style="font-size: 32px; font-weight: bold;">${num}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('[data-num]').forEach(item => {
+                            item.addEventListener('click', function() {
+                                if (parseInt(this.dataset.num) === data.nextClick) {
+                                    data.nextClick++;
+                                    this.style.background = '#4caf50';
+                                    this.style.pointerEvents = 'none';
+                                }
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const pattern = [1, 2, 3, 4];
+                    for (let i = pattern.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [pattern[i], pattern[j]] = [pattern[j], pattern[i]];
+                    }
+                    return { pattern, nextClick: 1 };
+                },
+                validate: (data) => data.nextClick === 5
+            },
+            {
+                name: 'Select Vowels',
+                render: (data) => {
+                    let html = '<p>Click all VOWELS (A, E, I, O, U):</p><div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 20px 0;">';
+                    data.letters.forEach((letter, i) => {
+                        html += `<div class="check-item" data-id="${i}" style="width: 40px; height: 40px; padding: 0;">${letter}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('[data-id]').forEach(item => {
+                            item.addEventListener('click', function() {
+                                this.classList.toggle('selected');
+                                this.style.background = this.classList.contains('selected') ? '#ff6b6b' : '';
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const consonants = 'BCDFGHJKLMNPQRSTVWXYZ'.split('');
+                    const vowels = ['A', 'E', 'I', 'O', 'U'];
+                    let letters = [...vowels];
+                    for (let i = 0; i < 7; i++) {
+                        letters.push(consonants[Math.floor(Math.random() * consonants.length)]);
+                    }
+                    // Fisher-Yates shuffle
+                    for (let i = letters.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [letters[i], letters[j]] = [letters[j], letters[i]];
+                    }
+                    return { letters, vowels };
+                },
+                validate: (data) => {
+                    const selected = [];
+                    document.querySelectorAll('[data-id].selected').forEach((item) => {
+                        selected.push(data.letters[parseInt(item.dataset.id)]);
+                    });
+                    return selected.length === data.vowels.length && data.vowels.every(v => selected.includes(v));
+                }
+            },
+            {
+                name: 'Memory Grid',
+                render: (data) => {
+                    let html = '<p>Remember the sequence! They will disappear:</p><div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;">';
+                    data.sequence.forEach((emoji, i) => {
+                        html += `<div class="check-item" data-id="${i}" style="font-size: 32px;">${emoji}</div>`;
+                    });
+                    html += '</div><p style="color: #aaa; font-size: 12px;">Sequence hidden after 3 seconds. Click in order.</p>';
+                    setTimeout(() => {
+                        data.revealTime = true;
+                        setTimeout(() => {
+                            document.querySelectorAll('[data-id]').forEach(item => {
+                                item.textContent = '❓';
+                            });
+                            document.querySelectorAll('[data-id]').forEach(item => {
+                                item.addEventListener('click', function() {
+                                    const idx = parseInt(this.dataset.id);
+                                    if (idx === data.nextIndex) {
+                                        data.nextIndex++;
+                                        this.style.background = '#4caf50';
+                                        this.style.pointerEvents = 'none';
+                                    } else {
+                                        data.nextIndex = 0;
+                                        document.querySelectorAll('[data-id]').forEach(b => {
+                                            b.style.background = '';
+                                            b.style.pointerEvents = 'auto';
+                                        });
+                                    }
+                                });
+                            });
+                        }, 3000);
+                    }, 100);
+                    return html;
+                },
+                setup: () => {
+                    const emojis = ['🌟', '🎨', '🎭', '🎪', '🎯', '🎲', '🎸', '🎺'];
+                    const sequence = [];
+                    for (let i = 0; i < 4; i++) {
+                        sequence.push(emojis[Math.floor(Math.random() * emojis.length)]);
+                    }
+                    return { sequence, nextIndex: 0, revealTime: false };
+                },
+                validate: (data) => data.nextIndex === 4
+            },
+            {
+                name: 'Mirror Text',
+                render: (data) => `<p>Read the mirrored text:</p><div style="font-size: 24px; font-family: monospace; text-align: center; padding: 20px; background: rgba(50,50,50,0.5); border-radius: 5px; letter-spacing: 5px; transform: scaleX(-1); margin: 20px 0;">${data.text}</div><input type="text" id="answer" placeholder="What does it say?" style="width: 100%; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const texts = ['VERIFY', 'HUMAN', 'ROBOT', 'SECURE', 'SYSTEM'];
+                    return { text: texts[Math.floor(Math.random() * texts.length)] };
+                },
+                validate: (data) => document.getElementById('answer').value.toUpperCase() === data.text
+            },
+            {
+                name: 'Arrow Sequence',
+                render: (data) => `<p>Remember and type the arrow directions:</p><div style="font-size: 48px; text-align: center; letter-spacing: 15px; margin: 20px 0; font-weight: bold;">${data.display}</div><input type="text" id="answer" placeholder="e.g., up right down left" style="width: 100%; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const arrows = ['↑', '→', '↓', '←'];
+                    const directions = ['up', 'right', 'down', 'left'];
+                    const selected = [];
+                    const answerArray = [];
+                    for (let i = 0; i < 4; i++) {
+                        const idx = Math.floor(Math.random() * 4);
+                        selected.push(arrows[idx]);
+                        answerArray.push(directions[idx]);
+                    }
+                    return { display: selected.join(' '), answer: answerArray.join(' ') };
+                },
+                validate: (data) => document.getElementById('answer').value.toLowerCase() === data.answer
+            },
+            {
+                name: 'Spot the Intruder',
+                render: (data) => {
+                    let html = '<p>Find the different emoji:</p><div class="checkbox-grid">';
+                    data.items.forEach((item, i) => {
+                        html += `<div class="check-item" data-id="${i}">${item}</div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('.check-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                if (parseInt(this.dataset.id) === data.correctIndex) {
+                                    data.found = true;
+                                    this.style.background = '#4caf50';
+                                    this.style.pointerEvents = 'none';
+                                } else {
+                                    this.style.opacity = '0.5';
+                                }
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const items = [];
+                    const target = Math.floor(Math.random() * 9);
+                    const mainEmoji = ['🍎', '🍊', '🐱', '🐶', '⭐', '🌸', '🎨', '🎯'][Math.floor(Math.random() * 8)];
+                    const otherEmojis = ['🍎', '🍊', '🐱', '🐶', '⭐', '🌸', '🎨', '🎯'].filter(e => e !== mainEmoji);
+                    
+                    for (let i = 0; i < 9; i++) {
+                        items.push(i === target ? otherEmojis[0] : mainEmoji);
+                    }
+                    return { items, correctIndex: target, found: false };
+                },
+                validate: (data) => data.found
+            },
+            {
+                name: 'Speed Clicker',
+                render: (data) => `<p>Click the button as fast as you can (10 times in 5 seconds):</p><button id="speedBtn" class="btn-submit" style="width: 100%; height: 80px; font-size: 32px; margin: 20px 0;">CLICK! <span id="speedCount">0</span>/10</button>`,
+                setup: () => {
+                    const data = { clicks: 0, done: false };
+                    let timeLeft = 5;
+                    const timer = setInterval(() => {
+                        timeLeft--;
+                        if (timeLeft <= 0) {
+                            clearInterval(timer);
+                            const btn = document.getElementById('speedBtn');
+                            if (btn) btn.disabled = true;
+                            data.done = true;
+                        }
+                    }, 1000);
+                    setTimeout(() => {
+                        const btn = document.getElementById('speedBtn');
+                        if (btn) {
+                            btn.addEventListener('click', () => {
+                                data.clicks++;
+                                const count = document.getElementById('speedCount');
+                                if (count) count.textContent = data.clicks;
+                                if (data.clicks >= 10) data.done = true;
+                            });
+                        }
+                    }, 50);
+                    return data;
+                },
+                validate: (data) => data.clicks >= 10 && data.done
+            },
+            {
+                name: 'Color Mixer',
+                render: (data) => {
+                    let html = '<p>Which color is the mix of RED and YELLOW?</p><div class="color-grid">';
+                    data.colors.forEach((color, i) => {
+                        html += `<div class="color-box" data-index="${i}" style="background: ${color};"></div>`;
+                    });
+                    html += '</div>';
+                    setTimeout(() => {
+                        document.querySelectorAll('.color-box').forEach(box => {
+                            box.addEventListener('click', function() {
+                                data.selected = parseInt(this.dataset.index);
+                                document.querySelectorAll('.color-box').forEach(b => b.style.border = '2px solid #444');
+                                this.style.border = '3px solid #fff';
+                            });
+                        });
+                    }, 50);
+                    return html;
+                },
+                setup: () => {
+                    const colors = ['#ff4444', '#ffff44', '#ff8844', '#4444ff', '#44ff44', '#ff44ff'];
+                    const correctIndex = 2;
+                    for (let i = colors.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        if (i === correctIndex || j === correctIndex) continue;
+                        [colors[i], colors[j]] = [colors[j], colors[i]];
+                    }
+                    return { colors, selected: null, correctIndex };
+                },
+                validate: (data) => data.selected === data.correctIndex
+            },
+            {
+                name: 'Audio Pattern (Click)',
+                render: (data) => `<p>Click the boxes matching the pattern shown (4 flashes):</p><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0;"><div class="check-item" id="box1" data-num="1" style="background: #ff6b6b;">1</div><div class="check-item" id="box2" data-num="2" style="background: #4caf50;">2</div><div class="check-item" id="box3" data-num="3" style="background: #2196F3;">3</div><div class="check-item" id="box4" data-num="4" style="background: #ffeb3b; color: #000;">4</div></div><p style="color: #aaa; font-size: 12px;">Watch for the highlighted boxes then click them in order.</p>`,
+                setup: () => {
+                    const data = { pattern: [], nextIndex: 0 };
+                    for (let i = 0; i < 4; i++) {
+                        data.pattern.push(Math.floor(Math.random() * 4) + 1);
+                    }
+                    setTimeout(() => {
+                        let idx = 0;
+                        const highlight = () => {
+                            if (idx < data.pattern.length) {
+                                const boxId = `box${data.pattern[idx]}`;
+                                const box = document.getElementById(boxId);
+                                if (box) {
+                                    box.style.transform = 'scale(1.2)';
+                                    box.style.boxShadow = '0 0 20px rgba(255,255,255,0.8)';
+                                    setTimeout(() => {
+                                        box.style.transform = 'scale(1)';
+                                        box.style.boxShadow = 'none';
+                                        idx++;
+                                        setTimeout(highlight, 500);
+                                    }, 600);
+                                }
+                            }
+                        };
+                        setTimeout(highlight, 800);
+                    }, 100);
+                    setTimeout(() => {
+                        document.querySelectorAll('[data-num]').forEach(box => {
+                            box.addEventListener('click', function() {
+                                const num = parseInt(this.dataset.num);
+                                if (num === data.pattern[data.nextIndex]) {
+                                    data.nextIndex++;
+                                    this.style.background = this.style.background === 'rgb(255, 107, 107)' ? '#ff6b6b' : this.style.background;
+                                }
+                            });
+                        });
+                    }, 50);
+                    return data;
+                },
+                validate: (data) => data.nextIndex === data.pattern.length
+            },
+            {
+                name: 'Rotate to Correct',
+                render: (data) => `<p>Rotate the text to read it correctly:</p><div style="font-size: 32px; font-weight: bold; text-align: center; padding: 30px; background: rgba(50,50,50,0.5); border-radius: 5px; transform: rotate(${data.rotation}deg); transition: transform 0.2s;">${data.text}</div><p>Angle: <input type="range" id="rotationSlider" min="0" max="360" value="0" style="width: 100%;"> <span id="angleDisplay">0</span>°</p>`,
+                setup: () => {
+                    const data = { text: 'VERIFY', rotation: Math.floor(Math.random() * 360), correctAngle: 0 };
+                    data.correctAngle = (360 - data.rotation) % 360;
+                    setTimeout(() => {
+                        const slider = document.getElementById('rotationSlider');
+                        const display = document.getElementById('angleDisplay');
+                        const textDiv = document.querySelector('[style*="transform"]');
+                        if (slider) {
+                            slider.addEventListener('input', function() {
+                                const angle = parseInt(this.value);
+                                if (display) display.textContent = angle;
+                                if (textDiv) textDiv.style.transform = `rotate(${angle}deg)`;
+                            });
+                        }
+                    }, 50);
+                    return data;
+                },
+                validate: (data) => {
+                    const slider = document.getElementById('rotationSlider');
+                    if (!slider) return false;
+                    const angle = parseInt(slider.value);
+                    return Math.abs(angle - data.correctAngle) <= 5;
+                }
+            },
+            {
+                name: 'Binary Reader',
+                render: (data) => `<p>Convert binary to decimal:</p><div style="font-family: monospace; font-size: 20px; text-align: center; padding: 20px; background: rgba(50,50,50,0.5); border-radius: 5px; letter-spacing: 3px; margin: 20px 0; font-weight: bold;">${data.binary}</div><input type="number" id="answer" placeholder="Enter decimal value" style="width: 100%; padding: 8px; border: 2px solid #ff6b6b; border-radius: 5px; background: #1a1a1a; color: #fff;">`,
+                setup: () => {
+                    const decimal = Math.floor(Math.random() * 256);
+                    const binary = decimal.toString(2).padStart(8, '0');
+                    return { binary, answer: decimal };
+                },
+                validate: (data) => parseInt(document.getElementById('answer').value) === data.answer
+            }
+        ];
+
+        let currentChallenge = 0;
+        let validationCheckInterval;
+
+        function renderChallenge() {
+            const container = document.getElementById('challengeContainer');
+            const template = challengeTemplates[currentChallenge % challengeTemplates.length];
+            const data = template.setup();
+            
+            const html = `
+                <div class="captcha-challenge">
+                    <div class="challenge-title">${template.name}</div>
+                    ${template.render(data)}
+                    <p id="error-msg" class="error-message"></p>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            document.getElementById('challengeCount').textContent = currentChallenge + 1;
+            document.getElementById('progressBar').style.width = (Math.min(currentChallenge, 50) / 50) * 100 + '%';
+            
+            window.currentData = data;
+            window.currentTemplate = template;
+            
+            // Clear any existing interval
+            if (validationCheckInterval) clearInterval(validationCheckInterval);
+            
+            // Auto-check for completion every 100ms
+            validationCheckInterval = setInterval(() => {
+                if (window.currentTemplate && window.currentTemplate.validate(window.currentData)) {
+                    clearInterval(validationCheckInterval);
+                    currentChallenge++;
+                    setTimeout(() => renderChallenge(), 200);
+                }
+            }, 100);
+        }
+
+        window.addEventListener('load', () => {
+            renderChallenge();
+        });
+
+        // Focus detection - reset progress when user leaves the page
+        // window.addEventListener('blur', () => {
+        //     if (validationCheckInterval) clearInterval(validationCheckInterval);
+        //     currentChallenge = 0;
+        //     const warning = document.getElementById('focusWarning');
+        //     if (warning) {
+        //         warning.style.display = 'block';
+        //         setTimeout(() => { warning.style.display = 'none'; }, 3000);
+        //     }
+        //     renderChallenge();
+        // });
+    </script>
+</body>
+</html>
