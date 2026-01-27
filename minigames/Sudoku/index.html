@@ -7,16 +7,123 @@
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="/styles.css">
     <style>
+        :root {
+            --primary-color: #0ff;
+            --primary-dark: #222;
+            --primary-light: #333;
+            --text-color: #0ff;
+            --border-color: #444;
+            --accent-color: #0f0;
+        }
+
+        body.theme-cyan {
+            --primary-color: #0ff;
+            --text-color: #0ff;
+            --accent-color: #0f0;
+        }
+
+        body.theme-purple {
+            --primary-color: #f0f;
+            --text-color: #f0f;
+            --accent-color: #0f0;
+        }
+
+        body.theme-green {
+            --primary-color: #0f0;
+            --text-color: #0f0;
+            --accent-color: #00ffff;
+        }
+
+        body.theme-orange {
+            --primary-color: #ff9900;
+            --text-color: #ff9900;
+            --accent-color: #ffff00;
+        }
+
+        body.theme-red {
+            --primary-color: #ff4444;
+            --text-color: #ff4444;
+            --accent-color: #ffff00;
+        }
+
+        body.theme-blue {
+            --primary-color: #00ddff;
+            --text-color: #00ddff;
+            --accent-color: #ffff00;
+        }
+
+        body.theme-custom {
+            --primary-color: var(--custom-primary);
+            --text-color: var(--custom-primary);
+            --accent-color: var(--custom-accent);
+            --primary-dark: var(--custom-dark);
+            --primary-light: var(--custom-light);
+        }
+
+        .custom-theme-panel {
+            display: none;
+            background: #1a1a1a;
+            border: 2px solid var(--primary-color);
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            gap: 1rem;
+            flex-direction: column;
+        }
+
+        .custom-theme-panel.active {
+            display: flex;
+        }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .color-picker-group label {
+            min-width: 100px;
+        }
+
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: 1px solid var(--primary-color);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .custom-color-value {
+            font-family: monospace;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+
         #content {
             max-width: 600px;
             margin: 0 auto;
         }
 
+        .selectors-row {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
         .difficulty-selector {
             display: flex;
             gap: 1rem;
-            margin: 2rem 0;
             justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .difficulty-btn {
@@ -31,14 +138,35 @@
         }
 
         .difficulty-btn:hover {
-            border-color: #0ff;
-            color: #0ff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
         }
 
         .difficulty-btn.active {
-            background: #0ff;
+            background: var(--primary-color);
             color: #000;
-            border-color: #0ff;
+            border-color: var(--primary-color);
+        }
+
+        .theme-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border: 2px solid #666;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .theme-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
         }
 
         .game-container {
@@ -52,7 +180,7 @@
             display: grid;
             grid-template-columns: repeat(9, 1fr);
             gap: 0;
-            border: 3px solid #0ff;
+            border: 3px solid var(--primary-color);
             background: #111;
             padding: 3px;
         }
@@ -63,9 +191,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #444;
-            background: #222;
-            color: #0ff;
+            border: 1px solid var(--border-color);
+            background: var(--primary-dark);
+            color: var(--primary-color);
             font-size: 1.2rem;
             font-weight: bold;
             cursor: pointer;
@@ -73,11 +201,11 @@
         }
 
         .sudoku-cell:hover {
-            background: #333;
+            background: var(--primary-light);
         }
 
         .sudoku-cell.selected {
-            background: #0ff;
+            background: var(--primary-color);
             color: #000;
         }
 
@@ -92,11 +220,11 @@
         }
 
         .sudoku-cell:nth-child(3n) {
-            border-right: 2px solid #0ff;
+            border-right: 2px solid var(--primary-color);
         }
 
         .sudoku-cell:nth-child(27n) {
-            border-bottom: 2px solid #0ff;
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .sudoku-cell:nth-child(9n) {
@@ -116,31 +244,31 @@
             height: 40px;
             font-size: 1rem;
             border: 1px solid #666;
-            background: #222;
-            color: #0ff;
+            background: var(--primary-dark);
+            color: var(--primary-color);
             cursor: pointer;
             border-radius: 3px;
             transition: all 0.2s;
         }
 
         .number-btn:hover {
-            background: #333;
-            border-color: #0ff;
+            background: var(--primary-light);
+            border-color: var(--primary-color);
         }
 
         .action-btn {
             padding: 0.5rem 1rem;
             border: 1px solid #666;
-            background: #222;
-            color: #0ff;
+            background: var(--primary-dark);
+            color: var(--primary-color);
             cursor: pointer;
             border-radius: 3px;
             transition: all 0.2s;
         }
 
         .action-btn:hover {
-            background: #333;
-            border-color: #0ff;
+            background: var(--primary-light);
+            border-color: var(--primary-color);
         }
 
         .action-btn:disabled {
@@ -155,7 +283,7 @@
         }
 
         .status.success {
-            color: #0f0;
+            color: var(--accent-color);
             font-weight: bold;
         }
 
@@ -190,10 +318,46 @@
     <section id="content">
         <h1>Sudoku Game</h1>
         
-        <div class="difficulty-selector">
-            <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
-            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
-            <button class="difficulty-btn" data-difficulty="evenharder">Even Harder</button>
+        <div class="selectors-row">
+            <div class="difficulty-selector">
+                <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+                <button class="difficulty-btn" data-difficulty="evenharder">Even Harder</button>
+            </div>
+
+            <div class="theme-selector">
+                <span style="display: flex; align-items: center; gap: 0.5rem;">Theme:</span>
+                <button class="theme-btn active" data-theme="cyan">Cyan</button>
+                <button class="theme-btn" data-theme="purple">Purple</button>
+                <button class="theme-btn" data-theme="green">Green</button>
+                <button class="theme-btn" data-theme="orange">Orange</button>
+                <button class="theme-btn" data-theme="red">Red</button>
+                <button class="theme-btn" data-theme="blue">Blue</button>
+                <button class="theme-btn" data-theme="custom">Custom</button>
+            </div>
+
+            <div class="custom-theme-panel" id="custom-theme-panel">
+                <div class="color-picker-group">
+                    <label for="primary-color-picker">Primary Color:</label>
+                    <input type="color" id="primary-color-picker" value="#00ffff">
+                    <span class="custom-color-value" id="primary-color-value">#00ffff</span>
+                </div>
+                <div class="color-picker-group">
+                    <label for="accent-color-picker">Accent Color:</label>
+                    <input type="color" id="accent-color-picker" value="#00ff00">
+                    <span class="custom-color-value" id="accent-color-value">#00ff00</span>
+                </div>
+                <div class="color-picker-group">
+                    <label for="dark-color-picker">Dark Background:</label>
+                    <input type="color" id="dark-color-picker" value="#222222">
+                    <span class="custom-color-value" id="dark-color-value">#222222</span>
+                </div>
+                <div class="color-picker-group">
+                    <label for="light-color-picker">Light Background:</label>
+                    <input type="color" id="light-color-picker" value="#333333">
+                    <span class="custom-color-value" id="light-color-value">#333333</span>
+                </div>
+            </div>
         </div>
 
         <div class="game-container">
@@ -232,10 +396,52 @@
 
             init() {
                 this.setupEventListeners();
+                this.loadTheme();
                 this.generateNewPuzzle();
             }
 
             setupEventListeners() {
+                // Theme selector
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const theme = e.target.dataset.theme;
+                        if (theme === 'custom') {
+                            this.showCustomThemePanel();
+                            this.setTheme('custom');
+                        } else {
+                            this.hideCustomThemePanel();
+                            this.setTheme(theme);
+                        }
+                    });
+                });
+
+                // Custom color picker listeners
+                document.getElementById('primary-color-picker').addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    document.getElementById('primary-color-value').textContent = color;
+                    this.updateCustomTheme('primary', color);
+                });
+
+                document.getElementById('accent-color-picker').addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    document.getElementById('accent-color-value').textContent = color;
+                    this.updateCustomTheme('accent', color);
+                });
+
+                document.getElementById('dark-color-picker').addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    document.getElementById('dark-color-value').textContent = color;
+                    this.updateCustomTheme('dark', color);
+                });
+
+                document.getElementById('light-color-picker').addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    document.getElementById('light-color-value').textContent = color;
+                    this.updateCustomTheme('light', color);
+                });
+
                 // Global keyboard input handler
                 document.addEventListener('keydown', (e) => {
                     if (/^[1-9]$/.test(e.key)) {
@@ -491,6 +697,66 @@
                     statusEl.classList.add('success');
                 } else if (message.includes('Invalid')) {
                     statusEl.classList.add('error');
+                }
+            }
+
+            setTheme(theme) {
+                document.body.className = `dark-mode theme-${theme}`;
+                localStorage.setItem('sudokuTheme', theme);
+            }
+
+            loadTheme() {
+                const savedTheme = localStorage.getItem('sudokuTheme') || 'cyan';
+                
+                if (savedTheme === 'custom') {
+                    // Load custom colors from localStorage
+                    const customColors = JSON.parse(localStorage.getItem('sudokuCustomColors') || '{}');
+                    document.documentElement.style.setProperty('--custom-primary', customColors.primary || '#00ffff');
+                    document.documentElement.style.setProperty('--custom-accent', customColors.accent || '#00ff00');
+                    document.documentElement.style.setProperty('--custom-dark', customColors.dark || '#222222');
+                    document.documentElement.style.setProperty('--custom-light', customColors.light || '#333333');
+                    
+                    // Set color picker values
+                    document.getElementById('primary-color-picker').value = customColors.primary || '#00ffff';
+                    document.getElementById('primary-color-value').textContent = customColors.primary || '#00ffff';
+                    document.getElementById('accent-color-picker').value = customColors.accent || '#00ff00';
+                    document.getElementById('accent-color-value').textContent = customColors.accent || '#00ff00';
+                    document.getElementById('dark-color-picker').value = customColors.dark || '#222222';
+                    document.getElementById('dark-color-value').textContent = customColors.dark || '#222222';
+                    document.getElementById('light-color-picker').value = customColors.light || '#333333';
+                    document.getElementById('light-color-value').textContent = customColors.light || '#333333';
+                    
+                    this.showCustomThemePanel();
+                    document.querySelector(`[data-theme="custom"]`).classList.add('active');
+                } else {
+                    this.hideCustomThemePanel();
+                    document.querySelector(`[data-theme="${savedTheme}"]`).classList.add('active');
+                }
+                
+                document.body.className = `dark-mode theme-${savedTheme}`;
+            }
+
+            showCustomThemePanel() {
+                document.getElementById('custom-theme-panel').classList.add('active');
+            }
+
+            hideCustomThemePanel() {
+                document.getElementById('custom-theme-panel').classList.remove('active');
+            }
+
+            updateCustomTheme(type, color) {
+                let customColors = JSON.parse(localStorage.getItem('sudokuCustomColors') || '{}');
+                customColors[type] = color;
+                localStorage.setItem('sudokuCustomColors', JSON.stringify(customColors));
+                
+                if (type === 'primary') {
+                    document.documentElement.style.setProperty('--custom-primary', color);
+                } else if (type === 'accent') {
+                    document.documentElement.style.setProperty('--custom-accent', color);
+                } else if (type === 'dark') {
+                    document.documentElement.style.setProperty('--custom-dark', color);
+                } else if (type === 'light') {
+                    document.documentElement.style.setProperty('--custom-light', color);
                 }
             }
         }
