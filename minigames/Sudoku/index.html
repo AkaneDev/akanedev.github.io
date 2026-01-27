@@ -193,6 +193,7 @@
         <div class="difficulty-selector">
             <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
             <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+            <button class="difficulty-btn" data-difficulty="evenharder">Even Harder</button>
         </div>
 
         <div class="game-container">
@@ -235,6 +236,50 @@
             }
 
             setupEventListeners() {
+                // Global keyboard input handler
+                document.addEventListener('keydown', (e) => {
+                    if (/^[1-9]$/.test(e.key)) {
+                        if (this.selectedCell !== null && !this.given[Math.floor(this.selectedCell / 9)][this.selectedCell % 9]) {
+                            const num = parseInt(e.key);
+                            this.setCell(this.selectedCell, num);
+                            e.preventDefault();
+                        }
+                    } else if (e.key === 'Backspace' || e.key === '0') {
+                        if (this.selectedCell !== null && !this.given[Math.floor(this.selectedCell / 9)][this.selectedCell % 9]) {
+                            this.setCell(this.selectedCell, 0);
+                            e.preventDefault();
+                        }
+                    } else if (e.key === 'ArrowUp') {
+                        const row = Math.floor(this.selectedCell / 9);
+                        const col = this.selectedCell % 9;
+                        if (row > 0) {
+                            this.selectedCell = (row - 1) * 9 + col;
+                            this.updateBoard();
+                        }
+                    } else if (e.key === 'ArrowDown') {
+                        const row = Math.floor(this.selectedCell / 9);
+                        const col = this.selectedCell % 9;
+                        if (row < 8) {
+                            this.selectedCell = (row + 1) * 9 + col;
+                            this.updateBoard();
+                        }
+                    } else if (e.key === 'ArrowLeft') {
+                        const row = Math.floor(this.selectedCell / 9);
+                        const col = this.selectedCell % 9;
+                        if (col > 0) {
+                            this.selectedCell = row * 9 + (col - 1);
+                            this.updateBoard();
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        const row = Math.floor(this.selectedCell / 9);
+                        const col = this.selectedCell % 9;
+                        if (col < 8) {
+                            this.selectedCell = row * 9 + (col + 1);
+                            this.updateBoard();
+                        }
+                    }
+                });
+
                 document.querySelectorAll('.difficulty-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
@@ -283,7 +328,14 @@
                 this.board = JSON.parse(JSON.stringify(this.solution));
 
                 // Remove numbers based on difficulty
-                const cellsToRemove = this.difficulty === 'easy' ? 30 : 55;
+                let cellsToRemove;
+                if (this.difficulty === 'easy') {
+                    cellsToRemove = 30;
+                } else if (this.difficulty === 'hard') {
+                    cellsToRemove = 55;
+                } else {
+                    cellsToRemove = 64; // Even harder: almost empty board
+                }
                 let removed = 0;
 
                 while (removed < cellsToRemove) {
@@ -426,6 +478,7 @@
                         this.updateBoard();
                     });
 
+                    cell.setAttribute('tabindex', '0');
                     boardEl.appendChild(cell);
                 }
             }
