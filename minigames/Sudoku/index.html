@@ -6,6 +6,7 @@
     <title>Sudoku Game</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel="stylesheet" href="/styles.css">
+    <script src="/theme-manager.js"></script>
     <style>
         :root {
             --primary-color: #0ff;
@@ -50,54 +51,6 @@
             --primary-color: #00ddff;
             --text-color: #00ddff;
             --accent-color: #ffff00;
-        }
-
-        body.theme-custom {
-            --primary-color: var(--custom-primary);
-            --text-color: var(--custom-primary);
-            --accent-color: var(--custom-accent);
-            --primary-dark: var(--custom-dark);
-            --primary-light: var(--custom-light);
-        }
-
-        .custom-theme-panel {
-            display: none;
-            background: #1a1a1a;
-            border: 2px solid var(--primary-color);
-            border-radius: 5px;
-            padding: 1rem;
-            margin: 1rem 0;
-            gap: 1rem;
-            flex-direction: column;
-        }
-
-        .custom-theme-panel.active {
-            display: flex;
-        }
-
-        .color-picker-group {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .color-picker-group label {
-            min-width: 100px;
-        }
-
-        .color-picker-group input[type="color"] {
-            width: 50px;
-            height: 40px;
-            border: 1px solid var(--primary-color);
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .custom-color-value {
-            font-family: monospace;
-            font-size: 0.9rem;
-            min-width: 80px;
         }
 
         #content {

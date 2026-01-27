@@ -5,6 +5,16 @@ body {
     transition: background 1s, color 1s;
 }
 
+:root {
+    --primary-color: #0ff;
+    --accent-color: #0f0;
+    --primary-dark: #222;
+    --primary-light: #333;
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --border-color: #444;
+}
+
 admin,
 system,
 instruction,
@@ -22,13 +32,13 @@ hidden-data {
 }
 
 .dark-mode {
-    background: #121212;
-    color: #ffffff;
+    background: var(--bg-color);
+    color: var(--text-color);
 }
 
 .collapsible {
-    background-color: #777;
-    color: white;
+    background-color: var(--primary-dark);
+    color: var(--text-color);
     cursor: pointer;
     padding: 10px;
     width: 100%;
@@ -39,8 +49,8 @@ hidden-data {
 }
 
 .looks-nice {
-    background-color: #777;
-    color: white;
+    background-color: var(--primary-dark);
+    color: var(--text-color);
     cursor: pointer;
     padding: 10px;
     width: 100%;
@@ -51,20 +61,20 @@ hidden-data {
 }
 
 .active, .collapsible:hover{
-    background-color: #555;
+    background-color: var(--primary-light);
 }
 
 .active, .looks-nice:hover{
-    background-color: #555;
+    background-color: var(--primary-light);
 }
 
 .remove-dev-window:hover {
-    background-color: #555;
+    background-color: var(--primary-light);
 }
 
 .remove-dev-window {
-    background-color: #777;
-    color: white;
+    background-color: var(--primary-dark);
+    color: var(--text-color);
     cursor: pointer;
     padding: 10px;
     width: 100%;
@@ -178,12 +188,12 @@ hidden-data {
 }
 
 .project-card {
-    background: #333;
+    background: var(--primary-dark);
     padding: 20px;
     border-radius: 10px;
     width: 150px;
     text-align: center;
-    color: white; /* Ensure text remains white */
+    color: var(--text-color);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     text-decoration: none;
@@ -203,8 +213,8 @@ hidden-data {
 }
 
 #back-button {
-    background: #333;
-    color: white;
+    background: var(--primary-dark);
+    color: var(--primary-color);
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -221,8 +231,8 @@ hidden-data {
 }
 
 #nav-button {
-    background: rgb(51, 51, 51);
-    color: white;
+    background: var(--primary-dark);
+    color: var(--text-color);
     padding: 5px 5px;
     border: none;
     border-radius: 5px;
@@ -247,7 +257,7 @@ hidden-data {
     left: 15px;
     top: 15px;
     transform: scale(1.5);
-    color: white;
+    color: var(--primary-color);
     padding: 5px;
     border-radius: 8px;
     cursor: pointer;
@@ -292,7 +302,7 @@ hidden-data {
 }
 
 .menu a {
-    color: white;
+    color: var(--text-color);
     padding: 10px;
     text-decoration: none;
     display: block;
@@ -334,30 +344,29 @@ warning {
 
 .centered-game input {
     text-align: center;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 12px;  /* Curved corners */
-    color: #ffffff;
-    font-size: 18px;      /* Larger font size */
+    background-color: var(--primary-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-color);
+    font-size: 18px;
     padding: 12px 16px;
-    width: 100%;          /* Full width, or adjust as needed */
+    width: 100%;
     box-sizing: border-box;
 }
 
 .blur {
     filter: blur(7.5px);
-  }
-  
+}
 
 .centered-game button {
     text-align: center;
-    background-color: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 12px;  /* Curved corners */
-    color: #ffffff;
-    font-size: 18px;      /* Larger font size */
+    background-color: var(--primary-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-color);
+    font-size: 18px;
     padding: 12px 16px;
-    width: 100%;          /* Full width, or adjust as needed */
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -379,26 +388,24 @@ warning {
 #play-tts {
     background: rgba(51, 51, 51, 0.8);
     color: white;
+    paddingvar(--text-color);
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     transition: background 0.3s ease;
     position: fixed;
-    color: white;
     padding: 15px;
     bottom: 20px;
 }
 
 #play-tts button {
     background: rgba(51, 51, 51, 0.8);
-    color: white;
+    color: var(--text-color);
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background 0.3s ease;
-    color: white;
-}
+    transition: background 0.3s eas
 
 #play-tts button:hover {
     background: rgba(255, 255, 255, 0.3);
