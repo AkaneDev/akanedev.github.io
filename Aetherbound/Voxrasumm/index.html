@@ -17,7 +17,7 @@
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 1.5rem;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
         }
 
         @media (max-width: 900px) {
@@ -31,10 +31,6 @@
             border-radius: 12px;
             padding: 1.2rem;
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        .panel h2 {
-            margin-top: 0;
         }
 
         .spell-workspace {
@@ -136,9 +132,6 @@
     </nav>
 
     <section id="content">
-        <h1>Aetherbound Spell Creator</h1>
-        <p>Voxrasumm is the spell-casting language used by magic casters in Aetherbound.</p>
-
         <div class="dashboard-grid">
 
             <!-- Spell Workspace -->
@@ -151,8 +144,12 @@
                     placeholder="Your spell incantation will appear here..."></textarea>
 
                 <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-                    <button id="clearWorkspace" class="action danger" style="flex:1">Clear Spell</button>
-                    <button id="exportSpell" class="action success" style="flex:1">Copy Spell</button>
+                    <button id="clearWorkspace" class="action danger" style="flex:1">
+                        Clear Spell
+                    </button>
+                    <button id="exportSpell" class="action success" style="flex:1">
+                        Copy Spell
+                    </button>
                 </div>
             </div>
 
@@ -160,7 +157,8 @@
             <div class="panel">
                 <h2>Lexicon & Presets</h2>
 
-                <input id="searchInput" type="text" placeholder="Search runes or English words…">
+                <input id="searchInput" type="text"
+                       placeholder="Search runes or English words…">
 
                 <div style="max-height:260px; overflow-y:auto; margin:0.6rem 0;">
                     <table>
@@ -176,12 +174,17 @@
                 </div>
 
                 <input id="nlInput" type="text" placeholder="e.g. wave of fireball">
-                <button id="parseSpell" class="action primary" style="width:100%; margin:0.4rem 0;">
+
+                <button id="parseSpell"
+                        class="action primary"
+                        style="width:100%; margin:0.4rem 0;">
                     Parse Spell
                 </button>
 
                 <h3>Preset Spells</h3>
-                <div id="presetContainer" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
+                <div id="presetContainer"
+                     style="display:flex; flex-direction:column; gap:0.4rem;">
+                </div>
             </div>
         </div>
     </section>
@@ -190,84 +193,168 @@
     <div id="runeModal" class="modal">
         <div class="modal-content">
             <h3>Choose a rune</h3>
-            <div id="runeChoices" style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
-            <button id="closeModal" class="action danger" style="margin-top:0.6rem;">Cancel</button>
+            <div id="runeChoices"
+                 style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
+            <button id="closeModal"
+                    class="action danger"
+                    style="margin-top:0.6rem;">
+                Cancel
+            </button>
         </div>
     </div>
 
 <script>
-/* === Logic unchanged from your version (only class names adjusted) === */
-
 let lexicon = [];
 let spellRunes = [];
 let presets = [];
 
 async function loadLexicon() {
-  const response = await fetch('lexicon.csv');
-  const text = await response.text();
-  const rows = text.trim().split('\n').filter(l => l && !l.startsWith('#')).slice(1);
-  lexicon = rows.map(row => {
-    const [rune, pronunciation, english] = row.split(',');
-    return { rune, pronunciation, english: english.replace(/^\[|\]$/g,'').split('|') };
-  });
-  renderTable(lexicon);
+    const response = await fetch('lexicon.csv');
+    const text = await response.text();
+    const rows = text.trim().split('\n')
+        .filter(l => l && !l.startsWith('#'))
+        .slice(1);
+
+    lexicon = rows.map(row => {
+        const [rune, pronunciation, english] = row.split(',');
+        return {
+            rune,
+            pronunciation,
+            english: english.replace(/^\[|\]$/g,'').split('|')
+        };
+    });
+
+    renderTable(lexicon);
 }
 
 function renderTable(data) {
-  const table = document.getElementById('lexiconTable');
-  table.innerHTML = '';
-  data.forEach(entry => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${entry.rune}</td>
-      <td>${entry.pronunciation}</td>
-      <td>${entry.english.join(', ')}</td>
-    `;
-    row.onclick = () => addRune(entry.rune);
-    table.appendChild(row);
-  });
+    const table = document.getElementById('lexiconTable');
+    table.innerHTML = '';
+    data.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entry.rune}</td>
+            <td>${entry.pronunciation}</td>
+            <td>${entry.english.join(', ')}</td>
+        `;
+        row.onclick = () => addRune(entry.rune);
+        table.appendChild(row);
+    });
 }
 
 function addRune(rune) {
-  spellRunes.push(rune);
-  updateWorkspace();
+    spellRunes.push(rune);
+    updateWorkspace();
 }
 
 function updateWorkspace() {
-  const ws = document.getElementById('spellWorkspace');
-  ws.innerHTML = '';
-  spellRunes.forEach((r, i) => {
-    const chip = document.createElement('span');
-    chip.textContent = r;
-    chip.className = 'rune-chip';
-    chip.onclick = () => {
-      spellRunes.splice(i, 1);
-      updateWorkspace();
-    };
-    ws.appendChild(chip);
-  });
-  document.getElementById('spellIncantation').value = spellRunes.join(' ');
+    const ws = document.getElementById('spellWorkspace');
+    ws.innerHTML = '';
+    spellRunes.forEach((r, i) => {
+        const chip = document.createElement('span');
+        chip.textContent = r;
+        chip.className = 'rune-chip';
+        chip.onclick = () => {
+            spellRunes.splice(i, 1);
+            updateWorkspace();
+        };
+        ws.appendChild(chip);
+    });
+    document.getElementById('spellIncantation').value =
+        spellRunes.join(' ');
 }
 
 document.getElementById('searchInput').oninput = e => {
-  const q = e.target.value.toLowerCase();
-  renderTable(lexicon.filter(l =>
-    l.rune.toLowerCase().includes(q) ||
-    l.pronunciation.toLowerCase().includes(q) ||
-    l.english.some(w => w.toLowerCase().includes(q))
-  ));
+    const q = e.target.value.toLowerCase();
+    renderTable(
+        lexicon.filter(l =>
+            l.rune.toLowerCase().includes(q) ||
+            l.pronunciation.toLowerCase().includes(q) ||
+            l.english.some(w => w.toLowerCase().includes(q))
+        )
+    );
 };
 
+document.getElementById('parseSpell').onclick = () => {
+    const words = document.getElementById('nlInput')
+        .value.toLowerCase()
+        .replace(/ of /g,' ')
+        .split(/\s+/);
+    parseSpellWords(words);
+};
+
+function parseSpellWords(words) {
+    let i = 0;
+    function next() {
+        if (i >= words.length) return;
+        const word = words[i];
+        const matches = lexicon.filter(e =>
+            e.english.some(en => en.toLowerCase() === word)
+        );
+
+        if (matches.length === 1) {
+            addRune(matches[0].rune);
+            i++; next();
+        } else if (matches.length > 1) {
+            showRuneModal(matches, sel => {
+                addRune(sel.rune);
+                i++; next();
+            });
+        } else {
+            i++; next();
+        }
+    }
+    next();
+}
+
+function showRuneModal(candidates, cb) {
+    const modal = document.getElementById('runeModal');
+    const box = document.getElementById('runeChoices');
+    box.innerHTML = '';
+    candidates.forEach(c => {
+        const b = document.createElement('button');
+        b.textContent = `${c.rune} (${c.english.join(', ')})`;
+        b.className = 'action primary';
+        b.onclick = () => {
+            modal.classList.remove('show');
+            cb(c);
+        };
+        box.appendChild(b);
+    });
+    modal.classList.add('show');
+}
+
+document.getElementById('closeModal').onclick =
+    () => document.getElementById('runeModal').classList.remove('show');
+
 document.getElementById('clearWorkspace').onclick = () => {
-  spellRunes = [];
-  updateWorkspace();
+    spellRunes = [];
+    updateWorkspace();
 };
 
 document.getElementById('exportSpell').onclick = () => {
-  navigator.clipboard.writeText(spellRunes.join(' '));
+    navigator.clipboard.writeText(spellRunes.join(' '));
 };
 
+async function loadPresets() {
+    const res = await fetch('presets.json');
+    presets = await res.json();
+    const c = document.getElementById('presetContainer');
+    c.innerHTML = '';
+    presets.forEach(p => {
+        const b = document.createElement('button');
+        b.textContent = p.name;
+        b.className = 'action success';
+        b.onclick = () => {
+            spellRunes.push(...p.runes);
+            updateWorkspace();
+        };
+        c.appendChild(b);
+    });
+}
+
 loadLexicon();
+loadPresets();
 </script>
 </body>
 </html>
