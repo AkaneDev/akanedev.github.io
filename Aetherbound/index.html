@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Aetherbound Toolbox</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <link rel="stylesheet" href="/styles.css">
+
+    <script src='main.js'></script>
+    <script src="/theme-manager.js"></script>
+    <script defer src="/script.js"></script>
+
+    <!-- Open Graph (Discord, Slack, etc.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Aetherbound Toolbox">
+    <meta property="og:description" content="A grid-based dashboard of internal tools and experiments for the Aetherbound project.">
+    <meta property="og:url" content="https://akanedev.au/Aetherbound/">
+
+    <!-- Twitter Card (text-only) -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Aetherbound Toolbox">
+    <meta name="twitter:description" content="Internal tools, spell editors, and experiments for the Aetherbound universe.">
+    <meta name="twitter:site" content="@AkaneDev">
+
+
+    <style>
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .tool-card {
+            background: var(--card-bg, #111);
+            border-radius: 12px;
+            padding: 1.2rem;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+
+        .tool-card h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .tool-card p {
+            margin: 0 0 0.8rem;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            background: #333;
+            color: #ddd;
+        }
+
+        /* Status badges */
+        .badge.stable { background: #1f7a3a; }
+        .badge.experimental { background: #7a4f1f; }
+        .badge.wip { background: #7a1f1f; }
+
+        /* Platform / tag badges */
+        .badge.web { background: #1f4f7a; }
+        .badge.windows { background: #4f1f7a; }
+        .badge.cross { background: #3a3a3a; }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">Aetherbound</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button" onclick="history.back()">← back</button>
+        </div>
+    </nav>
+
+    <section id="content">
+        <h1>Aetherbound Toolbox</h1>
+        <p>
+            A grid-based dashboard of internal tools and experiments for the
+            Aetherbound project.
+        </p>
+
+        <div class="tool-grid">
+
+            <a class="tool-card" href="/Aetherbound/Voxrasumm/index.html">
+                <h2>Voxrasumm Spell Creator</h2>
+                <p>Voxrasumm is a spell casting language used in Aetherbound by magic casters</p>
+                <div class="badge-row">
+                    <span class="badge stable">stable</span>
+                    <span class="badge web">web</span>
+                </div>
+            </a>
+        </div>
+    </section>
+</body>
+</html>
