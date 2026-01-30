@@ -1,0 +1,23 @@
+{
+    "index": "warlock",
+    "name": "Warlock",
+    "hit_die": 8,
+    "primary_ability": [
+        "WIS",
+        "CHA"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Simple Weapons",
+        "Saving Throw: WIS",
+        "Saving Throw: CHA"
+    ],
+    "saving_throws": [
+        "WIS",
+        "CHA"
+    ],
+    "features": [],
+    "subclasses": [
+        "Fiend"
+    ]
+}

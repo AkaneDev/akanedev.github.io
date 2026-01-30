@@ -1,0 +1,23 @@
+{
+    "index": "monk",
+    "name": "Monk",
+    "hit_die": 8,
+    "primary_ability": [
+        "STR",
+        "DEX"
+    ],
+    "proficiencies": [
+        "Simple Weapons",
+        "Shortswords",
+        "Saving Throw: DEX",
+        "Saving Throw: STR"
+    ],
+    "saving_throws": [
+        "STR",
+        "DEX"
+    ],
+    "features": [],
+    "subclasses": [
+        "Open Hand"
+    ]
+}

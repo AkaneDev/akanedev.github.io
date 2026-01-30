@@ -1,0 +1,26 @@
+{
+    "index": "barbarian",
+    "name": "Barbarian",
+    "hit_die": 12,
+    "primary_ability": [
+        "STR",
+        "CON"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Medium Armor",
+        "Shields",
+        "Simple Weapons",
+        "Martial Weapons",
+        "Saving Throw: STR",
+        "Saving Throw: CON"
+    ],
+    "saving_throws": [
+        "STR",
+        "CON"
+    ],
+    "features": [],
+    "subclasses": [
+        "Berserker"
+    ]
+}

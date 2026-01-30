@@ -1,0 +1,28 @@
+{
+    "index": "rogue",
+    "name": "Rogue",
+    "hit_die": 8,
+    "primary_ability": [
+        "DEX",
+        "INT"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Simple Weapons",
+        "Longswords",
+        "Rapiers",
+        "Shortswords",
+        "Hand crossbows",
+        "Thieves' Tools",
+        "Saving Throw: DEX",
+        "Saving Throw: INT"
+    ],
+    "saving_throws": [
+        "DEX",
+        "INT"
+    ],
+    "features": [],
+    "subclasses": [
+        "Thief"
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "index": "wizard",
+    "name": "Wizard",
+    "hit_die": 6,
+    "primary_ability": [
+        "INT",
+        "WIS"
+    ],
+    "proficiencies": [
+        "Daggers",
+        "Darts",
+        "Slings",
+        "Quarterstaffs",
+        "Crossbows, light",
+        "Saving Throw: INT",
+        "Saving Throw: WIS"
+    ],
+    "saving_throws": [
+        "INT",
+        "WIS"
+    ],
+    "features": [],
+    "subclasses": [
+        "Evocation"
+    ]
+}

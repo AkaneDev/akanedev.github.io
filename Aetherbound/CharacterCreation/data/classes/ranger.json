@@ -1,0 +1,26 @@
+{
+    "index": "ranger",
+    "name": "Ranger",
+    "hit_die": 10,
+    "primary_ability": [
+        "STR",
+        "DEX"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Medium Armor",
+        "Shields",
+        "Simple Weapons",
+        "Martial Weapons",
+        "Saving Throw: DEX",
+        "Saving Throw: STR"
+    ],
+    "saving_throws": [
+        "STR",
+        "DEX"
+    ],
+    "features": [],
+    "subclasses": [
+        "Hunter"
+    ]
+}

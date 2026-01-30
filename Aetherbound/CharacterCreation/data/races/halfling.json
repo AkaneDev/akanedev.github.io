@@ -1,0 +1,23 @@
+{
+    "index": "halfling",
+    "name": "Halfling",
+    "speed": 25,
+    "ability_bonuses": {
+        "DEX": 2
+    },
+    "age": "A halfling reaches adulthood at the age of 20 and generally lives into the middle of his or her second century.",
+    "alignment": "Most halflings are lawful good. As a rule, they are good-hearted and kind, hate to see others in pain, and have no tolerance for oppression. They are also very orderly and traditional, leaning heavily on the support of their community and the comfort of their old ways.",
+    "size": "Small",
+    "languages": [
+        "Common",
+        "Halfling"
+    ],
+    "traits": [
+        "Brave",
+        "Halfling Nimbleness",
+        "Lucky"
+    ],
+    "subraces": [
+        "Lightfoot Halfling"
+    ]
+}

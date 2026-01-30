@@ -1,0 +1,23 @@
+{
+    "index": "half-orc",
+    "name": "Half-Orc",
+    "speed": 30,
+    "ability_bonuses": {
+        "STR": 2,
+        "CON": 1
+    },
+    "age": "Half-orcs mature a little faster than humans, reaching adulthood around age 14. They age noticeably faster and rarely live longer than 75 years.",
+    "alignment": "Half-orcs inherit a tendency toward chaos from their orc parents and are not strongly inclined toward good. Half-orcs raised among orcs and willing to live out their lives among them are usually evil.",
+    "size": "Medium",
+    "languages": [
+        "Common",
+        "Orc"
+    ],
+    "traits": [
+        "Darkvision",
+        "Savage Attacks",
+        "Relentless Endurance",
+        "Menacing"
+    ],
+    "subraces": []
+}

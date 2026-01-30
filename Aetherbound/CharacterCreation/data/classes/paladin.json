@@ -1,0 +1,25 @@
+{
+    "index": "paladin",
+    "name": "Paladin",
+    "hit_die": 10,
+    "primary_ability": [
+        "WIS",
+        "CHA"
+    ],
+    "proficiencies": [
+        "All armor",
+        "Shields",
+        "Simple Weapons",
+        "Martial Weapons",
+        "Saving Throw: WIS",
+        "Saving Throw: CHA"
+    ],
+    "saving_throws": [
+        "WIS",
+        "CHA"
+    ],
+    "features": [],
+    "subclasses": [
+        "Devotion"
+    ]
+}

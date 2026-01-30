@@ -1,0 +1,21 @@
+{
+    "index": "human",
+    "name": "Human",
+    "speed": 30,
+    "ability_bonuses": {
+        "STR": 1,
+        "DEX": 1,
+        "CON": 1,
+        "INT": 1,
+        "WIS": 1,
+        "CHA": 1
+    },
+    "age": "Humans reach adulthood in their late teens and live less than a century.",
+    "alignment": "Humans tend toward no particular alignment. The best and the worst are found among them.",
+    "size": "Medium",
+    "languages": [
+        "Common"
+    ],
+    "traits": [],
+    "subraces": []
+}

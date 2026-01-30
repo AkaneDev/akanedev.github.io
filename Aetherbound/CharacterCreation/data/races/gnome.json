@@ -1,0 +1,22 @@
+{
+    "index": "gnome",
+    "name": "Gnome",
+    "speed": 25,
+    "ability_bonuses": {
+        "INT": 2
+    },
+    "age": "Gnomes mature at the same rate humans do, and most are expected to settle down into an adult life by around age 40. They can live 350 to almost 500 years.",
+    "alignment": "Gnomes are most often good. Those who tend toward law are sages, engineers, researchers, scholars, investigators, or inventors. Those who tend toward chaos are minstrels, tricksters, wanderers, or fanciful jewelers. Gnomes are good-hearted, and even the tricksters among them are more playful than vicious.",
+    "size": "Small",
+    "languages": [
+        "Common",
+        "Gnomish"
+    ],
+    "traits": [
+        "Darkvision",
+        "Gnome Cunning"
+    ],
+    "subraces": [
+        "Rock Gnome"
+    ]
+}

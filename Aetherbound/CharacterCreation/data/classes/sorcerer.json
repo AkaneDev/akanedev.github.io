@@ -1,0 +1,26 @@
+{
+    "index": "sorcerer",
+    "name": "Sorcerer",
+    "hit_die": 6,
+    "primary_ability": [
+        "CON",
+        "CHA"
+    ],
+    "proficiencies": [
+        "Daggers",
+        "Darts",
+        "Slings",
+        "Quarterstaffs",
+        "Crossbows, light",
+        "Saving Throw: CON",
+        "Saving Throw: CHA"
+    ],
+    "saving_throws": [
+        "CON",
+        "CHA"
+    ],
+    "features": [],
+    "subclasses": [
+        "Draconic"
+    ]
+}

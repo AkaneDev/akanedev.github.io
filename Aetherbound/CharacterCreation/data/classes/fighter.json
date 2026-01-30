@@ -1,0 +1,25 @@
+{
+    "index": "fighter",
+    "name": "Fighter",
+    "hit_die": 10,
+    "primary_ability": [
+        "STR",
+        "CON"
+    ],
+    "proficiencies": [
+        "All armor",
+        "Shields",
+        "Simple Weapons",
+        "Martial Weapons",
+        "Saving Throw: STR",
+        "Saving Throw: CON"
+    ],
+    "saving_throws": [
+        "STR",
+        "CON"
+    ],
+    "features": [],
+    "subclasses": [
+        "Champion"
+    ]
+}

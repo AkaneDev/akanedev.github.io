@@ -1,0 +1,22 @@
+{
+    "index": "tiefling",
+    "name": "Tiefling",
+    "speed": 30,
+    "ability_bonuses": {
+        "INT": 1,
+        "CHA": 2
+    },
+    "age": "Tieflings mature at the same rate as humans but live a few years longer.",
+    "alignment": "Tieflings might not have an innate tendency toward evil, but many of them end up there. Evil or not, an independent nature inclines many tieflings toward a chaotic alignment.",
+    "size": "Medium",
+    "languages": [
+        "Common",
+        "Infernal"
+    ],
+    "traits": [
+        "Darkvision",
+        "Hellish Resistance",
+        "Infernal Legacy"
+    ],
+    "subraces": []
+}

@@ -1,0 +1,25 @@
+{
+    "index": "cleric",
+    "name": "Cleric",
+    "hit_die": 8,
+    "primary_ability": [
+        "WIS",
+        "CHA"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Medium Armor",
+        "Shields",
+        "Simple Weapons",
+        "Saving Throw: WIS",
+        "Saving Throw: CHA"
+    ],
+    "saving_throws": [
+        "WIS",
+        "CHA"
+    ],
+    "features": [],
+    "subclasses": [
+        "Life"
+    ]
+}

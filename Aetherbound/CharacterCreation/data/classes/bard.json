@@ -1,0 +1,27 @@
+{
+    "index": "bard",
+    "name": "Bard",
+    "hit_die": 8,
+    "primary_ability": [
+        "DEX",
+        "CHA"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Simple Weapons",
+        "Longswords",
+        "Rapiers",
+        "Shortswords",
+        "Hand crossbows",
+        "Saving Throw: DEX",
+        "Saving Throw: CHA"
+    ],
+    "saving_throws": [
+        "DEX",
+        "CHA"
+    ],
+    "features": [],
+    "subclasses": [
+        "Lore"
+    ]
+}

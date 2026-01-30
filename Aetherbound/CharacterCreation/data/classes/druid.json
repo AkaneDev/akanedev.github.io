@@ -1,0 +1,35 @@
+{
+    "index": "druid",
+    "name": "Druid",
+    "hit_die": 8,
+    "primary_ability": [
+        "INT",
+        "WIS"
+    ],
+    "proficiencies": [
+        "Light Armor",
+        "Medium Armor",
+        "Shields",
+        "Clubs",
+        "Daggers",
+        "Javelins",
+        "Maces",
+        "Quarterstaffs",
+        "Sickles",
+        "Spears",
+        "Darts",
+        "Slings",
+        "Scimitars",
+        "Herbalism Kit",
+        "Saving Throw: INT",
+        "Saving Throw: WIS"
+    ],
+    "saving_throws": [
+        "INT",
+        "WIS"
+    ],
+    "features": [],
+    "subclasses": [
+        "Land"
+    ]
+}

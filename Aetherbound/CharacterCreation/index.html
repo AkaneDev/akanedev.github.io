@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D 5e Character Creator</title>
+<style>
+body { font-family: sans-serif; background: #1e1e1e; color: #f0f0f0; padding: 20px; }
+h1,h2 { color: #fff; }
+label { display: block; margin: 10px 0 5px; }
+select, input { padding: 5px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #666; background: #2c2c2c; color: #f0f0f0; }
+input[type=number] { width: 60px; text-align: center; font-weight: bold; }
+.section { margin-bottom: 20px; padding: 15px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; }
+button {
+    background: #4a90e2;
+    border: none;
+    padding: 8px 15px;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 10px;
+    transition: 0.2s;
+}
+button:hover { background: #357ab8; }
+#summary { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<h1>D&D 5e Character Creator</h1>
+
+<div class="section">
+<h2>Character Info</h2>
+<label for="name">Character Name:</label>
+<input type="text" id="name" placeholder="Your character's name">
+
+<label for="race">Race:</label>
+<select id="race"><option>Loading...</option></select>
+
+<label for="class">Class:</label>
+<select id="class"><option>Loading...</option></select>
+
+<label for="level">Level:</label>
+<input type="number" id="level" value="1" min="1" max="20">
+</div>
+
+<div class="section">
+<h2>Ability Scores</h2>
+<button onclick="rollAllStats()">🎲 Roll Ability Scores</button>
+
+<label for="str">Strength:</label>
+<input type="number" id="str" value="10" min="1" max="20">
+
+<label for="dex">Dexterity:</label>
+<input type="number" id="dex" value="10" min="1" max="20">
+
+<label for="con">Constitution:</label>
+<input type="number" id="con" value="10" min="1" max="20">
+
+<label for="int">Intelligence:</label>
+<input type="number" id="int" value="10" min="1" max="20">
+
+<label for="wis">Wisdom:</label>
+<input type="number" id="wis" value="10" min="1" max="20">
+
+<label for="cha">Charisma:</label>
+<input type="number" id="cha" value="10" min="1" max="20">
+</div>
+
+<div class="section">
+<button id="generate">Generate Character</button>
+</div>
+
+<div id="summary" class="section">
+<h2>Character Summary</h2>
+<pre id="output">Your character summary will appear here...</pre>
+</div>
+
+<script>
+// ---------- Auto-redirect to index.html ----------
+window.addEventListener("load", () => {
+    const pathname = window.location.pathname;
+    const normalized = pathname.endsWith("/") ? pathname : pathname + "/";
+    if (normalized.endsWith("/Aetherbound/CharacterCreation/") && !pathname.endsWith("/index.html")) {
+        window.location.replace(normalized + "index.html");
+    }
+});
+
+// ---------- Dice Rolling ----------
+function rollStat() {
+    let rolls = [];
+    for (let i=0;i<4;i++) rolls.push(Math.floor(Math.random()*6)+1);
+    rolls.sort((a,b)=>a-b); rolls.shift(); // drop lowest
+    return rolls.reduce((a,b)=>a+b,0);
+}
+function rollAllStats() {
+    ["str","dex","con","int","wis","cha"].forEach(s=>{
+        document.getElementById(s).value = rollStat();
+    });
+}
+
+// ---------- Load Manifest & JSON ----------
+async function loadManifest(url) {
+    const res = await fetch(url);
+    const text = await res.text();
+    return text.split("\n").filter(l=>l.trim()!=="");
+}
+async function loadJSON(url) { const res = await fetch(url); return await res.json(); }
+
+let raceData = [];
+let classData = [];
+
+async function populateDropdowns() {
+    const manifest = await loadManifest("/Aetherbound/CharacterCreation/manifest.txt");
+    raceData = []; classData = [];
+    for (const file of manifest) {
+        const data = await loadJSON(file);
+        if (file.includes("/races/")) raceData.push(data);
+        else if (file.includes("/classes/")) classData.push(data);
+    }
+
+    const raceDropdown = document.getElementById("race");
+    const classDropdown = document.getElementById("class");
+    raceDropdown.innerHTML = "<option value=''>-- Select Race --</option>";
+    classDropdown.innerHTML = "<option value=''>-- Select Class --</option>";
+
+    raceData.forEach(r=>{ let opt=document.createElement("option"); opt.value=r.name; opt.textContent=r.name; raceDropdown.appendChild(opt); });
+    classData.forEach(c=>{ let opt=document.createElement("option"); opt.value=c.name; opt.textContent=c.name; classDropdown.appendChild(opt); });
+}
+
+// ---------- Generate Character ----------
+document.getElementById("generate").addEventListener("click",()=>{
+    const name = document.getElementById("name").value || "Unnamed Hero";
+    const raceName = document.getElementById("race").value;
+    const className = document.getElementById("class").value;
+    const level = parseInt(document.getElementById("level").value)||1;
+
+    let abilities = {
+        STR: parseInt(document.getElementById("str").value)||10,
+        DEX: parseInt(document.getElementById("dex").value)||10,
+        CON: parseInt(document.getElementById("con").value)||10,
+        INT: parseInt(document.getElementById("int").value)||10,
+        WIS: parseInt(document.getElementById("wis").value)||10,
+        CHA: parseInt(document.getElementById("cha").value)||10
+    };
+
+    const race = raceData.find(r=>r.name===raceName);
+    const charClass = classData.find(c=>c.name===className);
+
+    // Apply race ability bonuses
+    if(race && race.ability_bonuses){
+        for(let stat in race.ability_bonuses) abilities[stat] += race.ability_bonuses[stat];
+    }
+
+    let summary = `Name: ${name}
+Race: ${raceName||"None"}
+Class: ${className||"None"} (Level ${level})
+
+Ability Scores:
+STR: ${abilities.STR}
+DEX: ${abilities.DEX}
+CON: ${abilities.CON}
+INT: ${abilities.INT}
+WIS: ${abilities.WIS}
+CHA: ${abilities.CHA}
+`;
+
+    if(charClass && charClass.features){
+        summary += `\nClass Features:\n`;
+        charClass.features.forEach(f=>{
+            if(f.level<=level) summary += `- [Lvl ${f.level}] ${f.name}\n`;
+        });
+    }
+
+    document.getElementById("output").textContent = summary;
+});
+
+// ---------- Init ----------
+window.addEventListener("load", populateDropdowns);
+</script>
+
+</body>
+</html>
