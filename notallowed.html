@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Terminal</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: #33ff33;
+    font-family: "Courier New", monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#crt-terminal {
+    width: 80%;
+    max-width: 900px;
+    height: 80vh;
+    padding: 20px;
+    background: black;
+    border: 2px solid #33ff33;
+    box-shadow: 0 0 25px #33ff33, inset 0 0 50px #33ff33;
+    overflow-y: auto;
+    position: relative;
+    animation: flicker 0.15s infinite;
+}
+
+/* Scanlines */
+#crt-terminal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0.15) 1px,
+        rgba(0,0,0,0) 2px
+    );
+    pointer-events: none;
+}
+
+/* Flicker */
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.97; }
+}
+
+#output {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.input-line {
+    display: none;
+    margin-top: 10px;
+}
+
+.prompt {
+    margin-right: 5px;
+}
+
+input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #33ff33;
+    font-family: inherit;
+    font-size: 1em;
+    width: 100%;
+}
+</style>
+</head>
+<body>
+
+<div id="crt-terminal">
+    <div id="output"></div>
+    <div class="input-line" id="inputLine">
+        <span class="prompt">&gt;</span>
+        <input type="text" id="commandInput" autocomplete="off" />
+    </div>
+</div>
+
+<script>
+const output = document.getElementById("output");
+const inputLine = document.getElementById("inputLine");
+const input = document.getElementById("commandInput");
+
+const ENDPOINT = "https://simple.akanedev.au/data/_youshouldntbehere_";
+// const ENDPOINT = "http://akanespi.local:6706/data/_youshouldntbehere_";
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function typeText(text, baseSpeed = 50) {
+    return new Promise(resolve => {
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                output.textContent += text.charAt(i);
+                output.parentElement.scrollTop = output.parentElement.scrollHeight;
+                i++;
+                setTimeout(type, baseSpeed + Math.random() * 30);
+            } else {
+                resolve();
+            }
+        }
+        type();
+    });
+}
+
+async function bootSequence() {
+    await typeText("attempting connection...\n", 60);
+    await sleep(800);
+
+    await typeText("resolving host simple.akanedev.au...\n", 45);
+    await sleep(700);
+
+    await typeText("establishing secure channel...\n", 45);
+    await sleep(900);
+
+    try {
+        const response = await fetch(ENDPOINT, { method: "GET" });
+
+        if (!response.ok) throw new Error("bad status");
+
+        await typeText("connection to simple.akanedev.au succeeded\n\n", 55);
+
+        inputLine.style.display = "flex";
+        input.focus();
+
+    } catch (err) {
+        await typeText(
+            "connection terminated - error code: 556E617574686F72697A6564\n",
+            55
+        );
+    }
+}
+
+input.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") {
+        const command = input.value.trim();
+        if (!command) return;
+
+        output.textContent += "\n> " + command + "\n";
+        input.value = "";
+
+        try {
+            const response = await fetch(ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ command })
+            });
+
+            const result = await response.text();
+            await typeText(result + "\n", 35);
+
+        } catch {
+            await typeText("error: connection lost\n", 40);
+        }
+    }
+});
+
+bootSequence();
+</script>
+
+</body>
+</html>
