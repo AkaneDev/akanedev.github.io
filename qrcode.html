@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Generator & Print</title>
+<style>
+  /* Reset some defaults */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    background: #fff;
+    padding: 40px 50px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  h1 {
+    margin-bottom: 30px;
+    color: #333;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    transition: 0.3s;
+  }
+
+  input[type="text"]:focus {
+    border-color: #66a6ff;
+    outline: none;
+  }
+
+  button {
+    padding: 12px 25px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    margin: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+    color: #fff;
+  }
+
+  #generate {
+    background: #66a6ff;
+  }
+
+  #generate:hover {
+    background: #547dcf;
+  }
+
+  #print {
+    background: #34d399;
+  }
+
+  #print:hover {
+    background: #28a06b;
+  }
+
+  #qrcode {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f9f9f9;
+    display: inline-block;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #qrcode, #qrcode * {
+      visibility: visible;
+    }
+    #qrcode {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 0;
+      box-shadow: none;
+      border-radius: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>QR Code Generator</h1>
+  <input type="text" id="text" placeholder="Enter text or URL">
+  <div>
+    <button id="generate">Generate QR</button>
+    <button id="print">Print QR</button>
+  </div>
+  <div id="qrcode"></div>
+</div>
+
+<!-- QRCode.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  let qr;
+
+  document.getElementById("generate").addEventListener("click", () => {
+    const text = document.getElementById("text").value.trim();
+    if (!text) return alert("Please enter some text or URL!");
+
+    // Clear previous QR code
+    document.getElementById("qrcode").innerHTML = "";
+
+    // Generate new QR code
+    qr = new QRCode(document.getElementById("qrcode"), {
+      text: text,
+      width: 256,
+      height: 256,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  });
+
+  document.getElementById("print").addEventListener("click", () => {
+    if (!qr) return alert("Please generate a QR code first!");
+    window.print();
+  });
+</script>
+
+</body>
+</html>
