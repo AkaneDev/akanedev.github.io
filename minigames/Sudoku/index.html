@@ -176,12 +176,18 @@
             border-right: 2px solid var(--primary-color);
         }
 
+        .sudoku-cell:nth-child(9n) {
+            border-right: none;
+        }
+
         .sudoku-cell:nth-child(27n) {
             border-bottom: 2px solid var(--primary-color);
         }
 
-        .sudoku-cell:nth-child(9n) {
-            border-right: none;
+        .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+        .sudoku-cell:nth-child(n+46):nth-child(-n+54),
+        .sudoku-cell:nth-child(n+73) {
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .controls {
@@ -486,23 +492,48 @@
                 this.solution = this.generateCompleteSudoku();
                 this.board = JSON.parse(JSON.stringify(this.solution));
 
-                // Remove numbers based on difficulty
-                let cellsToRemove;
+                // Determine target difficulty
+                let targetClues;
                 if (this.difficulty === 'easy') {
-                    cellsToRemove = 30;
+                    targetClues = 40; // 40-49 clues = easy
                 } else if (this.difficulty === 'hard') {
-                    cellsToRemove = 55;
+                    targetClues = 25; // 25-30 clues = hard
                 } else {
-                    cellsToRemove = 64; // Even harder: almost empty board
+                    targetClues = 17; // 17 clues = very hard (minimum for unique solution)
                 }
+
+                // Remove cells while maintaining exactly one solution
+                const cells = [];
+                for (let i = 0; i < 81; i++) {
+                    cells.push(i);
+                }
+                
+                // Shuffle cell removal order for variety
+                for (let i = cells.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cells[i], cells[j]] = [cells[j], cells[i]];
+                }
+
+                const clues = 81 - targetClues;
                 let removed = 0;
 
-                while (removed < cellsToRemove) {
-                    const row = Math.floor(Math.random() * 9);
-                    const col = Math.floor(Math.random() * 9);
+                for (let cellIndex of cells) {
+                    if (removed >= clues) break;
+
+                    const row = Math.floor(cellIndex / 9);
+                    const col = cellIndex % 9;
+
                     if (this.board[row][col] !== 0) {
+                        const backup = this.board[row][col];
                         this.board[row][col] = 0;
-                        removed++;
+
+                        // Check if puzzle still has exactly one solution
+                        if (this.countSolutions(this.board) === 1) {
+                            removed++;
+                        } else {
+                            // Restore the cell if removing it causes multiple solutions
+                            this.board[row][col] = backup;
+                        }
                     }
                 }
 
@@ -512,6 +543,35 @@
                 this.selectedCell = null;
                 this.updateBoard();
                 this.updateStatus('');
+            }
+
+            countSolutions(board, limit = 2) {
+                // Count the number of solutions (stops at 'limit' for efficiency)
+                let count = 0;
+                const boardCopy = board.map(row => [...row]);
+                
+                const countHelper = () => {
+                    if (count >= limit) return; // Stop early if we found enough solutions
+
+                    for (let row = 0; row < 9; row++) {
+                        for (let col = 0; col < 9; col++) {
+                            if (boardCopy[row][col] === 0) {
+                                for (let num = 1; num <= 9; num++) {
+                                    if (this.isValid(boardCopy, row, col, num)) {
+                                        boardCopy[row][col] = num;
+                                        countHelper();
+                                        boardCopy[row][col] = 0;
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                    }
+                    count++; // Found a complete solution
+                };
+
+                countHelper();
+                return count;
             }
 
             generateCompleteSudoku() {
