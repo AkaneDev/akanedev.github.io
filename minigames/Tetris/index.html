@@ -152,8 +152,9 @@
     display:flex;
     justify-content:center;
     box-shadow:var(--panel-shadow);
+    position:relative;
   }
-  canvas{background:var(--canvas);border-radius:8px;display:block;max-width:100%;height:auto;}
+  canvas{background:var(--canvas);border-radius:8px;display:block;max-width:100%;height:auto;touch-action:none;}
   .side{
     flex:1 1 300px;
     background:var(--side-bg);
@@ -179,6 +180,7 @@
   .controls{font-size:13px;color:var(--muted);line-height:1.6;margin-top:8px;}
   .btn{display:inline-block;padding:10px 12px;border-radius:8px;background:var(--button-bg);cursor:pointer;margin-top:8px;width:100%;font-size:clamp(0.9rem,1.3vw,1rem);color:var(--text);border:1px solid transparent;transition:background .2s ease;}
   .btn:hover{background:var(--button-bg-hover);}
+  .btn:active{background:var(--button-bg-hover);transform:scale(0.98);}
   .overlay{
     position:fixed;inset:0;background:rgba(0,0,0,.85);
     display:none;align-items:center;justify-content:center;color:#fff;
@@ -188,6 +190,13 @@
           border:1px solid rgba(255,255,255,.03);min-width:260px;width:80%;max-width:320px;}
   .choice:hover{background:var(--chooser-bg-hover);}
   .muted{color:var(--muted);}
+  .touchControls{display:none;gap:8px;margin-top:12px;}
+  .dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+  .touchBtn{padding:clamp(10px,3vw,16px);border-radius:8px;background:var(--button-bg);color:var(--text);border:1px solid var(--input-border);cursor:pointer;font-size:clamp(12px,2vw,16px);user-select:none;-webkit-user-select:none;transition:all .15s ease;font-weight:500;}
+  .touchBtn:hover{background:var(--button-bg-hover);}
+  .touchBtn:active{background:var(--button-bg-hover);transform:scale(0.95);}
+  .touchBtn.wide{grid-column:1/-1;}
+  .touchBtn.corner{grid-column:span 1;}
   @media (max-width:900px){
     body{align-items:center;padding:4vw;}
     .wrap{flex-direction:column;align-items:center;}
@@ -195,12 +204,15 @@
     #board{width:100%;height:auto;}
     .side{width:100%;max-width:90vw;}
     .mods{max-height:150px;}
+    .touchControls{display:flex;flex-direction:column;}
+    .dpad{grid-template-columns:repeat(3,1fr);}
   }
   @media (max-width:500px){
     .statRow{flex-direction:column;}
     .card{font-size:0.9rem;}
     h1{font-size:1.4rem;}
     .controls{font-size:0.85rem;}
+    .touchBtn{padding:12px 8px;font-size:14px;}
   }
 </style>
 </head>
@@ -243,8 +255,18 @@
         ↑ : Rotate<br>
         ↓ : Soft drop<br>
         Space : Hard drop<br>
-        C / Shift : Hold / Swap<br>
+        C / Shift : Hold<br>
         Esc : Restart
+      </div>
+      <div class="touchControls" id="touchControls">
+        <div class="dpad">
+          <button class="touchBtn" style="grid-column:2;" id="btnRotate">↑</button>
+          <button class="touchBtn" id="btnLeft">←</button>
+          <button class="touchBtn" id="btnHold">⊙</button>
+          <button class="touchBtn" id="btnRight">→</button>
+          <button class="touchBtn" style="grid-column:2;" id="btnDown">↓</button>
+        </div>
+        <button class="touchBtn wide" id="btnHardDrop">⬇ HARD DROP</button>
       </div>
       <div style="margin-top:12px">
         <button id="btnPause" class="btn">Pause</button>
@@ -267,6 +289,7 @@ const themeSelect=document.getElementById('themeSelect');
 let grid=[],current=null,nextPiece=null,hold=null,canHold=true,score=0,level=1,lines=0,goalBase=5;
 let dropInterval=800,dropCounter=0,lastTime=0,paused=false,gameOver=false;
 let activeMods=[],controlsReversed=false;
+let touchStartX=0,touchStartY=0,touchThreshold=30;
 
 const THEME_KEY='tetris-theme';
 const THEME_OPTIONS=[
@@ -371,6 +394,29 @@ function updateStats(){scoreEl.textContent=score;levelEl.textContent=level;lines
  modsListEl.innerHTML=activeMods.length?activeMods.map(m=>`<div><strong>${m.name}</strong><div class="muted" style="font-size:12px">${m.type}</div></div>`).join(''):'<em class="muted">None</em>'; }
 function checkLevel(){if(lines>=goalBase*level){level++;dropInterval=Math.max(80,Math.floor(dropInterval*0.92));updateStats();}}
 function renderPreviews(){drawPreview(nextCtx,nextPiece);drawPreview(holdCtx,hold);updateStats();}
+
+board.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;},{passive:true});
+board.addEventListener('touchend',e=>{
+ if(paused||gameOver||!current)return;
+ const dx=e.changedTouches[0].clientX-touchStartX;
+ const dy=e.changedTouches[0].clientY-touchStartY;
+ if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>touchThreshold){
+  if(dx<0){current.x--;if(collides(current))current.x++;}
+  else{current.x++;if(collides(current))current.x--;}
+ }else if(Math.abs(dy)>touchThreshold){
+  if(dy>0)softDrop();
+  else{const old=clone(current.shape);current.shape=rotate(current.shape);if(collides(current))current.shape=old;}
+ }
+ renderPreviews();
+},{passive:true});
+
+document.getElementById('btnLeft').addEventListener('click',()=>{if(paused||gameOver||!current)return;current.x--;if(collides(current))current.x++;renderPreviews();});
+document.getElementById('btnRight').addEventListener('click',()=>{if(paused||gameOver||!current)return;current.x++;if(collides(current))current.x--;renderPreviews();});
+document.getElementById('btnDown').addEventListener('click',()=>{if(paused||gameOver||!current)return;softDrop();renderPreviews();});
+document.getElementById('btnRotate').addEventListener('click',()=>{if(paused||gameOver||!current)return;const old=clone(current.shape);current.shape=rotate(current.shape);if(collides(current))current.shape=old;renderPreviews();});
+document.getElementById('btnHardDrop').addEventListener('click',()=>{if(paused||gameOver||!current)return;hardDrop();});
+document.getElementById('btnHold').addEventListener('click',()=>{if(paused||gameOver||!current)return;holdPiece();});
+
 window.addEventListener('keydown',e=>{
  if(e.code==='Escape')return restart();if(paused||gameOver)return;
  let k=e.code;if(controlsReversed){if(k==='ArrowLeft')k='ArrowRight';else if(k==='ArrowRight')k='ArrowLeft';}
@@ -393,11 +439,10 @@ function restart(){grid=makeGrid();current=null;nextPiece=makePiece();hold=null;
  updateStats();spawn();lastTime=performance.now();requestAnimationFrame(update);}
 grid=makeGrid();spawn();updateStats();requestAnimationFrame(update);
 
-// ---------- AUTO-RESIZE (Canvas Only) ----------
 function resizeBoard(){
   const wrap = document.querySelector('.boardWrap');
   const maxW = Math.min(wrap.clientWidth, window.innerWidth * 0.9);
-  const maxH = Math.min(window.innerHeight * 0.9, maxW * 2); // keep 1:2 ratio
+  const maxH = Math.min(window.innerHeight * 0.9, maxW * 2);
 
   const newWidth = Math.min(maxW, maxH / 2);
   const newHeight = newWidth * 2;
