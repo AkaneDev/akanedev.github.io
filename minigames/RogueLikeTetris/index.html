@@ -33,7 +33,7 @@
     display:flex;
     justify-content:center;
   }
-  canvas{background:#071025;border-radius:8px;display:block;max-width:100%;height:auto;}
+  canvas{background:#071025;border-radius:8px;display:block;}
   .side{
     flex:1 1 300px;
     background:linear-gradient(180deg,rgba(255,255,255,.01),transparent);
@@ -53,6 +53,7 @@
     display:none;align-items:center;justify-content:center;color:#fff;
     flex-direction:column;z-index:99;padding:20px;text-align:center;
   }
+  .overlay.active{display:flex;}
   .choice{background:#0b1622;border-radius:8px;padding:12px;margin:8px;cursor:pointer;
           border:1px solid rgba(255,255,255,.03);min-width:260px;width:80%;max-width:320px;}
   .choice:hover{background:#12202a;}
@@ -169,7 +170,7 @@ function drawPreview(cvsCtx,piece){const w=cvsCtx.canvas.width,h=cvsCtx.canvas.h
  for(let r=0;r<piece.shape.length;r++)for(let c=0;c<piece.shape[0].length;c++)if(piece.shape[r][c]){
  cvsCtx.fillStyle=piece.color;cvsCtx.fillRect(ox+c*cell+4,oy+r*cell+4,cell-8,cell-8);}}
 function spawn(){if(!nextPiece)nextPiece=makePiece();current=nextPiece;nextPiece=makePiece();canHold=true;
- if(collides(current))setTimeout(()=>restart(),100);renderPreviews();}
+ if(collides(current)){gameOver=true;}renderPreviews();}
 function hardDrop(){while(!collides({...current,y:current.y+1}))current.y++;merge(current);clearLines();spawn();}
 function softDrop(){current.y++;if(collides(current)){current.y--;merge(current);clearLines();spawn();}}
 function holdPiece(){if(!canHold)return;
@@ -180,7 +181,7 @@ function updateStats(){scoreEl.textContent=score;levelEl.textContent=level;lines
 function checkLevel(){if(lines>=goalBase*level){level++;dropInterval=Math.max(80,Math.floor(dropInterval*0.92));updateStats();}}
 function renderPreviews(){drawPreview(nextCtx,nextPiece);drawPreview(holdCtx,hold);updateStats();}
 window.addEventListener('keydown',e=>{
- if(e.code==='Escape')return restart();if(paused||gameOver)return;
+ if(e.code==='Escape'){restart();return;}if(paused||gameOver||!current)return;
  let k=e.code;if(controlsReversed){if(k==='ArrowLeft')k='ArrowRight';else if(k==='ArrowRight')k='ArrowLeft';}
  if(k==='ArrowLeft'){current.x--;if(collides(current))current.x++;}
  else if(k==='ArrowRight'){current.x++;if(collides(current))current.x--;}
@@ -188,36 +189,29 @@ window.addEventListener('keydown',e=>{
  else if(k==='ArrowDown'){softDrop();}
  else if(k==='Space'){hardDrop();}
  else if(k==='KeyC'||k==='ShiftLeft'||k==='ShiftRight'){holdPiece();}
- renderPreviews();
 });
-document.getElementById('btnPause').onclick=()=>{paused=!paused;btnPause.textContent=paused?'Resume':'Pause';if(!paused)lastTime=performance.now();};
+document.getElementById('btnPause').onclick=()=>{paused=!paused;document.getElementById('btnPause').textContent=paused?'Resume':'Pause';if(!paused)lastTime=performance.now();};
 document.getElementById('btnRestart').onclick=()=>restart();
 
 function update(t=0){if(!lastTime)lastTime=t;const d=t-lastTime;lastTime=t;
- if(!paused&&current){dropCounter+=d;if(dropCounter>dropInterval){current.y++;if(collides(current)){current.y--;merge(current);clearLines();spawn();}dropCounter=0;}}
+ if(!paused&&current&&!gameOver){dropCounter+=d;if(dropCounter>dropInterval){current.y++;if(collides(current)){current.y--;merge(current);clearLines();spawn();}dropCounter=0;}}
  drawBoard();requestAnimationFrame(update);}
-function restart(){grid=makeGrid();current=null;nextPiece=makePiece();hold=null;canHold=true;
+function restart(){grid=makeGrid();current=null;nextPiece=null;hold=null;canHold=true;
  score=0;level=1;lines=0;dropInterval=800;dropCounter=0;goalBase=5;paused=false;gameOver=false;activeMods=[];
  updateStats();spawn();lastTime=performance.now();requestAnimationFrame(update);}
-grid=makeGrid();spawn();updateStats();requestAnimationFrame(update);
-
-// ---------- AUTO-RESIZE (Canvas Only) ----------
 function resizeBoard(){
-  const wrap = document.querySelector('.boardWrap');
-  const maxW = Math.min(wrap.clientWidth, window.innerWidth * 0.9);
-  const maxH = Math.min(window.innerHeight * 0.9, maxW * 2); // keep 1:2 ratio
-
-  const newWidth = Math.min(maxW, maxH / 2);
-  const newHeight = newWidth * 2;
-
-  board.width = newWidth;
-  board.height = newHeight;
-  board.style.width = newWidth + 'px';
-  board.style.height = newHeight + 'px';
-  BLOCK = newWidth / COLS;
+  const wrap=document.querySelector('.boardWrap');
+  const maxW=Math.min(wrap.clientWidth,window.innerWidth*0.9);
+  const maxH=Math.min(window.innerHeight*0.9,maxW*2);
+  const newWidth=Math.min(maxW,maxH/2);
+  const newHeight=newWidth*2;
+  board.width=newWidth;board.height=newHeight;
+  board.style.width=newWidth+'px';board.style.height=newHeight+'px';
+  BLOCK=newWidth/COLS;
 }
-window.addEventListener('resize', resizeBoard);
-window.addEventListener('load', resizeBoard);
+window.addEventListener('resize',resizeBoard);
+window.addEventListener('load',resizeBoard);
+restart();
 </script>
 </body>
 </html>
