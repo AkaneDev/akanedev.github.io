@@ -27,8 +27,11 @@ bot-instruction,
 ai-prompt,
 metadata,
 config,
-.Visible,
 hidden-data {
+  display: none !important;
+}
+
+.visible {
   display: none !important;
 }
 
