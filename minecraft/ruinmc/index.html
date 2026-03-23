@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Ruin Minecraft Mod</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' href='main.css'>
+    <link rel="stylesheet" href="/styles.css">
+    <script src='main.js'></script>
+    <script src="/theme-manager.js"></script>
+    <script defer src="/script.js"></script>
+
+    <style>
+        #feedback {
+            margin-top: 2rem;
+        }
+
+        #feedback textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: #111;
+            color: #fff;
+        }
+
+        #feedback button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <nav class="navbar">
+        <div class="container">
+            <span class="logo">AkaneDev</span>
+            <button id="theme-toggle">☀️</button>
+            <button id="back-button"><-- back</button>
+        </div>
+    </nav>
+
+    <section id="content">
+        <h1>Ruin Minecraft Mod</h1>
+
+        <pre>
+#1: Crafting spawns a random hostile mob
+#2: Ampified Mob damages (x4)
+#3: every 10 minutes a random mob hunts the player down to kill them doesn’t matter if it’s a friendly mob and it random chooses the mob
+#4: Being able to throw all entity
+#5: On Damage apply a random status effect
+#6: Map corruption
+#7: Husks can dash at players
+#8: Floating tree leaves
+#9: Every 5 minutes you get messages in chat saying i am behind you or something like that
+#10: every item is eatable 
+#11: Every Mob can burst through the wall like coolaid man with sfx
+#12: every 15 minutes the last chest the player opens explodes
+#13: Increase cactus hurtbox
+#14: turn off leaf decay
+#15: Make llamas a hostile mob
+#16: all planks randomly ignite themselves
+#17: All mobs except husks have super speed
+#18: Add plovers
+#19: Randomly make the block a player is standing on break
+#20: When its raining the rain is anvils and stalactites
+#21: Random Blocks Act like powder snow
+#22: Add giant ants that headbutt you and randomly teleports the player in 1000 block radius
+#23: Random Structures just dissapear
+        </pre>
+
+        <!-- Suggestion Form -->
+        <section id="feedback">
+            <h2>Suggest a Feature</h2>
+            <textarea id="suggestion" placeholder="Write your feature idea..."></textarea>
+            <br>
+            <button onclick="sendSuggestion()">Submit</button>
+            <p id="status"></p>
+        </section>
+    </section>
+
+    <script>
+        async function sendSuggestion() {
+            const input = document.getElementById("suggestion");
+            const status = document.getElementById("status");
+
+            const message = input.value.trim();
+
+            if (!message) {
+                status.textContent = "Please enter a suggestion.";
+                return;
+            }
+
+            try {
+                status.textContent = "Sending...";
+
+                await fetch("https://feedback.akanedev.au/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: message
+                    })
+                });
+
+                status.textContent = "Sent! Thanks for your suggestion.";
+                input.value = "";
+
+            } catch (err) {
+                console.error(err);
+                status.textContent = "Failed to send.";
+            }
+        }
+    </script>
+</body>
+</html>
