@@ -121,96 +121,461 @@
   <div id="modOverlay" class="overlay"></div>
 
 <script>
-const COLS=10,ROWS=20;
-let BLOCK=30;
-const board=document.getElementById("board"),ctx=board.getContext("2d");
-const nextCanvas=document.getElementById('nextCanvas'),nextCtx=nextCanvas.getContext('2d');
-const holdCanvas=document.getElementById('holdCanvas'),holdCtx=holdCanvas.getContext('2d');
-const scoreEl=document.getElementById('score'),levelEl=document.getElementById('level'),
-      linesEl=document.getElementById('lines'),goalEl=document.getElementById('goal');
-const modsListEl=document.getElementById('modsList'),overlay=document.getElementById('modOverlay');
+const COLS = 10, ROWS = 20;
+let BLOCK = 30;
 
-const SHAPES={I:[[1,1,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]],O:[[1,1],[1,1]],S:[[0,1,1],[1,1,0]],T:[[0,1,0],[1,1,1]],Z:[[1,1,0],[0,1,1]]};
-const COLORS={I:'#60f',J:'#36c',L:'#f93',O:'#fc0',S:'#2bfa8a',T:'#b76cff',Z:'#ff5c8a'};
+const board = document.getElementById("board"), ctx = board.getContext("2d");
+const nextCanvas = document.getElementById("nextCanvas"), nextCtx = nextCanvas.getContext("2d");
+const holdCanvas = document.getElementById("holdCanvas"), holdCtx = holdCanvas.getContext("2d");
 
-let grid=[],current=null,nextPiece=null,hold=null,canHold=true,score=0,level=1,lines=0,goalBase=5;
-let dropInterval=800,dropCounter=0,lastTime=0,paused=false,gameOver=false;
-let activeMods=[],controlsReversed=false;
+const scoreEl = document.getElementById("score");
+const levelEl = document.getElementById("level");
+const linesEl = document.getElementById("lines");
+const goalEl = document.getElementById("goal");
+const modsListEl = document.getElementById("modsList");
+const overlay = document.getElementById("modOverlay");
 
-function makeGrid(){return Array.from({length:ROWS},()=>Array(COLS).fill(null));}
-function clone(s){return s.map(r=>r.slice());}
-function makePiece(t=null){const k=Object.keys(SHAPES);const type=t||k[Math.floor(Math.random()*k.length)];
- return {type,shape:clone(SHAPES[type]),x:Math.floor((COLS-SHAPES[type][0].length)/2),y:-1,color:COLORS[type]};}
-function rotate(mat){const h=mat.length,w=mat[0].length;const o=Array.from({length:w},()=>Array(h).fill(0));
- for(let r=0;r<h;r++)for(let c=0;c<w;c++)o[c][h-1-r]=mat[r][c];return o;}
-function collides(p){for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[0].length;c++){if(!p.shape[r][c])continue;
- let gx=p.x+c,gy=p.y+r;if(gx<0||gx>=COLS||gy>=ROWS)return true;if(gy>=0&&grid[gy][gx])return true;}return false;}
-function merge(p){for(let r=0;r<p.shape.length;r++)for(let c=0;c<p.shape[0].length;c++){if(p.shape[r][c]){
- let gx=p.x+c,gy=p.y+r;if(gy>=0&&gy<ROWS&&gx>=0&&gx<COLS)grid[gy][gx]=p.color;}}}
-function clearLines(){let cleared=0;
- for(let r=ROWS-1;r>=0;r--){if(grid[r].every(v=>v)){grid.splice(r,1);grid.unshift(Array(COLS).fill(null));cleared++;r++;}}
- if(cleared){lines+=cleared;score+=cleared*100*level;updateStats();checkLevel();}}
-function drawCell(x,y,c,a=1){ctx.globalAlpha=a;ctx.fillStyle=c;ctx.fillRect(x*BLOCK+1,y*BLOCK+1,BLOCK-2,BLOCK-2);ctx.globalAlpha=1;}
+/* =========================
+   CORE SYSTEM
+========================= */
+
+const ModType = {
+  PASSIVE: "passive",
+  TEMPORARY: "temporary",
+  EVENT: "event",
+  MUTATOR: "mutator"
+};
+
+const gameState = {
+  dropInterval: 800,
+  controlsReversed: false,
+  scoreMultiplier: 1
+};
+
+let activeMods = [];
+
+function triggerEvent(name, ...args) {
+  for (const mod of activeMods) {
+    if (mod[name]) mod[name](...args, gameState, mod);
+  }
+}
+
+/* =========================
+   MODIFIERS
+========================= */
+
+const modifiers = [
+  {
+    id: "reverse",
+    name: "Reverse Controls",
+    type: ModType.TEMPORARY,
+    duration: 30000,
+    onApply(s){ s.controlsReversed = true; },
+    onRemove(s){ s.controlsReversed = false; }
+  },
+  {
+    id: "i_only",
+    name: "I Only",
+    type: ModType.MUTATOR,
+    onPieceGenerate(){ return "I"; }
+  },
+  {
+    id: "speed",
+    name: "Speed Up",
+    type: ModType.PASSIVE,
+    onApply(s, m){
+      m.level = (m.level||0)+1;
+      s.dropInterval *= 0.8;
+    }
+  },
+  {
+    id: "combo",
+    name: "Combo Engine",
+    type: ModType.EVENT,
+    onLineClear(c, s, m){
+      m.level = m.level || 1;
+      s.scoreMultiplier += c * 0.1 * m.level;
+    }
+  }
+];
+
+/* =========================
+   MOD MANAGEMENT
+========================= */
+
+function applyMod(mod){
+  const existing = activeMods.find(m=>m.id===mod.id);
+
+  if(existing){
+    existing.level = (existing.level||1)+1;
+    existing.onApply?.(gameState, existing);
+    updateStats();
+    return;
+  }
+
+  const inst = {...mod};
+  activeMods.push(inst);
+
+  inst.onApply?.(gameState, inst);
+
+  if(inst.type === ModType.TEMPORARY){
+    setTimeout(()=>removeMod(inst), inst.duration||30000);
+  }
+
+  updateStats();
+}
+
+function removeMod(mod){
+  mod.onRemove?.(gameState, mod);
+  activeMods = activeMods.filter(m=>m!==mod);
+  updateStats();
+}
+
+/* =========================
+   GAME STATE
+========================= */
+
+let grid=[], current=null, nextPiece=null, hold=null;
+let canHold=true, score=0, level=1, lines=0;
+let goalBase=5, dropCounter=0, lastTime=0;
+let paused=false, gameOver=false;
+
+/* =========================
+   PIECES
+========================= */
+
+const SHAPES = {
+I:[[1,1,1,1]],
+J:[[1,0,0],[1,1,1]],
+L:[[0,0,1],[1,1,1]],
+O:[[1,1],[1,1]],
+S:[[0,1,1],[1,1,0]],
+T:[[0,1,0],[1,1,1]],
+Z:[[1,1,0],[0,1,1]]
+};
+
+const COLORS = {
+I:"#60f",J:"#36c",L:"#f93",O:"#fc0",
+S:"#2bfa8a",T:"#b76cff",Z:"#ff5c8a"
+};
+
+function getModifiedPieceType(type){
+  for(const m of activeMods){
+    if(m.onPieceGenerate) type = m.onPieceGenerate(type, gameState, m);
+  }
+  return type;
+}
+
+function makePiece(t=null){
+  const keys = Object.keys(SHAPES);
+  let type = t || keys[Math.floor(Math.random()*keys.length)];
+  type = getModifiedPieceType(type);
+
+  return {
+    type,
+    shape: SHAPES[type].map(r=>r.slice()),
+    x: Math.floor((COLS - SHAPES[type][0].length)/2),
+    y: -1,
+    color: COLORS[type]
+  };
+}
+
+function rotate(m){
+  return m[0].map((_,i)=>m.map(r=>r[i]).reverse());
+}
+
+/* =========================
+   GAME LOGIC
+========================= */
+
+function collides(p){
+  for(let r=0;r<p.shape.length;r++)
+  for(let c=0;c<p.shape[0].length;c++){
+    if(!p.shape[r][c]) continue;
+    let x=p.x+c,y=p.y+r;
+    if(x<0||x>=COLS||y>=ROWS) return true;
+    if(y>=0 && grid[y][x]) return true;
+  }
+  return false;
+}
+
+function merge(p){
+  for(let r=0;r<p.shape.length;r++)
+  for(let c=0;c<p.shape[0].length;c++){
+    if(p.shape[r][c]){
+      let x=p.x+c,y=p.y+r;
+      if(y>=0) grid[y][x]=p.color;
+    }
+  }
+}
+
+function clearLines(){
+  let cleared=0;
+
+  for(let r=ROWS-1;r>=0;r--){
+    if(grid[r].every(v=>v)){
+      grid.splice(r,1);
+      grid.unshift(Array(COLS).fill(null));
+      cleared++; r++;
+    }
+  }
+
+  if(cleared){
+    triggerEvent("onLineClear", cleared);
+    lines+=cleared;
+    score+=cleared*100*level*gameState.scoreMultiplier;
+    updateStats();
+    checkLevel();
+  }
+}
+
+/* =========================
+   DRAW
+========================= */
+
+function drawCell(x,y,c,a=1){
+  ctx.globalAlpha=a;
+  ctx.fillStyle=c;
+  ctx.fillRect(x*BLOCK+1,y*BLOCK+1,BLOCK-2,BLOCK-2);
+  ctx.globalAlpha=1;
+}
+
+function drawPreview(ctx,p){
+  const w=ctx.canvas.width,h=ctx.canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  if(!p) return;
+
+  const cell=Math.min(w/(p.shape[0].length+1),h/(p.shape.length+1));
+  const ox=(w-p.shape[0].length*cell)/2;
+  const oy=(h-p.shape.length*cell)/2;
+
+  for(let r=0;r<p.shape.length;r++)
+  for(let c=0;c<p.shape[0].length;c++)
+    if(p.shape[r][c]){
+      ctx.fillStyle=p.color;
+      ctx.fillRect(ox+c*cell,oy+r*cell,cell-4,cell-4);
+    }
+}
+
 function drawBoard(){
- ctx.clearRect(0,0,board.width,board.height);ctx.fillStyle='#071025';ctx.fillRect(0,0,board.width,board.height);
- for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c])drawCell(c,r,grid[r][c]);
- if(current){
-  let g={...current,shape:clone(current.shape)};
-  while(!collides({...g,y:g.y+1}))g.y++;
-  for(let r=0;r<g.shape.length;r++)for(let c=0;c<g.shape[0].length;c++)if(g.shape[r][c])drawCell(g.x+c,g.y+r,current.color,0.14);
-  for(let r=0;r<current.shape.length;r++)for(let c=0;c<current.shape[0].length;c++)if(current.shape[r][c])drawCell(current.x+c,current.y+r,current.color,1);
- }
- ctx.strokeStyle='rgba(255,255,255,0.03)';for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*BLOCK,0);ctx.lineTo(x*BLOCK,ROWS*BLOCK);ctx.stroke();}
- for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*BLOCK);ctx.lineTo(COLS*BLOCK,y*BLOCK);ctx.stroke();}
-}
-function drawPreview(cvsCtx,piece){const w=cvsCtx.canvas.width,h=cvsCtx.canvas.height;
- cvsCtx.clearRect(0,0,w,h);cvsCtx.fillStyle='#051217';cvsCtx.fillRect(0,0,w,h);if(!piece)return;
- const cell=Math.min(w/(piece.shape[0].length+1),h/(piece.shape.length+1));
- const ox=(w-piece.shape[0].length*cell)/2,oy=(h-piece.shape.length*cell)/2;
- for(let r=0;r<piece.shape.length;r++)for(let c=0;c<piece.shape[0].length;c++)if(piece.shape[r][c]){
- cvsCtx.fillStyle=piece.color;cvsCtx.fillRect(ox+c*cell+4,oy+r*cell+4,cell-8,cell-8);}}
-function spawn(){if(!nextPiece)nextPiece=makePiece();current=nextPiece;nextPiece=makePiece();canHold=true;
- if(collides(current)){gameOver=true;}renderPreviews();}
-function hardDrop(){while(!collides({...current,y:current.y+1}))current.y++;merge(current);clearLines();spawn();}
-function softDrop(){current.y++;if(collides(current)){current.y--;merge(current);clearLines();spawn();}}
-function holdPiece(){if(!canHold)return;
- if(!hold){hold={...current,shape:clone(current.shape)};spawn();}else{const t={...hold,shape:clone(hold.shape)};hold={...current,shape:clone(current.shape)};current=t;current.x=Math.floor((COLS-current.shape[0].length)/2);current.y=-1;if(collides(current))spawn();}
- canHold=false;renderPreviews();}
-function updateStats(){scoreEl.textContent=score;levelEl.textContent=level;linesEl.textContent=lines;goalEl.textContent=goalBase*level;
- modsListEl.innerHTML=activeMods.length?activeMods.map(m=>`<div><strong>${m.name}</strong><div class="muted" style="font-size:12px">${m.type}</div></div>`).join(''):'<em class="muted">None</em>'; }
-function checkLevel(){if(lines>=goalBase*level){level++;dropInterval=Math.max(80,Math.floor(dropInterval*0.92));updateStats();}}
-function renderPreviews(){drawPreview(nextCtx,nextPiece);drawPreview(holdCtx,hold);updateStats();}
-window.addEventListener('keydown',e=>{
- if(e.code==='Escape'){restart();return;}if(paused||gameOver||!current)return;
- let k=e.code;if(controlsReversed){if(k==='ArrowLeft')k='ArrowRight';else if(k==='ArrowRight')k='ArrowLeft';}
- if(k==='ArrowLeft'){current.x--;if(collides(current))current.x++;}
- else if(k==='ArrowRight'){current.x++;if(collides(current))current.x--;}
- else if(k==='ArrowUp'){const old=clone(current.shape);current.shape=rotate(current.shape);if(collides(current))current.shape=old;}
- else if(k==='ArrowDown'){softDrop();}
- else if(k==='Space'){hardDrop();}
- else if(k==='KeyC'||k==='ShiftLeft'||k==='ShiftRight'){holdPiece();}
-});
-document.getElementById('btnPause').onclick=()=>{paused=!paused;document.getElementById('btnPause').textContent=paused?'Resume':'Pause';if(!paused)lastTime=performance.now();};
-document.getElementById('btnRestart').onclick=()=>restart();
+  ctx.clearRect(0,0,board.width,board.height);
 
-function update(t=0){if(!lastTime)lastTime=t;const d=t-lastTime;lastTime=t;
- if(!paused&&current&&!gameOver){dropCounter+=d;if(dropCounter>dropInterval){current.y++;if(collides(current)){current.y--;merge(current);clearLines();spawn();}dropCounter=0;}}
- drawBoard();requestAnimationFrame(update);}
-function restart(){grid=makeGrid();current=null;nextPiece=null;hold=null;canHold=true;
- score=0;level=1;lines=0;dropInterval=800;dropCounter=0;goalBase=5;paused=false;gameOver=false;activeMods=[];
- updateStats();spawn();lastTime=performance.now();requestAnimationFrame(update);}
-function resizeBoard(){
-  const wrap=document.querySelector('.boardWrap');
-  const maxW=Math.min(wrap.clientWidth,window.innerWidth*0.9);
-  const maxH=Math.min(window.innerHeight*0.9,maxW*2);
-  const newWidth=Math.min(maxW,maxH/2);
-  const newHeight=newWidth*2;
-  board.width=newWidth;board.height=newHeight;
-  board.style.width=newWidth+'px';board.style.height=newHeight+'px';
-  BLOCK=newWidth/COLS;
+  for(let r=0;r<ROWS;r++)
+  for(let c=0;c<COLS;c++)
+    if(grid[r][c]) drawCell(c,r,grid[r][c]);
+
+  if(current){
+    let ghost={...current, y:current.y};
+
+    while(!collides({...ghost,y:ghost.y+1})) ghost.y++;
+
+    for(let r=0;r<ghost.shape.length;r++)
+    for(let c=0;c<ghost.shape[0].length;c++)
+      if(ghost.shape[r][c])
+        drawCell(ghost.x+c,ghost.y+r,current.color,0.15);
+
+    for(let r=0;r<current.shape.length;r++)
+    for(let c=0;c<current.shape[0].length;c++)
+      if(current.shape[r][c])
+        drawCell(current.x+c,current.y+r,current.color);
+  }
 }
-window.addEventListener('resize',resizeBoard);
-window.addEventListener('load',resizeBoard);
+
+/* =========================
+   FLOW
+========================= */
+
+function spawn(){
+  if(!nextPiece) nextPiece=makePiece();
+
+  current=nextPiece;
+  nextPiece=makePiece();
+  canHold=true;
+
+  if(collides(current)) gameOver=true;
+
+  renderPreviews();
+}
+
+function renderPreviews(){
+  drawPreview(nextCtx,nextPiece);
+  drawPreview(holdCtx,hold);
+}
+
+function hardDrop(){
+  while(!collides({...current,y:current.y+1})) current.y++;
+  merge(current); clearLines(); spawn();
+}
+
+function softDrop(){
+  current.y++;
+  if(collides(current)){
+    current.y--;
+    merge(current);
+    clearLines();
+    spawn();
+  }
+}
+
+function holdPiece(){
+  if(!canHold) return;
+
+  if(!hold){
+    hold={...current,shape:current.shape.map(r=>r.slice())};
+    spawn();
+  }else{
+    let t={...hold,shape:hold.shape.map(r=>r.slice())};
+    hold={...current,shape:current.shape.map(r=>r.slice())};
+    current=t;
+    current.x=Math.floor((COLS-current.shape[0].length)/2);
+    current.y=-1;
+  }
+
+  canHold=false;
+  renderPreviews();
+}
+
+/* =========================
+   MOD CHOICE
+========================= */
+
+function getRandomMods(n){
+  return [...modifiers].sort(()=>0.5-Math.random()).slice(0,n);
+}
+
+function offerModifierChoice(){
+  paused=true;
+  const c=getRandomMods(3);
+
+  overlay.innerHTML=c.map((m,i)=>`
+    <div class="choice" onclick="selectMod(${i})">
+      <strong>${m.name}</strong>
+      <div class="muted">${m.type}</div>
+    </div>`).join("");
+
+  overlay.classList.add("active");
+  window._modChoices=c;
+}
+
+function selectMod(i){
+  applyMod(window._modChoices[i]);
+  overlay.classList.remove("active");
+  paused=false;
+}
+
+/* =========================
+   UI
+========================= */
+
+function updateStats(){
+  scoreEl.textContent=score;
+  levelEl.textContent=level;
+  linesEl.textContent=lines;
+  goalEl.textContent=goalBase*level;
+
+  modsListEl.innerHTML=activeMods.length
+    ? activeMods.map(m=>`<div><strong>${m.name}${m.level?" Lv."+m.level:""}</strong></div>`).join("")
+    : "<em class='muted'>None</em>";
+}
+
+function checkLevel(){
+  if(lines>=goalBase*level){
+    level++;
+    gameState.dropInterval*=0.92;
+    offerModifierChoice();
+  }
+}
+
+/* =========================
+   INPUT
+========================= */
+
+window.addEventListener("keydown",e=>{
+  if(e.code==="Escape"){ restart(); return; }
+  if(paused||gameOver||!current) return;
+
+  let k=e.code;
+
+  if(gameState.controlsReversed){
+    if(k==="ArrowLeft")k="ArrowRight";
+    else if(k==="ArrowRight")k="ArrowLeft";
+  }
+
+  if(k==="ArrowLeft"){ current.x--; if(collides(current))current.x++; }
+  else if(k==="ArrowRight"){ current.x++; if(collides(current))current.x--; }
+  else if(k==="ArrowUp"){ current.shape=rotate(current.shape); }
+  else if(k==="ArrowDown") softDrop();
+  else if(k==="Space") hardDrop();
+  else if(k==="KeyC"||k==="ShiftLeft"||k==="ShiftRight") holdPiece();
+});
+
+/* =========================
+   LOOP
+========================= */
+
+function update(t=0){
+  if(!lastTime) lastTime=t;
+  const d=t-lastTime;
+  lastTime=t;
+
+  if(!paused && current && !gameOver){
+    dropCounter+=d;
+    if(dropCounter>gameState.dropInterval){
+      softDrop();
+      dropCounter=0;
+    }
+  }
+
+  drawBoard();
+  requestAnimationFrame(update);
+}
+
+/* =========================
+   RESIZE
+========================= */
+
+function resizeBoard(){
+  const wrap=document.querySelector(".boardWrap");
+  const w=Math.min(wrap.clientWidth,window.innerWidth*0.9);
+  const h=Math.min(window.innerHeight*0.9,w*2);
+
+  const newW=Math.min(w,h/2);
+  const newH=newW*2;
+
+  board.width=newW;
+  board.height=newH;
+
+  BLOCK=newW/COLS;
+}
+
+window.addEventListener("resize",resizeBoard);
+window.addEventListener("load",resizeBoard);
+
+/* =========================
+   RESET
+========================= */
+
+function restart(){
+  grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+  current=null; nextPiece=null; hold=null;
+  canHold=true;
+
+  score=0; level=1; lines=0;
+  paused=false; gameOver=false;
+
+  gameState.dropInterval=800;
+  gameState.controlsReversed=false;
+  gameState.scoreMultiplier=1;
+
+  activeMods=[];
+
+  resizeBoard();
+  spawn();
+  updateStats();
+  requestAnimationFrame(update);
+}
+
 restart();
 </script>
 </body>
