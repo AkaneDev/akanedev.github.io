@@ -40,6 +40,44 @@ hidden-data {
     color: var(--text-color);
 }
 
+/* Center the About Me section */
+#aboutme-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 60px); /* Adjust if navbar height changes */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Box styling */
+.aboutme-box {
+    background-color: #1e1e1e; /* Dark box */
+    color: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+/* Header with image next to name */
+.aboutme-header {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between image and text */
+    margin-bottom: 20px;
+}
+
+/* Profile image circular */
+.profile-pic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover; /* Makes sure the image fills the circle */
+    border: 2px solid #fff;
+}
+
 .collapsible {
     background-color: var(--primary-dark);
     color: var(--text-color);
