@@ -430,7 +430,7 @@ warning {
 #play-tts {
     background: rgba(51, 51, 51, 0.8);
     color: white;
-    paddingvar(--text-color);
+    paddingvar: (--text-color);
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -447,8 +447,8 @@ warning {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background 0.3s eas
-
+    transition: background 0.3s ease;
+}
 #play-tts button:hover {
     background: rgba(255, 255, 255, 0.3);
 }
