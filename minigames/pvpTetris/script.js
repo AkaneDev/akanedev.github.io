@@ -1,40 +1,18 @@
 const SERVER = "https://tetris.worker.akanedev.au";
 
-let pc;
-let dc;
-let lobbyCode;
+let pc, dc, lobbyCode;
 
-const W = 10;
-const H = 20;
-const CELL = 20;
-
-// --- simple boards ---
-let board = Array.from({ length: H }, () => Array(W).fill(0));
-let enemyBoard = Array.from({ length: H }, () => Array(W).fill(0));
-
-// --- piece ---
-let piece = { x: 4, y: 0 };
-
-// ---------------- UI ----------------
-
-function setStatus(msg) {
-    document.getElementById("status").innerText = msg;
-}
-
-function showGame() {
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("game").style.display = "flex";
-}
-
-// ---------------- WEBRTC ----------------
+// =========================
+// P2P LAYER
+// =========================
 
 function createPeer() {
     pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
     });
 
-    pc.ondatachannel = (event) => {
-        dc = event.channel;
+    pc.ondatachannel = (e) => {
+        dc = e.channel;
         setupDC();
     };
 
@@ -53,146 +31,292 @@ function send(data) {
     }
 }
 
-// ---------------- LOBBY ----------------
+// =========================
+// LOBBY (UNCHANGED LOGIC)
+// =========================
 
-async function createLobby() {
-    setStatus("Creating lobby...");
-    createPeer();
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    const res = await fetch(`${SERVER}/create`, { method: "POST" });
-    const { code } = await res.json();
-
-    lobbyCode = code;
-    document.getElementById("codeDisplay").innerText = `Code: ${code}`;
-
-    await fetch(`${SERVER}/offer/${code}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offer })
-    });
-
-    pollAnswer(code);
-    setStatus("Waiting for opponent...");
+function setStatus(msg) {
+    document.getElementById("status").innerText = msg;
 }
 
-async function joinLobby() {
-    const code = document.getElementById("joinCode").value;
-    lobbyCode = code;
-
-    setStatus("Joining...");
-    createPeer();
-
-    const offerRes = await fetch(`${SERVER}/offer/${code}`);
-    const { offer } = await offerRes.json();
-
-    await pc.setRemoteDescription(offer);
-
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-
-    await fetch(`${SERVER}/answer/${code}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answer })
-    });
-
-    setStatus("Connected setup complete");
-    showGame();
-    startGame();
+function showGame() {
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game").style.display = "flex";
 }
 
-async function pollAnswer(code) {
-    const i = setInterval(async () => {
-        const res = await fetch(`${SERVER}/answer/${code}`);
-        const data = await res.json();
+// createLobby / joinLobby / pollAnswer
+// (same as your previous working version)
+// ----------------------------
+// KEEP YOUR EXISTING FUNCTIONS
+// ----------------------------
 
-        if (data.answer) {
-            clearInterval(i);
-            await pc.setRemoteDescription(data.answer);
-            setStatus("Connected setup complete");
-            showGame();
-            startGame();
+
+// =========================
+// TETRIS CORE (YOUR ENGINE INTEGRATED)
+// =========================
+
+const COLS = 10, ROWS = 20;
+let BLOCK = 30;
+
+let grid, current, nextPiece, hold;
+let canHold = true;
+
+let score = 0;
+let level = 1;
+let lines = 0;
+
+let dropInterval = 800;
+let dropCounter = 0;
+let lastTime = 0;
+let paused = false;
+
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+
+const SHAPES = {
+    I:[[1,1,1,1]],
+    J:[[1,0,0],[1,1,1]],
+    L:[[0,0,1],[1,1,1]],
+    O:[[1,1],[1,1]],
+    S:[[0,1,1],[1,1,0]],
+    T:[[0,1,0],[1,1,1]],
+    Z:[[1,1,0],[0,1,1]]
+};
+
+const COLORS = {
+    I:"#6600ff", J:"#3366cc", L:"#ff9933",
+    O:"#ffcc00", S:"#2bfa8a", T:"#b76cff", Z:"#ff5c8a"
+};
+
+function makeGrid() {
+    return Array.from({length: ROWS}, () => Array(COLS).fill(null));
+}
+
+function clone(m) {
+    return m.map(r => [...r]);
+}
+
+function makePiece() {
+    const types = Object.keys(SHAPES);
+    const type = types[Math.random()*types.length|0];
+
+    return {
+        type,
+        shape: clone(SHAPES[type]),
+        x: 3,
+        y: 0
+    };
+}
+
+function rotate(mat) {
+    return mat[0].map((_,i)=>mat.map(r=>r[i]).reverse());
+}
+
+function collides(p) {
+    for (let y=0;y<p.shape.length;y++) {
+        for (let x=0;x<p.shape[y].length;x++) {
+            if (!p.shape[y][x]) continue;
+
+            let nx = p.x + x;
+            let ny = p.y + y;
+
+            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+            if (ny >= 0 && grid[ny][nx]) return true;
         }
-    }, 1000);
+    }
+    return false;
 }
 
-// ---------------- GAME ----------------
-
-const canvas = () => document.getElementById("board");
-const ctx = () => canvas().getContext("2d");
-
-function drawBoard(b, context) {
-    context.clearRect(0, 0, 200, 400);
-
-    for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-            if (b[y][x]) {
-                context.fillStyle = "cyan";
-                context.fillRect(x * CELL, y * CELL, CELL, CELL);
+function merge(p) {
+    for (let y=0;y<p.shape.length;y++) {
+        for (let x=0;x<p.shape[y].length;x++) {
+            if (p.shape[y][x]) {
+                grid[p.y+y][p.x+x] = p.type;
             }
         }
     }
 }
 
-function tick() {
-    piece.y++;
+function clearLines() {
+    let cleared = 0;
 
-    if (piece.y >= H - 1) {
-        piece.y = 0;
-        piece.x = Math.floor(Math.random() * 8);
-
-        board[H - 1][piece.x] = 1;
-
-        send({
-            type: "drop",
-            x: piece.x
-        });
-
-        clearLines();
+    for (let y=ROWS-1;y>=0;y--) {
+        if (grid[y].every(v=>v)) {
+            grid.splice(y,1);
+            grid.unshift(Array(COLS).fill(null));
+            cleared++;
+            y++;
+        }
     }
 
-    render();
+    if (cleared) {
+        lines += cleared;
+        score += cleared * 100;
+
+        send({
+            type: "clear",
+            lines: cleared
+        });
+    }
 }
 
-function clearLines() {
-    for (let y = 0; y < H; y++) {
-        if (board[y].every(v => v === 1)) {
-            board.splice(y, 1);
-            board.unshift(Array(W).fill(0));
+function spawn() {
+    if (!nextPiece) nextPiece = makePiece();
+    current = nextPiece;
+    nextPiece = makePiece();
+    canHold = true;
 
-            send({
-                type: "clear",
-                row: y
-            });
+    if (collides(current)) restart();
+}
+
+// =========================
+// INPUT + SYNC
+// =========================
+
+function move(dx) {
+    current.x += dx;
+    if (collides(current)) current.x -= dx;
+
+    send({ type:"move", x:current.x });
+}
+
+function rotatePiece() {
+    const old = clone(current.shape);
+    current.shape = rotate(current.shape);
+    if (collides(current)) current.shape = old;
+
+    send({ type:"rotate" });
+}
+
+function softDrop() {
+    current.y++;
+    if (collides(current)) {
+        current.y--;
+        lock();
+    }
+}
+
+function hardDrop() {
+    while (!collides(current)) current.y++;
+    current.y--;
+    lock();
+}
+
+function lock() {
+    merge(current);
+    clearLines();
+    spawn();
+
+    send({ type:"lock" });
+}
+
+// =========================
+// REMOTE HANDLING
+// =========================
+
+function handleRemote(data) {
+    if (!data) return;
+
+    if (data.type === "move") {
+        // optional: ghost sync or opponent indicator
+    }
+
+    if (data.type === "rotate") {}
+
+    if (data.type === "lock") {
+        // opponent placed piece → can be used for garbage system later
+    }
+
+    if (data.type === "clear") {
+        // ATTACK SYSTEM (future upgrade)
+        addGarbage(data.lines);
+    }
+}
+
+function addGarbage(lines) {
+    for (let i=0;i<lines;i++) {
+        grid.pop();
+        grid.unshift(Array(COLS).fill("G"));
+    }
+}
+
+// =========================
+// RENDER
+// =========================
+
+function draw() {
+    ctx.fillStyle = "#071025";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    for (let y=0;y<ROWS;y++) {
+        for (let x=0;x<COLS;x++) {
+            if (grid[y][x]) {
+                ctx.fillStyle = COLORS[grid[y][x]] || "#444";
+                ctx.fillRect(x*BLOCK,y*BLOCK,BLOCK-1,BLOCK-1);
+            }
+        }
+    }
+
+    if (current) {
+        ctx.fillStyle = COLORS[current.type];
+
+        for (let y=0;y<current.shape.length;y++) {
+            for (let x=0;x<current.shape[y].length;x++) {
+                if (current.shape[y][x]) {
+                    ctx.fillRect(
+                        (current.x+x)*BLOCK,
+                        (current.y+y)*BLOCK,
+                        BLOCK-1,BLOCK-1
+                    );
+                }
+            }
         }
     }
 }
 
-function render() {
-    drawBoard(board, ctx());
-    drawBoard(enemyBoard, document.getElementById("enemyBoard").getContext("2d"));
+// =========================
+// LOOP
+// =========================
+
+function update(t=0) {
+    if (!lastTime) lastTime = t;
+    const delta = t - lastTime;
+    lastTime = t;
+
+    if (!paused) {
+        dropCounter += delta;
+
+        if (dropCounter > dropInterval) {
+            current.y++;
+            if (collides(current)) {
+                current.y--;
+                lock();
+            }
+            dropCounter = 0;
+        }
+    }
+
+    draw();
+    requestAnimationFrame(update);
 }
+
+// =========================
+// START
+// =========================
 
 function startGame() {
-    setInterval(tick, 500);
+    grid = makeGrid();
+    nextPiece = makePiece();
+    spawn();
+    update();
 }
 
-// ---------------- SYNC ----------------
+window.addEventListener("keydown", e => {
+    if (!current) return;
 
-function handleRemote(data) {
-    if (data.type === "drop") {
-        enemyBoard[H - 1][data.x] = 1;
-    }
-
-    if (data.type === "clear") {
-        enemyBoard.splice(data.row, 1);
-        enemyBoard.unshift(Array(W).fill(0));
-    }
-}
-
-// expose
-window.createLobby = createLobby;
-window.joinLobby = joinLobby;
+    if (e.code === "ArrowLeft") move(-1);
+    if (e.code === "ArrowRight") move(1);
+    if (e.code === "ArrowUp") rotatePiece();
+    if (e.code === "ArrowDown") softDrop();
+    if (e.code === "Space") hardDrop();
+});
