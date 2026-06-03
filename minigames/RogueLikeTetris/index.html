@@ -563,24 +563,49 @@ document.getElementById('btnShop').addEventListener('click', ()=>{ if(!paused) p
 /* =========================
    INPUT
 ========================= */
-
-window.addEventListener("keydown",e=>{
-  if(e.code==="Escape"){ restart(); return; }
-  if(paused||gameOver||!current) return;
-
-  let k=e.code;
-
-  if(gameState.controlsReversed){
-    if(k==="ArrowLeft")k="ArrowRight";
-    else if(k==="ArrowRight")k="ArrowLeft";
+window.addEventListener("keydown", e => {
+  if (e.code === "Escape") {
+    restart();
+    return;
   }
 
-  if(k==="ArrowLeft"){ current.x--; if(collides(current))current.x++; }
-  else if(k==="ArrowRight"){ current.x++; if(collides(current))current.x--; }
-  else if(k==="ArrowUp"){ current.shape=rotate(current.shape); }
-  else if(k==="ArrowDown") softDrop();
-  else if(k==="Space") hardDrop();
-  else if(k==="KeyC"||k==="ShiftLeft"||k==="ShiftRight") holdPiece();
+  if (paused || gameOver || !current) return;
+
+  let k = e.code;
+
+  if (gameState.controlsReversed) {
+    if (k === "ArrowLeft") k = "ArrowRight";
+    else if (k === "ArrowRight") k = "ArrowLeft";
+  }
+
+  if (k === "ArrowLeft") {
+    current.x--;
+    if (collides(current)) current.x++;
+  }
+  else if (k === "ArrowRight") {
+    current.x++;
+    if (collides(current)) current.x--;
+  }
+  else if (k === "ArrowUp") {
+    const old = current.shape.map(row => [...row]);
+
+    current.shape = rotate(current.shape);
+
+    if (collides(current)) {
+      current.shape = old;
+    }
+  }
+  else if (k === "ArrowDown") {
+    softDrop();
+  }
+  else if (k === "Space") {
+    hardDrop();
+  }
+  else if (k === "KeyC" || k === "ShiftLeft" || k === "ShiftRight") {
+    holdPiece();
+  }
+
+  renderPreviews();
 });
 
 /* =========================
