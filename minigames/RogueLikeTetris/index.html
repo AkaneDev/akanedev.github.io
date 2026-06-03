@@ -173,7 +173,15 @@ const SHOP_ITEMS = [
   { id: 'combo_plus', name: 'Combo Mastery', cost: 90, description: 'Increase combo bonuses', apply(){ window._comboBonus = (window._comboBonus||1) + 0.5; } },
   { id: 'score_mult_big', name: 'Scoring Matrix', cost: 120, description: 'Large score multiplier +50%', apply(s){ s.scoreMultiplier *= 1.5; } },
   { id: 'extra_gold_clear', name: 'Line Bounty', cost: 70, description: 'Gain extra gold per level (passive)', apply(){ window._extraGoldPerLevel = (window._extraGoldPerLevel||0) + 10; } },
-  { id: 'piece_bias_t', name: 'T Bias', cost: 60, description: 'Increase chance of T pieces (more combos)', apply(){ window._pieceBias = window._pieceBias||{}; window._pieceBias.T = (window._pieceBias.T||0) + 0.15; } }
+  { id: 'piece_bias_t', name: 'T Bias', cost: 60, description: 'Increase chance of T pieces (more combos)', apply(){ window._pieceBias = window._pieceBias||{}; window._pieceBias.T = (window._pieceBias.T||0) + 0.15; } },
+  { id: 'clear_random_line', name: 'Line Clearer', cost: 85, description: 'One-time use: Clear a random line on the board', apply(){ 
+    if(grid.some(row => row.some(cell => cell))){
+      const filledRows = grid.map((row, idx) => row.some(cell => cell) ? idx : null).filter(idx => idx !== null);
+      const rowToClear = filledRows[Math.floor(Math.random() * filledRows.length)];
+      grid.splice(rowToClear, 1);
+      grid.unshift(Array(COLS).fill(null));
+    }
+   } }
 ];
 
 // Shop pool refresh settings
