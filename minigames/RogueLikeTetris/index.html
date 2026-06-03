@@ -8,14 +8,14 @@
   :root{
     --bg:#071122;
     --panel:#0f1724;
-    --accent:#6ee7b7;
-    --muted:#94a3b8;
+    --accent:#ffffff;
+    --muted:#ffffff;
   }
   *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
   body{
     margin:0;
     background:linear-gradient(180deg,#051021 0%,#081529 100%);
-    color:#e6eef8;
+    color:#ffffff;
     display:flex;
     align-items:flex-start;
     justify-content:center;
@@ -89,6 +89,10 @@
         <div class="card">Lines<br><strong id="lines">0</strong></div>
         <div class="card">Goal<br><strong id="goal">5</strong></div>
       </div>
+      <div class="statRow">
+        <div class="card">Gold<br><strong id="gold">0</strong></div>
+        <div class="card">Shop<br><strong id="shopHint">—</strong></div>
+      </div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
         <div style="flex:1;text-align:center">
           <div class="muted">Hold</div>
@@ -100,7 +104,7 @@
         </div>
       </div>
       <div style="margin-top:10px">
-        <div class="muted">Active Modifiers</div>
+        <div class="muted">Active Upgrades</div>
         <div id="modsList" class="mods"><em class="muted">None</em></div>
       </div>
       <div class="controls">
@@ -115,6 +119,7 @@
       <div style="margin-top:12px">
         <button id="btnPause" class="btn">Pause</button>
         <button id="btnRestart" class="btn">Restart</button>
+        <button id="btnShop" class="btn">Shop</button>
       </div>
     </div>
   </div>
@@ -136,100 +141,46 @@ const modsListEl = document.getElementById("modsList");
 const overlay = document.getElementById("modOverlay");
 
 /* =========================
-   CORE SYSTEM
+   CORE SYSTEM / UPGRADES
+   - modifier system removed
+   - shop upgrades apply effects directly and are tracked in `activeUpgrades`
 ========================= */
-
-const ModType = {
-  PASSIVE: "passive",
-  TEMPORARY: "temporary",
-  EVENT: "event",
-  MUTATOR: "mutator"
-};
 
 const gameState = {
   dropInterval: 800,
   controlsReversed: false,
-  scoreMultiplier: 1
+  scoreMultiplier: 1,
+  comboEnabled: false
 };
 
-let activeMods = [];
+let activeUpgrades = [];
+let comboCount = 0;
 
-function triggerEvent(name, ...args) {
-  for (const mod of activeMods) {
-    if (mod[name]) mod[name](...args, gameState, mod);
-  }
-}
-
-/* =========================
-   MODIFIERS
-========================= */
-
-const modifiers = [
-  {
-    id: "reverse",
-    name: "Reverse Controls",
-    type: ModType.TEMPORARY,
-    duration: 30000,
-    onApply(s){ s.controlsReversed = true; },
-    onRemove(s){ s.controlsReversed = false; }
-  },
-  {
-    id: "i_only",
-    name: "I Only",
-    type: ModType.MUTATOR,
-    onPieceGenerate(){ return "I"; }
-  },
-  {
-    id: "speed",
-    name: "Speed Up",
-    type: ModType.PASSIVE,
-    onApply(s, m){
-      m.level = (m.level||0)+1;
-      s.dropInterval *= 0.8;
-    }
-  },
-  {
-    id: "combo",
-    name: "Combo Engine",
-    type: ModType.EVENT,
-    onLineClear(c, s, m){
-      m.level = m.level || 1;
-      s.scoreMultiplier += c * 0.1 * m.level;
-    }
-  }
+// Per-run shop items (easy to extend). Each item has: id, name, cost, description
+// and an `apply` function which receives `gameState` and may modify globals.
+const SHOP_ITEMS = [
+  { id: 'speed_boost', name: 'Faster Drops', cost: 50, description: 'Reduce drop interval by 15%', apply(s){ s.dropInterval *= 0.85; } },
+  { id: 'extra_hold', name: 'Extra Hold', cost: 40, description: 'Start with a held I piece', apply(){ if(!hold) hold = makePiece('I'); renderPreviews(); } },
+  { id: 'score_up', name: 'Score Booster', cost: 60, description: 'Permanent +25% score multiplier', apply(s){ s.scoreMultiplier *= 1.25; } },
+  { id: 'combo_engine', name: 'Combo Engine', cost: 70, description: 'Gain bonus for consecutive line clears', apply(s){ s.comboEnabled = true; } },
+  { id: 'gold_bonus', name: 'Gold Bounty', cost: 80, description: 'Gain +20% gold on level completion', apply(){ window._goldMultiplier = (window._goldMultiplier||1) + 0.2; } },
+  { id: 'piece_bias_i', name: 'I Bias', cost: 65, description: 'Increase chance of I pieces', apply(){ window._pieceBias = window._pieceBias||{}; window._pieceBias.I = (window._pieceBias.I||0) + 0.2; } },
+  { id: 'slow_down', name: 'Gentle Pace', cost: 55, description: 'Increase drop interval by 10% (easier)', apply(s){ s.dropInterval *= 1.10; } },
+  { id: 'more_gold_end', name: 'Treasure Chest', cost: 100, description: 'Get extra flat gold at level up', apply(){ window._goldFlat = (window._goldFlat||0) + 30; } },
+  { id: 'soft_drop_boost', name: 'Soft Drop Assist', cost: 45, description: 'Soft drop is slightly faster', apply(){ window._softDropMultiplier = (window._softDropMultiplier||1) * 0.9; } },
+  { id: 'hold_swap_plus', name: 'Quick Swap', cost: 50, description: 'Reduce hold cooldown (allow more frequent holds)', apply(){ window._holdCoolDown = (window._holdCoolDown||1) * 0.8; } },
+  { id: 'combo_plus', name: 'Combo Mastery', cost: 90, description: 'Increase combo bonuses', apply(){ window._comboBonus = (window._comboBonus||1) + 0.5; } },
+  { id: 'score_mult_big', name: 'Scoring Matrix', cost: 120, description: 'Large score multiplier +50%', apply(s){ s.scoreMultiplier *= 1.5; } },
+  { id: 'extra_gold_clear', name: 'Line Bounty', cost: 70, description: 'Gain extra gold per level (passive)', apply(){ window._extraGoldPerLevel = (window._extraGoldPerLevel||0) + 10; } },
+  { id: 'piece_bias_t', name: 'T Bias', cost: 60, description: 'Increase chance of T pieces (more combos)', apply(){ window._pieceBias = window._pieceBias||{}; window._pieceBias.T = (window._pieceBias.T||0) + 0.15; } }
 ];
 
-/* =========================
-   MOD MANAGEMENT
-========================= */
-
-function applyMod(mod){
-  const existing = activeMods.find(m=>m.id===mod.id);
-
-  if(existing){
-    existing.level = (existing.level||1)+1;
-    existing.onApply?.(gameState, existing);
-    updateStats();
-    return;
-  }
-
-  const inst = {...mod};
-  activeMods.push(inst);
-
-  inst.onApply?.(gameState, inst);
-
-  if(inst.type === ModType.TEMPORARY){
-    setTimeout(()=>removeMod(inst), inst.duration||30000);
-  }
-
-  updateStats();
-}
-
-function removeMod(mod){
-  mod.onRemove?.(gameState, mod);
-  activeMods = activeMods.filter(m=>m!==mod);
-  updateStats();
-}
+// Shop pool refresh settings
+let shopPool = [];
+const SHOP_REFRESH_MS = 120000; // 2 minutes
+function refreshShopPool(){ shopPool = [...SHOP_ITEMS].sort(()=>0.5-Math.random()); }
+refreshShopPool();
+setInterval(refreshShopPool, SHOP_REFRESH_MS);
 
 /* =========================
    GAME STATE
@@ -239,6 +190,20 @@ let grid=[], current=null, nextPiece=null, hold=null;
 let canHold=true, score=0, level=1, lines=0;
 let goalBase=5, dropCounter=0, lastTime=0;
 let paused=false, gameOver=false;
+let gold=0;
+
+// Progressive difficulty settings (time-based)
+let runtimeMs = 0;
+const SPEEDUP_INTERVAL_MS = 30000; // every 30s
+const SPEEDUP_FACTOR = 0.95; // multiply dropInterval by this
+const MIN_DROP_INTERVAL = 80; // lower cap (ms)
+let nextSpeedupAt = SPEEDUP_INTERVAL_MS;
+// Garbage (ghost) lines settings
+const GARBAGE_INTERVAL_MS = 45000; // every 45s
+let nextGarbageAt = GARBAGE_INTERVAL_MS;
+
+// Score thresholds for levels (easy to edit). Index = level number. Add more values to extend.
+const LEVEL_SCORE_THRESHOLDS = [0, 500, 1500, 3000, 5000, 8000];
 
 /* =========================
    PIECES
@@ -259,17 +224,24 @@ I:"#60f",J:"#36c",L:"#f93",O:"#fc0",
 S:"#2bfa8a",T:"#b76cff",Z:"#ff5c8a"
 };
 
-function getModifiedPieceType(type){
-  for(const m of activeMods){
-    if(m.onPieceGenerate) type = m.onPieceGenerate(type, gameState, m);
-  }
-  return type;
-}
-
 function makePiece(t=null){
   const keys = Object.keys(SHAPES);
-  let type = t || keys[Math.floor(Math.random()*keys.length)];
-  type = getModifiedPieceType(type);
+  let type = null;
+
+  if(t) type = t;
+  else if(window._pieceBias){
+    // weighted choice using biases on top of uniform weight
+    const weights = keys.map(k => 1 + (window._pieceBias[k]||0));
+    const sum = weights.reduce((a,b)=>a+b,0);
+    let r = Math.random()*sum;
+    for(let i=0;i<keys.length;i++){
+      r -= weights[i];
+      if(r <= 0){ type = keys[i]; break; }
+    }
+    if(!type) type = keys[Math.floor(Math.random()*keys.length)];
+  } else {
+    type = keys[Math.floor(Math.random()*keys.length)];
+  }
 
   return {
     type,
@@ -321,12 +293,68 @@ function clearLines(){
   }
 
   if(cleared){
-    triggerEvent("onLineClear", cleared);
-    lines+=cleared;
-    score+=cleared*100*level*gameState.scoreMultiplier;
+    // line clear handling with optional combo system
+    lines += cleared;
+    if(gameState.comboEnabled){
+      comboCount = (comboCount||0) + 1;
+      const comboBonus = ((comboCount-1) * 50) * (window._comboBonus || 1);
+      score += cleared * 100 * level * gameState.scoreMultiplier + comboBonus;
+    }else{
+      comboCount = 0;
+      score += cleared * 100 * level * gameState.scoreMultiplier;
+    }
+
+    // award gold per cleared line (base 10 per line), plus any flat bonuses and multipliers
+    const baseLineGold = 10;
+    const extraPerLine = window._extraGoldPerLevel || 0; // some shop items add this
+    const goldMult = window._goldMultiplier || 1;
+    const goldGain = Math.floor(cleared * (baseLineGold + extraPerLine) * goldMult);
+    gold += goldGain;
+
     updateStats();
     checkLevel();
   }
+  else {
+    // no clear resets combo counter
+    comboCount = 0;
+  }
+}
+
+function addGarbageLines(n){
+  for(let i=0;i<n;i++){
+    // create garbage row with one random hole
+    const hole = Math.floor(Math.random()*COLS);
+    const row = Array.from({length:COLS},(_,c)=> c===hole ? null : '#222');
+    // remove top row and push garbage at bottom
+    grid.shift();
+    grid.push(row);
+  }
+  // if current piece collides after garbage, game over
+  if(current && collides(current)){
+    gameOver = true;
+  }
+}
+
+function showEndScreen(){
+  paused = true;
+  overlay.innerHTML = `
+    <div style="max-width:520px;text-align:left">
+      <h2>Run Over</h2>
+      <div>Score: <strong>${score}</strong></div>
+      <div>Level reached: <strong>${level}</strong></div>
+      <div>Lines cleared: <strong>${lines}</strong></div>
+      <div>Gold earned: <strong>${gold}</strong></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="restartFromEnd()">Play Again</button>
+        <button class="btn" onclick="overlay.classList.remove('active')">Close</button>
+      </div>
+    </div>`;
+  overlay.classList.add('active');
+}
+
+function restartFromEnd(){
+  overlay.classList.remove('active');
+  restart();
 }
 
 /* =========================
@@ -436,33 +464,7 @@ function holdPiece(){
   renderPreviews();
 }
 
-/* =========================
-   MOD CHOICE
-========================= */
-
-function getRandomMods(n){
-  return [...modifiers].sort(()=>0.5-Math.random()).slice(0,n);
-}
-
-function offerModifierChoice(){
-  paused=true;
-  const c=getRandomMods(3);
-
-  overlay.innerHTML=c.map((m,i)=>`
-    <div class="choice" onclick="selectMod(${i})">
-      <strong>${m.name}</strong>
-      <div class="muted">${m.type}</div>
-    </div>`).join("");
-
-  overlay.classList.add("active");
-  window._modChoices=c;
-}
-
-function selectMod(i){
-  applyMod(window._modChoices[i]);
-  overlay.classList.remove("active");
-  paused=false;
-}
+/* old modifier-choice removed */
 
 /* =========================
    UI
@@ -472,20 +474,90 @@ function updateStats(){
   scoreEl.textContent=score;
   levelEl.textContent=level;
   linesEl.textContent=lines;
-  goalEl.textContent=goalBase*level;
+  // show next score goal for level-up
+  const nextThreshold = LEVEL_SCORE_THRESHOLDS[level] || Math.floor(level * 1000);
+  goalEl.textContent = nextThreshold;
+  document.getElementById('gold').textContent = gold;
+  document.getElementById('shopHint').textContent = `Next:${nextThreshold}`;
 
-  modsListEl.innerHTML=activeMods.length
-    ? activeMods.map(m=>`<div><strong>${m.name}${m.level?" Lv."+m.level:""}</strong></div>`).join("")
+  modsListEl.innerHTML=activeUpgrades.length
+    ? activeUpgrades.map(m=>`<div><strong>${m.name}</strong></div>`).join("")
     : "<em class='muted'>None</em>";
 }
 
 function checkLevel(){
-  if(lines>=goalBase*level){
+  // level up by score thresholds
+  const nextThreshold = LEVEL_SCORE_THRESHOLDS[level] || Math.floor(level * 1000);
+  if(score>=nextThreshold){
+    // reward gold for completing the level
+    const baseGold = level * 30;
+    const goldFlat = window._goldFlat || 0;
+    const extraPerLevel = window._extraGoldPerLevel || 0;
+    const mult = window._goldMultiplier || 1;
+    const gain = Math.floor((baseGold + goldFlat + extraPerLevel) * mult);
+    gold += gain;
     level++;
     gameState.dropInterval*=0.92;
-    offerModifierChoice();
+    offerShop();
   }
 }
+
+/* =========================
+   SHOP
+========================= */
+
+function getRandomShopItems(n){
+  return [...shopPool].sort(()=>0.5-Math.random()).slice(0,n);
+}
+
+function offerShop(){
+  paused=true;
+  const c=getRandomShopItems(3);
+
+  overlay.innerHTML = `
+    <div style="max-width:680px">
+      <h2>Shop - Choose an upgrade</h2>
+      ${c.map((it,i)=>`
+        <div class="choice" style="text-align:left">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>${it.name}</strong>
+            <div class="muted">Cost: ${it.cost}</div>
+          </div>
+          <div class="muted">${it.description}</div>
+          <div style="margin-top:8px;text-align:right"><button class="btn" onclick="buyShopItem(${i})">Buy</button></div>
+        </div>
+      `).join('')}
+      <div style="margin-top:8px"><button class="btn" onclick="skipShop()">Skip</button></div>
+    </div>`;
+
+  overlay.classList.add('active');
+  window._shopChoices = c;
+}
+
+function skipShop(){ overlay.classList.remove('active'); paused=false; }
+
+function buyShopItem(i){
+  const item = window._shopChoices[i];
+  if(!item) return;
+  if(gold < item.cost){ alert('Not enough gold'); return; }
+  gold -= item.cost;
+  // apply item and track it as an active upgrade
+  if(item.apply) {
+    try{ item.apply(gameState); }catch(e){ console.error(e); }
+  }
+  activeUpgrades.push(item);
+  overlay.classList.remove('active');
+  paused=false;
+  updateStats();
+}
+
+// UI buttons
+document.getElementById('btnPause').addEventListener('click', ()=>{
+  paused = !paused;
+  document.getElementById('btnPause').textContent = paused ? 'Resume' : 'Pause';
+});
+document.getElementById('btnRestart').addEventListener('click', restart);
+document.getElementById('btnShop').addEventListener('click', ()=>{ if(!paused) paused=true; offerShop(); });
 
 /* =========================
    INPUT
@@ -521,10 +593,28 @@ function update(t=0){
 
   if(!paused && current && !gameOver){
     dropCounter+=d;
+    runtimeMs += d;
+    if(runtimeMs >= nextSpeedupAt){
+      // apply time-based speedup
+      gameState.dropInterval = Math.max(MIN_DROP_INTERVAL, Math.floor(gameState.dropInterval * SPEEDUP_FACTOR));
+      nextSpeedupAt += SPEEDUP_INTERVAL_MS;
+    }
+    if(runtimeMs >= nextGarbageAt){
+      // add garbage lines to increase difficulty
+      const maxGarbage = Math.min(4, 1 + Math.floor(level/2));
+      const count = 1 + Math.floor(Math.random()*maxGarbage);
+      addGarbageLines(count);
+      nextGarbageAt += GARBAGE_INTERVAL_MS;
+    }
     if(dropCounter>gameState.dropInterval){
       softDrop();
       dropCounter=0;
     }
+  }
+
+  // if game over show end screen once
+  if(gameOver && !overlay.classList.contains('active')){
+    showEndScreen();
   }
 
   drawBoard();
@@ -562,13 +652,19 @@ function restart(){
   canHold=true;
 
   score=0; level=1; lines=0;
+  gold=0;
   paused=false; gameOver=false;
 
   gameState.dropInterval=800;
   gameState.controlsReversed=false;
   gameState.scoreMultiplier=1;
 
-  activeMods=[];
+  activeUpgrades=[];
+
+  // reset progressive difficulty timers
+  runtimeMs = 0;
+  nextSpeedupAt = SPEEDUP_INTERVAL_MS;
+  nextGarbageAt = GARBAGE_INTERVAL_MS;
 
   resizeBoard();
   spawn();
