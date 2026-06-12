@@ -28,7 +28,7 @@
     </style>
 </head>
 <body class="dark-mode">
-
+    <script src="./banner.js?size=minimal&animation=off&id=androidannouncement"></script>
     <nav class="navbar">
         <div class="container">
             <!-- https://live-checker.akane-4f4.workers.dev/ -->
@@ -63,14 +63,17 @@
                 </a>
             </div>
         </header>
-        <script src="https://keepandroidopen.org/banner.js?size=minimal&animation=on&id=androidannouncement"></script>
         <section class="new-thingannouncement"> <!--TODO: Add a way to update this live-->
             <div class="new-announcement-card">
                 <h2>NEW: <a href="https://keepandroidopen.org/">KEEP ANDROID OPEN</a></h2>
                 <p>Keep Android Open is a campaign to stop Google's anti-competitive practices and keep the Android ecosystem open and free for everyone.</p>
                 <a href="https://keepandroidopen.org/" class="announcement-link">Learn More</a>
-                <div id="androidannouncement" class="androidannouncement">
-                    <!-- The banner will be injected here by the script -->
+            </div>
+        </section>
+        <section class="new-thingannouncement">
+            <div class="new-announcement-card">
+                <div id="androidannouncement">
+
                 </div>
             </div>
         </section>
