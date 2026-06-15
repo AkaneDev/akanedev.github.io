@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Archive Map</title>
+
+<style>
+    body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    font-family: monospace;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* ========================
+   NODE BASE
+======================== */
+
+.node {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    user-select: none;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+}
+
+/* IMAGE NODE */
+.imgNode img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: contrast(1.15) brightness(0.85);
+}
+
+/* ========================
+   STATIC NODE (IMPROVED)
+======================== */
+
+.staticNode {
+    width: 90px;
+    height: 90px;
+    position: relative;
+    overflow: hidden;
+    background: #050505;
+}
+
+/* noise layer */
+.staticNode::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.05) 0px,
+            rgba(255,255,255,0.05) 1px,
+            transparent 1px,
+            transparent 3px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            rgba(255,255,255,0.04) 0px,
+            rgba(255,255,255,0.04) 1px,
+            transparent 1px,
+            transparent 4px
+        );
+    animation: staticDrift 0.09s linear infinite;
+    mix-blend-mode: screen;
+    opacity: 0.65;
+}
+
+/* flicker layer */
+.staticNode::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0.02;
+    animation: flicker 0.11s infinite;
+}
+
+/* drift motion */
+@keyframes staticDrift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(12px, -12px); }
+}
+
+/* global flicker */
+@keyframes flicker {
+    0%   { opacity: 0.01; }
+    25%  { opacity: 0.04; }
+    50%  { opacity: 0.02; }
+    75%  { opacity: 0.05; }
+    100% { opacity: 0.01; }
+}
+
+/* ========================
+   POPUP (NEXUS ARCHIVE STYLE)
+======================== */
+
+#popup {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 340px;
+    padding: 14px;
+    background: rgba(5, 5, 5, 0.97);
+    border: 1px solid rgba(0, 255, 204, 0.8);
+    color: #00ffcc;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.15);
+}
+
+/* textarea */
+#popup textarea {
+    width: 100%;
+    height: 120px;
+    background: black;
+    color: #00ffcc;
+    border: 1px solid rgba(0, 255, 204, 0.6);
+    resize: none;
+    outline: none;
+    font-family: monospace;
+}
+
+/* button */
+#popup button {
+    margin-top: 10px;
+    width: 100%;
+    background: black;
+    color: #00ffcc;
+    border: 1px solid rgba(0, 255, 204, 0.6);
+    cursor: pointer;
+    font-family: monospace;
+    transition: 0.2s;
+}
+
+#popup button:hover {
+    background: rgba(0, 255, 204, 0.1);
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="popup">
+    <div id="popupTitle"></div>
+    <textarea id="popupText"></textarea>
+    <button onclick="saveDesc()">Save</button>
+</div>
+
+<script>
+/*
+========================
+DATA (JSON-LIKE STRUCTURE)
+========================
+*/
+
+const nodes = {
+    A: {
+        x: -200, y: 0,
+        type: "static",
+        desc: "The Origin: NEXUS Deployment Project."
+    },
+    B: {
+        x: 200, y: -120,
+        type: "static",
+        desc: "???"
+    },
+    C: {
+        x: 200, y: 120,
+        type: "static",
+        desc: "???"
+    }
+};
+
+const links = [
+    ["A", "B"],
+    ["A", "C"]
+];
+
+/*
+========================
+CENTRE SYSTEM
+========================
+*/
+
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+function cx() { return W / 2; }
+function cy() { return H / 2; }
+
+/*
+========================
+RENDER NODES
+========================
+*/
+
+const nodeElements = {};
+let activeNode = null;
+
+for (const id in nodes) {
+    const n = nodes[id];
+
+    const el = document.createElement("div");
+    el.classList.add("node");
+
+    el.style.left = (cx() + n.x) + "px";
+    el.style.top  = (cy() + n.y) + "px";
+
+    if (n.type === "image") {
+        el.classList.add("imgNode");
+        el.innerHTML = `<img src="${n.src}">`;
+    }
+
+    if (n.type === "static") {
+        el.classList.add("staticNode");
+    }
+
+    el.addEventListener("click", () => openPopup(id));
+
+    document.body.appendChild(el);
+    nodeElements[id] = el;
+}
+
+/*
+========================
+CANVAS
+========================
+*/
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    canvas.width = W;
+    canvas.height = H;
+
+    for (const id in nodes) {
+        const n = nodes[id];
+        const el = nodeElements[id];
+
+        el.style.left = (cx() + n.x) + "px";
+        el.style.top  = (cy() + n.y) + "px";
+    }
+}
+resize();
+window.addEventListener("resize", resize);
+
+/*
+========================
+DRAW LINKS
+========================
+*/
+
+function center(el) {
+    const r = el.getBoundingClientRect();
+    return {
+        x: r.left + r.width / 2,
+        y: r.top + r.height / 2
+    };
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.strokeStyle = "rgba(0,255,180,0.25)";
+    ctx.lineWidth = 1;
+
+    for (const [a, b] of links) {
+        const p1 = center(nodeElements[a]);
+        const p2 = center(nodeElements[b]);
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+    }
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+
+/*
+========================
+POPUP SYSTEM
+========================
+*/
+
+const popup = document.getElementById("popup");
+const popupTitle = document.getElementById("popupTitle");
+const popupText = document.getElementById("popupText");
+
+function openPopup(id) {
+    activeNode = id;
+
+    popupTitle.textContent = "NODE: " + id;
+    popupText.value = nodes[id].desc || "";
+
+    popup.style.display = "block";
+}
+
+function saveDesc() {
+    if (!activeNode) return;
+
+    nodes[activeNode].desc = popupText.value;
+    popup.style.display = "none";
+
+    console.log("Updated JSON:", nodes);
+}
+
+/*
+close on background click
+*/
+window.addEventListener("click", (e) => {
+    if (e.target.id === "popup") {
+        popup.style.display = "none";
+    }
+});
+</script>
+
+</body>
+</html>

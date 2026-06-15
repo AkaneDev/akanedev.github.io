@@ -206,7 +206,7 @@ hidden-data {
     text-align: center;
 }
 
-#new-thingannouncement {
+.new-thingannouncement {
     text-align: center;
 }
 
@@ -218,6 +218,36 @@ hidden-data {
     margin: 20px auto;
     max-width: 600px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@keyframes staticDrift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(12px, -12px); }
+}
+
+
+@keyframes flicker {
+    0%   { opacity: 0.9; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.85; }
+}
+
+.sneakpeak {
+    text-align: center;
+    justify-content: center;
+}
+
+.sneakpeak-card {
+    background: rgb(19, 12, 12);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 600px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    justify-content: center;
+    
+    animation: flicker 0.12s infinite;
 }
 
 .project-list {
