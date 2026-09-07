@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discord Message Designer</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#111214;--panel:#18191c;--panel2:#202225;--input:#0f1012;
+  --border:#303238;--text:#f2f3f5;--muted:#b5bac1;--accent:#5865f2;
+}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;height:100vh;overflow:hidden}
+button,input,textarea,select{font:inherit}
+.app{height:100vh;display:grid;grid-template-rows:58px 1fr 250px}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--border)}
+header h1{font-size:18px;margin:0}
+.actions{display:flex;gap:8px}
+button{border:0;border-radius:6px;padding:9px 13px;background:#2b2d31;color:white;cursor:pointer}
+button:hover{background:#35373c}
+.primary{background:var(--accent)}
+.primary:hover{background:#4752c4}
+
+.main{display:grid;grid-template-columns:330px 1fr;min-height:0}
+.sidebar{overflow:auto;background:var(--panel);border-right:1px solid var(--border);padding:16px}
+.previewWrap{overflow:auto;padding:35px;background:#313338}
+
+.section{margin-bottom:22px}
+.section h2{
+  font-size:12px;text-transform:uppercase;color:var(--muted);
+  letter-spacing:.6px;margin:0 0 9px
+}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px}
+.toolbar button{min-width:38px;padding:8px;font-weight:bold}
+
+label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}
+
+input[type=text],input[type=url],textarea,select{
+ width:100%;background:var(--input);border:1px solid var(--border);
+ color:var(--text);border-radius:5px;padding:9px;outline:none
+}
+textarea{resize:vertical;min-height:90px}
+input:focus,textarea:focus{border-color:var(--accent)}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.colour{display:flex;gap:8px;align-items:center}
+input[type=color]{
+ width:42px;height:36px;padding:2px;background:var(--input);
+ border:1px solid var(--border);border-radius:5px
+}
+
+.message{max-width:900px;margin:auto;display:flex;gap:12px}
+.avatar{
+ width:40px;height:40px;border-radius:50%;background:var(--accent);
+ display:grid;place-items:center;font-weight:bold;flex:none
+}
+.author{font-weight:600}
+.bot{font-size:10px;background:var(--accent);padding:2px 4px;border-radius:3px;margin-left:4px}
+.time{color:#949ba4;font-size:11px;margin-left:5px}
+.content{margin-top:3px;line-height:1.45;word-wrap:break-word}
+.content h1{font-size:24px;margin:8px 0}
+.content h2{font-size:20px;margin:7px 0}
+.content h3{font-size:16px;margin:6px 0}
+.content blockquote{
+ border-left:4px solid #4e5058;padding-left:10px;
+ color:#dbdee1;margin:5px 0
+}
+.content code{
+ background:#1e1f22;border-radius:4px;padding:2px 4px;
+ font-family:monospace
+}
+.discord-subtext {
+  color: #949ba4;
+  font-size: 0.75em;
+  line-height: 1.3;
+  margin: 2px 0;
+}
+.codeblock{
+ background:#1e1f22;border:1px solid #2b2d31;border-radius:5px;
+ padding:10px;font-family:monospace;white-space:pre-wrap;margin:7px 0
+}
+.spoiler{
+ background:#202225;color:transparent;border-radius:3px;
+ cursor:pointer;padding:0 3px
+}
+.spoiler.revealed{color:inherit}
+
+.embed{
+ border-left:4px solid #5865f2;background:#2b2d31;border-radius:4px;
+ padding:12px 14px;margin-top:8px;max-width:520px
+}
+.embed-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.embed-desc{white-space:pre-wrap}
+.fields{
+ display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px
+}
+.field.full{grid-column:1/-1}
+.field-name{font-weight:700;font-size:13px}
+.field-value{white-space:pre-wrap;font-size:13px;color:#dbdee1}
+.footer{font-size:11px;color:#949ba4;margin-top:10px}
+
+.editor{
+ display:grid;grid-template-columns:1fr 1fr;background:var(--panel);
+ border-top:1px solid var(--border);min-height:0
+}
+.editorPane{padding:12px;min-width:0}
+.editorPane:first-child{border-right:1px solid var(--border)}
+.editorPane h2{
+ font-size:12px;text-transform:uppercase;color:var(--muted);margin:0 0 7px
+}
+#markdown{height:190px;font-family:monospace;resize:none}
+.small{font-size:11px;color:var(--muted);margin-top:6px}
+
+.embedFields{display:none}
+.fieldEditor{
+ border:1px solid var(--border);padding:8px;border-radius:5px;margin-top:8px
+}
+.remove{
+ float:right;background:#ed4245;padding:4px 7px;font-size:11px
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <h1>Discord Message Designer</h1>
+
+  <div class="actions">
+    <button onclick="clearAll()">Clear</button>
+    <button onclick="copyMarkdown()" class="primary">Copy Markdown</button>
+  </div>
+</header>
+
+<div class="main">
+
+<aside class="sidebar">
+
+  <div class="section">
+    <h2>Formatting</h2>
+
+    <div class="toolbar">
+      <button onclick="wrap('**','**')" title="Bold">B</button>
+      <button onclick="wrap('*','*')" title="Italic"><i>I</i></button>
+      <button onclick="wrap('__','__')" title="Underline"><u>U</u></button>
+      <button onclick="wrap('~~','~~')" title="Strikethrough"><s>S</s></button>
+      <button onclick="wrap('||','||')" title="Spoiler">||</button>
+
+      <button onclick="insert('# ')" title="Heading">H1</button>
+      <button onclick="insert('## ')" title="Heading 2">H2</button>
+      <button onclick="insert('### ')" title="Heading 3">H3</button>
+
+      <button onclick="insert('> ')" title="Quote">❯</button>
+      <button onclick="insert('- ')" title="List">•</button>
+
+      <button onclick="wrap('`','`')" title="Inline code">
+        &lt;/&gt;
+      </button>
+
+      <button onclick="codeBlock()" title="Code block">CODE</button>
+      <button onclick="link()" title="Link">LINK</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Message</h2>
+
+    <label>Author</label>
+    <input id="author" type="text" value="AkaneBot" oninput="render()">
+
+    <label>Avatar letter</label>
+    <input id="avatar" type="text" value="A" maxlength="2" oninput="render()">
+  </div>
+
+  <div class="section">
+    <h2>Embed</h2>
+
+    <label>
+      <input id="enableEmbed" type="checkbox" onchange="toggleEmbed()">
+      Enable embed
+    </label>
+
+    <div id="embedFields">
+
+      <label>Embed colour</label>
+
+      <div class="colour">
+        <input
+          id="embedColour"
+          type="color"
+          value="#5865f2"
+          oninput="render()"
+        >
+        <span id="colourText">#5865f2</span>
+      </div>
+
+      <label>Title</label>
+      <input id="embedTitle" type="text" oninput="render()">
+
+      <label>Description</label>
+      <textarea id="embedDesc" oninput="render()"></textarea>
+
+      <label>Footer</label>
+      <input id="embedFooter" type="text" oninput="render()">
+
+      <label>Fields</label>
+
+      <div id="fields"></div>
+
+      <button onclick="addField()">+ Add field</button>
+
+    </div>
+  </div>
+
+</aside>
+
+<main class="previewWrap">
+
+  <div class="message">
+
+    <div class="avatar" id="pvAvatar">A</div>
+
+    <div style="min-width:0">
+
+      <div>
+        <span class="author" id="pvAuthor">AkaneBot</span>
+        <span class="bot">BOT</span>
+        <span class="time">Today at 11:04 AM</span>
+      </div>
+
+      <div class="content" id="preview"></div>
+
+    </div>
+
+  </div>
+
+</main>
+
+</div>
+
+<div class="editor">
+
+  <div class="editorPane">
+
+    <h2>Markdown</h2>
+
+    <textarea
+      id="markdown"
+      spellcheck="false"
+      oninput="render()"
+    ></textarea>
+
+    <div class="small">
+      Your message is rendered live above.
+    </div>
+
+  </div>
+
+  <div class="editorPane">
+
+    <h2>Embed JSON</h2>
+
+    <textarea
+      id="embedJson"
+      spellcheck="false"
+      readonly
+    ></textarea>
+
+    <div class="small">
+      Useful when building Discord bot messages.
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<script>
+const md = document.getElementById('markdown');
+const preview = document.getElementById('preview');
+
+function esc(s) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function inline(s) {
+  s = esc(s);
+
+  s = s.replace(
+    /`([^`]+)`/g,
+    '<code>$1</code>'
+  );
+
+  s = s.replace(
+    /\*\*([^\*]+)\*\*/g,
+    '<strong>$1</strong>'
+  );
+
+  s = s.replace(
+    /__([^_]+)__/g,
+    '<u>$1</u>'
+  );
+
+  s = s.replace(
+    /~~([^~]+)~~/g,
+    '<s>$1</s>'
+  );
+
+  s = s.replace(
+    /\*([^\*]+)\*/g,
+    '<em>$1</em>'
+  );
+
+  s = s.replace(
+    /\|\|(.+?)\|\|/g,
+    '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>'
+  );
+
+  s = s.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>'
+  );
+
+  return s;
+}
+
+function renderMarkdown(text) {
+  const lines = text.split('\n');
+  const out = [];
+
+  let inCode = false;
+  let code = [];
+
+  for (const line of lines) {
+
+    /*
+     * Code blocks
+     */
+    if (line.startsWith('```')) {
+
+      if (inCode) {
+
+        out.push(
+          '<div class="codeblock">' +
+          esc(code.join('\n')) +
+          '</div>'
+        );
+
+        code = [];
+        inCode = false;
+
+      } else {
+
+        inCode = true;
+
+      }
+
+      continue;
+    }
+
+    if (inCode) {
+      code.push(line);
+      continue;
+    }
+
+    /*
+     * Discord subtext
+     *
+     * -# This is subtext
+     */
+    if (/^-# /.test(line)) {
+
+      out.push(
+        '<div class="discord-subtext">' +
+        inline(line.slice(3)) +
+        '</div>'
+      );
+
+    /*
+     * Headings
+     */
+    } else if (/^### /.test(line)) {
+
+      out.push(
+        '<h3>' +
+        inline(line.slice(4)) +
+        '</h3>'
+      );
+
+    } else if (/^## /.test(line)) {
+
+      out.push(
+        '<h2>' +
+        inline(line.slice(3)) +
+        '</h2>'
+      );
+
+    } else if (/^# /.test(line)) {
+
+      out.push(
+        '<h1>' +
+        inline(line.slice(2)) +
+        '</h1>'
+      );
+
+    /*
+     * Blockquotes
+     */
+    } else if (/^> /.test(line)) {
+
+      out.push(
+        '<blockquote>' +
+        inline(line.slice(2)) +
+        '</blockquote>'
+      );
+
+    /*
+     * Unordered lists
+     */
+    } else if (/^[-*] /.test(line)) {
+
+      out.push(
+        '<div>• ' +
+        inline(line.slice(2)) +
+        '</div>'
+      );
+
+    /*
+     * Ordered lists
+     */
+    } else if (/^\d+\.\s/.test(line)) {
+
+      out.push(
+        '<div>' +
+        inline(line) +
+        '</div>'
+      );
+
+    /*
+     * Empty line
+     */
+    } else if (line.trim() === '') {
+
+      out.push('<br>');
+
+    /*
+     * Normal text
+     */
+    } else {
+
+      out.push(
+        '<div>' +
+        inline(line) +
+        '</div>'
+      );
+
+    }
+  }
+
+  /*
+   * If the user forgot to close a code block,
+   * still render what they entered.
+   */
+  if (inCode && code.length) {
+
+    out.push(
+      '<div class="codeblock">' +
+      esc(code.join('\n')) +
+      '</div>'
+    );
+
+  }
+
+  return out.join('');
+}
+
+function render() {
+
+  preview.innerHTML = renderMarkdown(md.value);
+
+  document.getElementById('pvAuthor').textContent =
+    document.getElementById('author').value || 'User';
+
+  document.getElementById('pvAvatar').textContent =
+    document.getElementById('avatar').value || 'A';
+
+  const colour =
+    document.getElementById('embedColour').value;
+
+  document.getElementById('colourText').textContent =
+    colour;
+
+  const enabled =
+    document.getElementById('enableEmbed').checked;
+
+  if (enabled) {
+
+    const embed = document.createElement('div');
+
+    embed.className = 'embed';
+
+    embed.style.borderLeftColor = colour;
+
+    const title =
+      document.getElementById('embedTitle').value;
+
+    const desc =
+      document.getElementById('embedDesc').value;
+
+    const footer =
+      document.getElementById('embedFooter').value;
+
+    if (title) {
+
+      embed.innerHTML +=
+        '<div class="embed-title">' +
+        esc(title) +
+        '</div>';
+
+    }
+
+    if (desc) {
+
+      embed.innerHTML +=
+        '<div class="embed-desc">' +
+        esc(desc) +
+        '</div>';
+
+    }
+
+    const fields =
+      document.createElement('div');
+
+    fields.className = 'fields';
+
+    document
+      .querySelectorAll('.fieldEditor')
+      .forEach(x => {
+
+        const name =
+          x.querySelector('.fn').value;
+
+        const value =
+          x.querySelector('.fv').value;
+
+        const full =
+          x.querySelector('.fullCheck').checked;
+
+        if (name || value) {
+
+          const field =
+            document.createElement('div');
+
+          field.className =
+            'field ' + (full ? 'full' : '');
+
+          field.innerHTML =
+            '<div class="field-name">' +
+            esc(name) +
+            '</div>' +
+
+            '<div class="field-value">' +
+            esc(value) +
+            '</div>';
+
+          fields.appendChild(field);
+        }
+
+      });
+
+    embed.appendChild(fields);
+
+    if (footer) {
+
+      const f =
+        document.createElement('div');
+
+      f.className = 'footer';
+
+      f.textContent = footer;
+
+      embed.appendChild(f);
+
+    }
+
+    preview.appendChild(embed);
+  }
+
+  updateJSON();
+}
+
+function wrap(a, b) {
+
+  const start =
+    md.selectionStart;
+
+  const end =
+    md.selectionEnd;
+
+  const value =
+    md.value;
+
+  const selected =
+    value.slice(start, end) || 'text';
+
+  md.value =
+    value.slice(0, start) +
+    a +
+    selected +
+    b +
+    value.slice(end);
+
+  md.focus();
+
+  md.setSelectionRange(
+    start + a.length,
+    end + a.length
+  );
+
+  render();
+}
+
+function insert(text) {
+
+  const start =
+    md.selectionStart;
+
+  const value =
+    md.value;
+
+  md.value =
+    value.slice(0, start) +
+    text +
+    value.slice(start);
+
+  md.focus();
+
+  md.setSelectionRange(
+    start + text.length,
+    start + text.length
+  );
+
+  render();
+}
+
+function codeBlock() {
+
+  wrap(
+    '```\n',
+    '\n```'
+  );
+}
+
+function link() {
+
+  const start =
+    md.selectionStart;
+
+  const end =
+    md.selectionEnd;
+
+  const value =
+    md.value;
+
+  const selected =
+    value.slice(start, end) || 'link text';
+
+  const replacement =
+    '[' +
+    selected +
+    '](https://example.com)';
+
+  md.value =
+    value.slice(0, start) +
+    replacement +
+    value.slice(end);
+
+  md.focus();
+
+  md.setSelectionRange(
+    start + 1,
+    start + 1 + selected.length
+  );
+
+  render();
+}
+
+function toggleEmbed() {
+
+  document.getElementById('embedFields').style.display =
+    document.getElementById('enableEmbed').checked
+      ? 'block'
+      : 'none';
+
+  render();
+}
+
+function addField() {
+
+  const field =
+    document.createElement('div');
+
+  field.className =
+    'fieldEditor';
+
+  field.innerHTML = `
+
+    <button
+      class="remove"
+      onclick="this.parentElement.remove();render()"
+    >×</button>
+
+    <label>Name</label>
+
+    <input
+      class="fn"
+      type="text"
+      oninput="render()"
+    >
+
+    <label>Value</label>
+
+    <textarea
+      class="fv"
+      oninput="render()"
+    ></textarea>
+
+    <label>
+
+      <input
+        class="fullCheck"
+        type="checkbox"
+        onchange="render()"
+      >
+
+      Full width
+
+    </label>
+  `;
+
+  document
+    .getElementById('fields')
+    .appendChild(field);
+
+  render();
+}
+
+function updateJSON() {
+
+  const enabled =
+    document.getElementById('enableEmbed').checked;
+
+  if (!enabled) {
+
+    document.getElementById('embedJson').value = '';
+
+    return;
+  }
+
+  const obj = {
+
+    title:
+      document.getElementById('embedTitle').value ||
+      undefined,
+
+    description:
+      document.getElementById('embedDesc').value ||
+      undefined,
+
+    color:
+      parseInt(
+        document
+          .getElementById('embedColour')
+          .value
+          .slice(1),
+        16
+      )
+  };
+
+  const fields = [];
+
+  document
+    .querySelectorAll('.fieldEditor')
+    .forEach(x => {
+
+      const name =
+        x.querySelector('.fn').value;
+
+      const value =
+        x.querySelector('.fv').value;
+
+      if (name || value) {
+
+        fields.push({
+
+          name,
+
+          value,
+
+          inline:
+            !x.querySelector('.fullCheck').checked
+
+        });
+
+      }
+
+    });
+
+  if (fields.length)
+    obj.fields = fields;
+
+  const footer =
+    document.getElementById('embedFooter').value;
+
+  if (footer)
+    obj.footer = {
+      text: footer
+    };
+
+  Object.keys(obj).forEach(k => {
+
+    if (obj[k] === undefined)
+      delete obj[k];
+
+  });
+
+  document.getElementById('embedJson').value =
+    JSON.stringify(obj, null, 2);
+}
+
+async function copyMarkdown() {
+
+  try {
+
+    await navigator.clipboard.writeText(md.value);
+
+    alert('Markdown copied!');
+
+  } catch {
+
+    md.select();
+
+    document.execCommand('copy');
+
+  }
+}
+
+function clearAll() {
+
+  md.value = '';
+
+  document.getElementById('enableEmbed').checked =
+    false;
+
+  document.getElementById('embedTitle').value =
+    '';
+
+  document.getElementById('embedDesc').value =
+    '';
+
+  document.getElementById('embedFooter').value =
+    '';
+
+  document.getElementById('fields').innerHTML =
+    '';
+
+  toggleEmbed();
+
+  render();
+}
+
+
+/*
+ * Example message
+ */
+md.value = `# Hello!
+
+This is **my Discord message** with *formatting*.
+
+> You can design everything here.
+
+\`inline code\`
+
+-# This is Discord subtext.
+
+-# **Subtext can still be bold.**
+
+-# *And it can be italic.*
+
+-# \`And it can contain inline code.\`
+`;
+
+render();
+</script>
+
+</body>
+</html>
