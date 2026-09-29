@@ -1,346 +1,850 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Discord Message Designer</title>
-<style>
-*{box-sizing:border-box}
-:root{
-  --bg:#111214;--panel:#18191c;--panel2:#202225;--input:#0f1012;
-  --border:#303238;--text:#f2f3f5;--muted:#b5bac1;--accent:#5865f2;
-}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;height:100vh;overflow:hidden}
-button,input,textarea,select{font:inherit}
-.app{height:100vh;display:grid;grid-template-rows:58px 1fr 250px}
-header{display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:var(--panel);border-bottom:1px solid var(--border)}
-header h1{font-size:18px;margin:0}
-.actions{display:flex;gap:8px}
-button{border:0;border-radius:6px;padding:9px 13px;background:#2b2d31;color:white;cursor:pointer}
-button:hover{background:#35373c}
-.primary{background:var(--accent)}
-.primary:hover{background:#4752c4}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Discord Message Designer</title>
 
-.main{display:grid;grid-template-columns:330px 1fr;min-height:0}
-.sidebar{overflow:auto;background:var(--panel);border-right:1px solid var(--border);padding:16px}
-.previewWrap{overflow:auto;padding:35px;background:#313338}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-.section{margin-bottom:22px}
-.section h2{
-  font-size:12px;text-transform:uppercase;color:var(--muted);
-  letter-spacing:.6px;margin:0 0 9px
-}
-.toolbar{display:flex;flex-wrap:wrap;gap:6px}
-.toolbar button{min-width:38px;padding:8px;font-weight:bold}
+    :root {
+      --bg: #111214;
+      --panel: #18191c;
+      --panel2: #202225;
+      --input: #0f1012;
+      --border: #303238;
+      --text: #f2f3f5;
+      --muted: #b5bac1;
+      --accent: #5865f2;
+    }
 
-label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-input[type=text],input[type=url],textarea,select{
- width:100%;background:var(--input);border:1px solid var(--border);
- color:var(--text);border-radius:5px;padding:9px;outline:none
-}
-textarea{resize:vertical;min-height:90px}
-input:focus,textarea:focus{border-color:var(--accent)}
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
 
-.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.colour{display:flex;gap:8px;align-items:center}
-input[type=color]{
- width:42px;height:36px;padding:2px;background:var(--input);
- border:1px solid var(--border);border-radius:5px
-}
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 58px 1fr 250px;
+    }
 
-.message{max-width:900px;margin:auto;display:flex;gap:12px}
-.avatar{
- width:40px;height:40px;border-radius:50%;background:var(--accent);
- display:grid;place-items:center;font-weight:bold;flex:none
-}
-.author{font-weight:600}
-.bot{font-size:10px;background:var(--accent);padding:2px 4px;border-radius:3px;margin-left:4px}
-.time{color:#949ba4;font-size:11px;margin-left:5px}
-.content{margin-top:3px;line-height:1.45;word-wrap:break-word}
-.content h1{font-size:24px;margin:8px 0}
-.content h2{font-size:20px;margin:7px 0}
-.content h3{font-size:16px;margin:6px 0}
-.content blockquote{
- border-left:4px solid #4e5058;padding-left:10px;
- color:#dbdee1;margin:5px 0
-}
-.content code{
- background:#1e1f22;border-radius:4px;padding:2px 4px;
- font-family:monospace
-}
-.discord-subtext {
-  color: #949ba4;
-  font-size: 0.75em;
-  line-height: 1.3;
-  margin: 2px 0;
-}
-.codeblock{
- background:#1e1f22;border:1px solid #2b2d31;border-radius:5px;
- padding:10px;font-family:monospace;white-space:pre-wrap;margin:7px 0
-}
-.spoiler{
- background:#202225;color:transparent;border-radius:3px;
- cursor:pointer;padding:0 3px
-}
-.spoiler.revealed{color:inherit}
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
 
-.embed{
- border-left:4px solid #5865f2;background:#2b2d31;border-radius:4px;
- padding:12px 14px;margin-top:8px;max-width:520px
-}
-.embed-title{font-size:16px;font-weight:700;margin-bottom:6px}
-.embed-desc{white-space:pre-wrap}
-.fields{
- display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px
-}
-.field.full{grid-column:1/-1}
-.field-name{font-weight:700;font-size:13px}
-.field-value{white-space:pre-wrap;font-size:13px;color:#dbdee1}
-.footer{font-size:11px;color:#949ba4;margin-top:10px}
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
 
-.editor{
- display:grid;grid-template-columns:1fr 1fr;background:var(--panel);
- border-top:1px solid var(--border);min-height:0
-}
-.editorPane{padding:12px;min-width:0}
-.editorPane:first-child{border-right:1px solid var(--border)}
-.editorPane h2{
- font-size:12px;text-transform:uppercase;color:var(--muted);margin:0 0 7px
-}
-#markdown{height:190px;font-family:monospace;resize:none}
-.small{font-size:11px;color:var(--muted);margin-top:6px}
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
 
-.embedFields{display:none}
-.fieldEditor{
- border:1px solid var(--border);padding:8px;border-radius:5px;margin-top:8px
-}
-.remove{
- float:right;background:#ed4245;padding:4px 7px;font-size:11px
-}
-</style>
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 13px;
+      background: #2b2d31;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #35373c;
+    }
+
+    .primary {
+      background: var(--accent);
+    }
+
+    .primary:hover {
+      background: #4752c4;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      min-height: 0;
+    }
+
+    .sidebar {
+      overflow: auto;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .previewWrap {
+      overflow: auto;
+      padding: 35px;
+      background: #313338;
+    }
+
+    .section {
+      margin-bottom: 22px;
+    }
+
+    .section h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: .6px;
+      margin: 0 0 9px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .toolbar button {
+      min-width: 38px;
+      padding: 8px;
+      font-weight: bold;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 10px 0 5px;
+    }
+
+    input[type=text],
+    input[type=url],
+    textarea,
+    select {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 5px;
+      padding: 9px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .colour {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input[type=color] {
+      width: 42px;
+      height: 36px;
+      padding: 2px;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+    }
+
+    .message {
+      max-width: 900px;
+      margin: auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+      flex: none;
+    }
+
+    .author {
+      font-weight: 600;
+    }
+
+    .bot {
+      font-size: 10px;
+      background: var(--accent);
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
+    .time {
+      color: #949ba4;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+
+    .content {
+      margin-top: 3px;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+
+    .content h1 {
+      font-size: 24px;
+      margin: 8px 0;
+    }
+
+    .content h2 {
+      font-size: 20px;
+      margin: 7px 0;
+    }
+
+    .content h3 {
+      font-size: 16px;
+      margin: 6px 0;
+    }
+
+    .content blockquote {
+      border-left: 4px solid #4e5058;
+      padding-left: 10px;
+      color: #dbdee1;
+      margin: 5px 0;
+    }
+
+    .content code {
+      background: #1e1f22;
+      border-radius: 4px;
+      padding: 2px 4px;
+      font-family: monospace;
+    }
+
+    .content a {
+      color: #00a8fc;
+      text-decoration: none;
+    }
+
+    .content a:hover {
+      text-decoration: underline;
+    }
+
+    .discord-subtext {
+      color: #949ba4;
+      font-size: 0.75em;
+      line-height: 1.3;
+      margin: 2px 0;
+    }
+
+    .discord-subtext a {
+      color: #949ba4;
+    }
+
+    .discord-subtext a:hover {
+      color: #dbdee1;
+    }
+
+    .codeblock {
+      background: #1e1f22;
+      border: 1px solid #2b2d31;
+      border-radius: 5px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin: 7px 0;
+    }
+
+    .spoiler {
+      background: #202225;
+      color: transparent;
+      border-radius: 3px;
+      cursor: pointer;
+      padding: 0 3px;
+    }
+
+    .spoiler.revealed {
+      color: inherit;
+    }
+
+    .embed {
+      border-left: 4px solid #5865f2;
+      background: #2b2d31;
+      border-radius: 4px;
+      padding: 12px 14px;
+      margin-top: 8px;
+      max-width: 520px;
+    }
+
+    .embed-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .embed-desc {
+      white-space: pre-wrap;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field-name {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .field-value {
+      white-space: pre-wrap;
+      font-size: 13px;
+      color: #dbdee1;
+    }
+
+    .footer {
+      font-size: 11px;
+      color: #949ba4;
+      margin-top: 10px;
+    }
+
+    .editor {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      min-height: 0;
+    }
+
+    .editorPane {
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .editorPane:first-child {
+      border-right: 1px solid var(--border);
+    }
+
+    .editorPane h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 7px;
+    }
+
+    #markdown {
+      height: 190px;
+      font-family: monospace;
+      resize: none;
+    }
+
+    .small {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    #embedFields {
+      display: none;
+    }
+
+    .fieldEditor {
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 5px;
+      margin-top: 8px;
+    }
+
+    .remove {
+      float: right;
+      background: #ed4245;
+      padding: 4px 7px;
+      font-size: 11px;
+    }
+
+    .remove:hover {
+      background: #c73537;
+    }
+
+    .checkboxRow {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .checkboxRow input {
+      width: auto;
+      margin: 0;
+    }
+  </style>
 </head>
 
 <body>
+
 <div class="app">
 
-<header>
-  <h1>Discord Message Designer</h1>
+  <header>
+    <h1>Discord Message Designer</h1>
 
-  <div class="actions">
-    <button onclick="clearAll()">Clear</button>
-    <button onclick="copyMarkdown()" class="primary">Copy Markdown</button>
-  </div>
-</header>
-
-<div class="main">
-
-<aside class="sidebar">
-
-  <div class="section">
-    <h2>Formatting</h2>
-
-    <div class="toolbar">
-      <button onclick="wrap('**','**')" title="Bold">B</button>
-      <button onclick="wrap('*','*')" title="Italic"><i>I</i></button>
-      <button onclick="wrap('__','__')" title="Underline"><u>U</u></button>
-      <button onclick="wrap('~~','~~')" title="Strikethrough"><s>S</s></button>
-      <button onclick="wrap('||','||')" title="Spoiler">||</button>
-
-      <button onclick="insert('# ')" title="Heading">H1</button>
-      <button onclick="insert('## ')" title="Heading 2">H2</button>
-      <button onclick="insert('### ')" title="Heading 3">H3</button>
-
-      <button onclick="insert('> ')" title="Quote">❯</button>
-      <button onclick="insert('- ')" title="List">•</button>
-
-      <button onclick="wrap('`','`')" title="Inline code">
-        &lt;/&gt;
+    <div class="actions">
+      <button onclick="clearAll()">Clear</button>
+      <button onclick="copyMarkdown()" class="primary">
+        Copy Markdown
       </button>
-
-      <button onclick="codeBlock()" title="Code block">CODE</button>
-      <button onclick="link()" title="Link">LINK</button>
     </div>
-  </div>
+  </header>
 
-  <div class="section">
-    <h2>Message</h2>
 
-    <label>Author</label>
-    <input id="author" type="text" value="AkaneBot" oninput="render()">
+  <div class="main">
 
-    <label>Avatar letter</label>
-    <input id="avatar" type="text" value="A" maxlength="2" oninput="render()">
-  </div>
+    <aside class="sidebar">
 
-  <div class="section">
-    <h2>Embed</h2>
+      <div class="section">
 
-    <label>
-      <input id="enableEmbed" type="checkbox" onchange="toggleEmbed()">
-      Enable embed
-    </label>
+        <h2>Formatting</h2>
 
-    <div id="embedFields">
+        <div class="toolbar">
 
-      <label>Embed colour</label>
+          <button onclick="wrap('**','**')" title="Bold">
+            B
+          </button>
 
-      <div class="colour">
+          <button onclick="wrap('*','*')" title="Italic">
+            <i>I</i>
+          </button>
+
+          <button onclick="wrap('__','__')" title="Underline">
+            <u>U</u>
+          </button>
+
+          <button onclick="wrap('~~','~~')" title="Strikethrough">
+            <s>S</s>
+          </button>
+
+          <button onclick="wrap('||','||')" title="Spoiler">
+            ||
+          </button>
+
+          <button onclick="insert('# ')" title="Heading">
+            H1
+          </button>
+
+          <button onclick="insert('## ')" title="Heading 2">
+            H2
+          </button>
+
+          <button onclick="insert('### ')" title="Heading 3">
+            H3
+          </button>
+
+          <button onclick="insert('> ')" title="Quote">
+            ❯
+          </button>
+
+          <button onclick="insert('- ')" title="List">
+            •
+          </button>
+
+          <button onclick="wrap('`','`')" title="Inline code">
+            &lt;/&gt;
+          </button>
+
+          <button onclick="codeBlock()" title="Code block">
+            CODE
+          </button>
+
+          <button onclick="link()" title="Link">
+            LINK
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="section">
+
+        <h2>Message</h2>
+
+        <label>Author</label>
+
         <input
-          id="embedColour"
-          type="color"
-          value="#5865f2"
+          id="author"
+          type="text"
+          value="AkaneBot"
           oninput="render()"
         >
-        <span id="colourText">#5865f2</span>
+
+        <label>Avatar letter</label>
+
+        <input
+          id="avatar"
+          type="text"
+          value="A"
+          maxlength="2"
+          oninput="render()"
+        >
+
+        <label>Site Promo</label>
+
+        <div class="checkboxRow">
+
+          <input
+            id="promosite"
+            type="checkbox"
+            checked
+            onchange="render()"
+          >
+
+          <span>
+            Add promo when copying Markdown
+          </span>
+
+        </div>
+
       </div>
 
-      <label>Title</label>
-      <input id="embedTitle" type="text" oninput="render()">
 
-      <label>Description</label>
-      <textarea id="embedDesc" oninput="render()"></textarea>
+      <div class="section">
 
-      <label>Footer</label>
-      <input id="embedFooter" type="text" oninput="render()">
+        <h2>Embed</h2>
 
-      <label>Fields</label>
+        <label class="checkboxRow">
 
-      <div id="fields"></div>
+          <input
+            id="enableEmbed"
+            type="checkbox"
+            onchange="toggleEmbed()"
+          >
 
-      <button onclick="addField()">+ Add field</button>
+          <span>
+            Enable embed
+          </span>
 
-    </div>
-  </div>
+        </label>
 
-</aside>
 
-<main class="previewWrap">
+        <div id="embedFields">
 
-  <div class="message">
+          <label>Embed colour</label>
 
-    <div class="avatar" id="pvAvatar">A</div>
+          <div class="colour">
 
-    <div style="min-width:0">
+            <input
+              id="embedColour"
+              type="color"
+              value="#5865f2"
+              oninput="render()"
+            >
 
-      <div>
-        <span class="author" id="pvAuthor">AkaneBot</span>
-        <span class="bot">BOT</span>
-        <span class="time">Today at 11:04 AM</span>
+            <span id="colourText">
+              #5865f2
+            </span>
+
+          </div>
+
+
+          <label>Title</label>
+
+          <input
+            id="embedTitle"
+            type="text"
+            oninput="render()"
+          >
+
+
+          <label>Description</label>
+
+          <textarea
+            id="embedDesc"
+            oninput="render()"
+          ></textarea>
+
+
+          <label>Footer</label>
+
+          <input
+            id="embedFooter"
+            type="text"
+            oninput="render()"
+          >
+
+
+          <label>Fields</label>
+
+          <div id="fields"></div>
+
+          <button onclick="addField()">
+            + Add field
+          </button>
+
+        </div>
+
       </div>
 
-      <div class="content" id="preview"></div>
+    </aside>
+
+
+    <main class="previewWrap">
+
+      <div class="message">
+
+        <div class="avatar" id="pvAvatar">
+          A
+        </div>
+
+        <div style="min-width:0">
+
+          <div>
+
+            <span class="author" id="pvAuthor">
+              AkaneBot
+            </span>
+
+            <span class="bot">
+              BOT
+            </span>
+
+            <span class="time">
+              Today at 11:04 AM
+            </span>
+
+          </div>
+
+          <div
+            class="content"
+            id="preview"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+
+  <div class="editor">
+
+    <div class="editorPane">
+
+      <h2>Markdown</h2>
+
+      <textarea
+        id="markdown"
+        spellcheck="false"
+        oninput="render()"
+      ></textarea>
+
+      <div class="small">
+        Your message is rendered live above.
+      </div>
+
+    </div>
+
+
+    <div class="editorPane">
+
+      <h2>Embed JSON</h2>
+
+      <textarea
+        id="embedJson"
+        spellcheck="false"
+        readonly
+      ></textarea>
+
+      <div class="small">
+        Useful when building Discord bot messages.
+      </div>
 
     </div>
 
   </div>
 
-</main>
-
 </div>
 
-<div class="editor">
-
-  <div class="editorPane">
-
-    <h2>Markdown</h2>
-
-    <textarea
-      id="markdown"
-      spellcheck="false"
-      oninput="render()"
-    ></textarea>
-
-    <div class="small">
-      Your message is rendered live above.
-    </div>
-
-  </div>
-
-  <div class="editorPane">
-
-    <h2>Embed JSON</h2>
-
-    <textarea
-      id="embedJson"
-      spellcheck="false"
-      readonly
-    ></textarea>
-
-    <div class="small">
-      Useful when building Discord bot messages.
-    </div>
-
-  </div>
-
-</div>
-
-</div>
 
 <script>
-const md = document.getElementById('markdown');
-const preview = document.getElementById('preview');
+
+const md =
+  document.getElementById('markdown');
+
+const preview =
+  document.getElementById('preview');
+
+
+/*
+ * This is NEVER inserted into md.value.
+ *
+ * It is only:
+ *
+ * 1. Rendered in the preview when enabled.
+ * 2. Appended to the copied Markdown when enabled.
+ */
+
+const PROMO_MARKDOWN =
+  '-# Made with [Discord Message Designer](https://akanedev.au/discordMessageFormatter/index.html) by AkaneDev';
+
+
+/*
+ * Escape HTML.
+ */
 
 function esc(s) {
+
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+
 }
 
+
+/*
+ * Render inline Markdown.
+ */
+
 function inline(s) {
+
   s = esc(s);
+
+
+  /*
+   * Inline code
+   */
 
   s = s.replace(
     /`([^`]+)`/g,
     '<code>$1</code>'
   );
 
+
+  /*
+   * Bold
+   */
+
   s = s.replace(
-    /\*\*([^\*]+)\*\*/g,
+    /\*\*([^*]+)\*\*/g,
     '<strong>$1</strong>'
   );
+
+
+  /*
+   * Underline
+   */
 
   s = s.replace(
     /__([^_]+)__/g,
     '<u>$1</u>'
   );
 
+
+  /*
+   * Strikethrough
+   */
+
   s = s.replace(
     /~~([^~]+)~~/g,
     '<s>$1</s>'
   );
 
+
+  /*
+   * Italic
+   */
+
   s = s.replace(
-    /\*([^\*]+)\*/g,
+    /\*([^*]+)\*/g,
     '<em>$1</em>'
   );
+
+
+  /*
+   * Spoiler
+   */
 
   s = s.replace(
     /\|\|(.+?)\|\|/g,
     '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>'
   );
 
+
+  /*
+   * Markdown links
+   */
+
   s = s.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener">$1</a>'
   );
 
+
   return s;
+
 }
 
+
+/*
+ * Render Markdown into the Discord-style preview.
+ */
+
 function renderMarkdown(text) {
-  const lines = text.split('\n');
+
+  const lines =
+    text.split('\n');
+
   const out = [];
 
   let inCode = false;
+
   let code = [];
 
+
   for (const line of lines) {
+
 
     /*
      * Code blocks
      */
+
     if (line.startsWith('```')) {
 
       if (inCode) {
@@ -352,6 +856,7 @@ function renderMarkdown(text) {
         );
 
         code = [];
+
         inCode = false;
 
       } else {
@@ -363,16 +868,22 @@ function renderMarkdown(text) {
       continue;
     }
 
+
     if (inCode) {
+
       code.push(line);
+
       continue;
+
     }
+
 
     /*
      * Discord subtext
      *
      * -# This is subtext
      */
+
     if (/^-# /.test(line)) {
 
       out.push(
@@ -381,9 +892,11 @@ function renderMarkdown(text) {
         '</div>'
       );
 
+
     /*
      * Headings
      */
+
     } else if (/^### /.test(line)) {
 
       out.push(
@@ -408,9 +921,11 @@ function renderMarkdown(text) {
         '</h1>'
       );
 
+
     /*
      * Blockquotes
      */
+
     } else if (/^> /.test(line)) {
 
       out.push(
@@ -419,9 +934,11 @@ function renderMarkdown(text) {
         '</blockquote>'
       );
 
+
     /*
      * Unordered lists
      */
+
     } else if (/^[-*] /.test(line)) {
 
       out.push(
@@ -430,9 +947,11 @@ function renderMarkdown(text) {
         '</div>'
       );
 
+
     /*
      * Ordered lists
      */
+
     } else if (/^\d+\.\s/.test(line)) {
 
       out.push(
@@ -441,16 +960,20 @@ function renderMarkdown(text) {
         '</div>'
       );
 
+
     /*
      * Empty line
      */
+
     } else if (line.trim() === '') {
 
       out.push('<br>');
 
+
     /*
      * Normal text
      */
+
     } else {
 
       out.push(
@@ -460,12 +983,14 @@ function renderMarkdown(text) {
       );
 
     }
+
   }
 
+
   /*
-   * If the user forgot to close a code block,
-   * still render what they entered.
+   * Render an unclosed code block.
    */
+
   if (inCode && code.length) {
 
     out.push(
@@ -476,44 +1001,165 @@ function renderMarkdown(text) {
 
   }
 
+
   return out.join('');
+
 }
+
+
+/*
+ * Get the Markdown that will actually be copied.
+ *
+ * IMPORTANT:
+ *
+ * md.value itself does NOT contain the promo.
+ */
+
+function getMarkdownForCopy() {
+
+  let result =
+    md.value;
+
+
+  const promoEnabled =
+    document.getElementById('promosite').checked;
+
+
+  if (promoEnabled) {
+
+    /*
+     * Only add a separator if there is
+     * already message content.
+     */
+
+    if (result.trim().length > 0) {
+
+      result =
+        result.trimEnd() +
+        '\n\n' +
+        PROMO_MARKDOWN;
+
+    } else {
+
+      result =
+        PROMO_MARKDOWN;
+
+    }
+
+  }
+
+
+  return result;
+
+}
+
+
+/*
+ * Render everything.
+ */
 
 function render() {
 
-  preview.innerHTML = renderMarkdown(md.value);
+  /*
+   * Render the user's actual Markdown.
+   */
+
+  preview.innerHTML =
+    renderMarkdown(md.value);
+
+
+  /*
+   * Author.
+   */
 
   document.getElementById('pvAuthor').textContent =
-    document.getElementById('author').value || 'User';
+    document.getElementById('author').value ||
+    'User';
+
+
+  /*
+   * Avatar.
+   */
 
   document.getElementById('pvAvatar').textContent =
-    document.getElementById('avatar').value || 'A';
+    document.getElementById('avatar').value ||
+    'A';
+
+
+  /*
+   * Colour.
+   */
 
   const colour =
     document.getElementById('embedColour').value;
 
+
   document.getElementById('colourText').textContent =
     colour;
+
+
+  /*
+   * Site promo preview.
+   *
+   * This does NOT modify md.value.
+   */
+
+  const promoEnabled =
+    document.getElementById('promosite').checked;
+
+
+  if (promoEnabled) {
+
+    const promo =
+      document.createElement('div');
+
+    promo.className =
+      'discord-subtext';
+
+    promo.style.marginTop =
+      '16px';
+
+    promo.innerHTML =
+      inline(
+        PROMO_MARKDOWN.slice(3)
+      );
+
+    preview.appendChild(promo);
+
+  }
+
+
+  /*
+   * Embed.
+   */
 
   const enabled =
     document.getElementById('enableEmbed').checked;
 
+
   if (enabled) {
 
-    const embed = document.createElement('div');
+    const embed =
+      document.createElement('div');
 
-    embed.className = 'embed';
+    embed.className =
+      'embed';
 
-    embed.style.borderLeftColor = colour;
+    embed.style.borderLeftColor =
+      colour;
+
 
     const title =
       document.getElementById('embedTitle').value;
 
+
     const desc =
       document.getElementById('embedDesc').value;
 
+
     const footer =
       document.getElementById('embedFooter').value;
+
 
     if (title) {
 
@@ -524,6 +1170,7 @@ function render() {
 
     }
 
+
     if (desc) {
 
       embed.innerHTML +=
@@ -533,10 +1180,13 @@ function render() {
 
     }
 
+
     const fields =
       document.createElement('div');
 
-    fields.className = 'fields';
+    fields.className =
+      'fields';
+
 
     document
       .querySelectorAll('.fieldEditor')
@@ -545,11 +1195,14 @@ function render() {
         const name =
           x.querySelector('.fn').value;
 
+
         const value =
           x.querySelector('.fv').value;
 
+
         const full =
           x.querySelector('.fullCheck').checked;
+
 
         if (name || value) {
 
@@ -557,7 +1210,9 @@ function render() {
             document.createElement('div');
 
           field.className =
-            'field ' + (full ? 'full' : '');
+            'field ' +
+            (full ? 'full' : '');
+
 
           field.innerHTML =
             '<div class="field-name">' +
@@ -568,45 +1223,65 @@ function render() {
             esc(value) +
             '</div>';
 
+
           fields.appendChild(field);
+
         }
 
       });
 
+
     embed.appendChild(fields);
+
 
     if (footer) {
 
       const f =
         document.createElement('div');
 
-      f.className = 'footer';
+      f.className =
+        'footer';
 
-      f.textContent = footer;
+      f.textContent =
+        footer;
 
       embed.appendChild(f);
 
     }
 
+
     preview.appendChild(embed);
+
   }
 
+
   updateJSON();
+
 }
+
+
+/*
+ * Wrap selected text.
+ */
 
 function wrap(a, b) {
 
   const start =
     md.selectionStart;
 
+
   const end =
     md.selectionEnd;
+
 
   const value =
     md.value;
 
+
   const selected =
-    value.slice(start, end) || 'text';
+    value.slice(start, end) ||
+    'text';
+
 
   md.value =
     value.slice(0, start) +
@@ -615,38 +1290,58 @@ function wrap(a, b) {
     b +
     value.slice(end);
 
+
   md.focus();
+
 
   md.setSelectionRange(
     start + a.length,
     end + a.length
   );
 
+
   render();
+
 }
+
+
+/*
+ * Insert Markdown.
+ */
 
 function insert(text) {
 
   const start =
     md.selectionStart;
 
+
   const value =
     md.value;
+
 
   md.value =
     value.slice(0, start) +
     text +
     value.slice(start);
 
+
   md.focus();
+
 
   md.setSelectionRange(
     start + text.length,
     start + text.length
   );
 
+
   render();
+
 }
+
+
+/*
+ * Code block.
+ */
 
 function codeBlock() {
 
@@ -654,41 +1349,62 @@ function codeBlock() {
     '```\n',
     '\n```'
   );
+
 }
+
+
+/*
+ * Markdown link.
+ */
 
 function link() {
 
   const start =
     md.selectionStart;
 
+
   const end =
     md.selectionEnd;
+
 
   const value =
     md.value;
 
+
   const selected =
-    value.slice(start, end) || 'link text';
+    value.slice(start, end) ||
+    'link text';
+
 
   const replacement =
     '[' +
     selected +
     '](https://example.com)';
 
+
   md.value =
     value.slice(0, start) +
     replacement +
     value.slice(end);
 
+
   md.focus();
+
 
   md.setSelectionRange(
     start + 1,
     start + 1 + selected.length
   );
 
+
   render();
+
 }
+
+
+/*
+ * Toggle embed editor.
+ */
 
 function toggleEmbed() {
 
@@ -697,23 +1413,34 @@ function toggleEmbed() {
       ? 'block'
       : 'none';
 
+
   render();
+
 }
+
+
+/*
+ * Add embed field.
+ */
 
 function addField() {
 
   const field =
     document.createElement('div');
 
+
   field.className =
     'fieldEditor';
+
 
   field.innerHTML = `
 
     <button
       class="remove"
       onclick="this.parentElement.remove();render()"
-    >×</button>
+    >
+      ×
+    </button>
 
     <label>Name</label>
 
@@ -730,7 +1457,7 @@ function addField() {
       oninput="render()"
     ></textarea>
 
-    <label>
+    <label class="checkboxRow">
 
       <input
         class="fullCheck"
@@ -738,29 +1465,42 @@ function addField() {
         onchange="render()"
       >
 
-      Full width
+      <span>Full width</span>
 
     </label>
+
   `;
+
 
   document
     .getElementById('fields')
     .appendChild(field);
 
+
   render();
+
 }
+
+
+/*
+ * Generate Embed JSON.
+ */
 
 function updateJSON() {
 
   const enabled =
     document.getElementById('enableEmbed').checked;
 
+
   if (!enabled) {
 
-    document.getElementById('embedJson').value = '';
+    document.getElementById('embedJson').value =
+      '';
 
     return;
+
   }
+
 
   const obj = {
 
@@ -780,9 +1520,12 @@ function updateJSON() {
           .slice(1),
         16
       )
+
   };
 
+
   const fields = [];
+
 
   document
     .querySelectorAll('.fieldEditor')
@@ -791,8 +1534,10 @@ function updateJSON() {
       const name =
         x.querySelector('.fn').value;
 
+
       const value =
         x.querySelector('.fv').value;
+
 
       if (name || value) {
 
@@ -811,73 +1556,148 @@ function updateJSON() {
 
     });
 
-  if (fields.length)
-    obj.fields = fields;
+
+  if (fields.length) {
+
+    obj.fields =
+      fields;
+
+  }
+
 
   const footer =
     document.getElementById('embedFooter').value;
 
-  if (footer)
+
+  if (footer) {
+
     obj.footer = {
       text: footer
     };
 
+  }
+
+
   Object.keys(obj).forEach(k => {
 
-    if (obj[k] === undefined)
+    if (obj[k] === undefined) {
+
       delete obj[k];
+
+    }
 
   });
 
+
   document.getElementById('embedJson').value =
     JSON.stringify(obj, null, 2);
+
 }
+
+
+/*
+ * Copy the actual Markdown.
+ *
+ * The promo is appended here only.
+ * It never appears inside the Markdown editor.
+ */
 
 async function copyMarkdown() {
 
+  const markdownToCopy =
+    getMarkdownForCopy();
+
+
   try {
 
-    await navigator.clipboard.writeText(md.value);
+    await navigator.clipboard.writeText(
+      markdownToCopy
+    );
 
     alert('Markdown copied!');
 
   } catch {
 
-    md.select();
+    /*
+     * Fallback for older browsers.
+     */
+
+    const temp =
+      document.createElement('textarea');
+
+    temp.value =
+      markdownToCopy;
+
+    temp.style.position =
+      'fixed';
+
+    temp.style.opacity =
+      '0';
+
+    document.body.appendChild(temp);
+
+    temp.focus();
+
+    temp.select();
 
     document.execCommand('copy');
 
+    temp.remove();
+
   }
-}
 
-function clearAll() {
-
-  md.value = '';
-
-  document.getElementById('enableEmbed').checked =
-    false;
-
-  document.getElementById('embedTitle').value =
-    '';
-
-  document.getElementById('embedDesc').value =
-    '';
-
-  document.getElementById('embedFooter').value =
-    '';
-
-  document.getElementById('fields').innerHTML =
-    '';
-
-  toggleEmbed();
-
-  render();
 }
 
 
 /*
- * Example message
+ * Clear everything.
+ *
+ * Site Promo remains enabled by default.
  */
+
+function clearAll() {
+
+  md.value =
+    '';
+
+
+  document.getElementById('promosite').checked =
+    true;
+
+
+  document.getElementById('enableEmbed').checked =
+    false;
+
+
+  document.getElementById('embedTitle').value =
+    '';
+
+
+  document.getElementById('embedDesc').value =
+    '';
+
+
+  document.getElementById('embedFooter').value =
+    '';
+
+
+  document.getElementById('fields').innerHTML =
+    '';
+
+
+  toggleEmbed();
+
+  render();
+
+}
+
+
+/*
+ * Example message.
+ *
+ * Notice that the promo is NOT included here.
+ */
+
 md.value = `# Hello!
 
 This is **my Discord message** with *formatting*.
@@ -895,7 +1715,15 @@ This is **my Discord message** with *formatting*.
 -# \`And it can contain inline code.\`
 `;
 
+
+/*
+ * Initial render.
+ *
+ * Site Promo is already checked by default.
+ */
+
 render();
+
 </script>
 
 </body>
