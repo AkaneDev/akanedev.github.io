@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DynamicSite Generator</title>
+
+    <script src="dynamicSite.js"></script>
+
+    <style>
+        :root {
+            color-scheme: dark;
+
+            --bg: #070910;
+            --panel: #0d111b;
+            --panel-light: #111827;
+            --border: rgba(255, 255, 255, 0.09);
+            --border-hover: rgba(255, 255, 255, 0.16);
+
+            --text: #edf2f7;
+            --muted: #8993a4;
+            --dim: #5e6878;
+
+            --accent: #7aa7ff;
+            --accent-bright: #9bbcff;
+
+            --green: #55e69a;
+            --red: #ff6b7a;
+
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            background: var(--bg);
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+
+            color: var(--text);
+            background:
+                radial-gradient(
+                    circle at 50% -20%,
+                    rgba(82, 120, 255, 0.12),
+                    transparent 45%
+                ),
+                var(--bg);
+
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        body::before {
+            content: "";
+
+            position: fixed;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    rgba(255,255,255,0.018) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,0.018) 1px,
+                    transparent 1px
+                );
+
+            background-size: 40px 40px;
+
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        header {
+            width: min(1100px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 2rem 0 1rem;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+
+            display: grid;
+            place-items: center;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(122,167,255,0.18),
+                    rgba(122,167,255,0.04)
+                );
+
+            color: var(--accent-bright);
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-subtitle {
+            margin-left: 0.35rem;
+
+            color: var(--dim);
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .version {
+            padding: 0.35rem 0.65rem;
+
+            border: 1px solid var(--border);
+            border-radius: 999px;
+
+            color: var(--muted);
+            background: rgba(255,255,255,0.025);
+
+            font-family: monospace;
+            font-size: 0.72rem;
+        }
+
+        main {
+            width: min(1100px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 3rem 0 5rem;
+        }
+
+        .hero {
+            max-width: 760px;
+            margin-bottom: 2.5rem;
+        }
+
+        .eyebrow {
+            margin-bottom: 0.8rem;
+
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size: clamp(2.6rem, 7vw, 5rem);
+            line-height: 0.95;
+            letter-spacing: -0.065em;
+        }
+
+        .hero p {
+            max-width: 680px;
+            margin: 1.5rem 0 0;
+
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+            gap: 1rem;
+        }
+
+        .panel {
+            min-width: 0;
+
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,255,255,0.025),
+                    rgba(255,255,255,0.01)
+                ),
+                var(--panel);
+
+            box-shadow:
+                0 20px 70px rgba(0,0,0,0.2),
+                inset 0 1px rgba(255,255,255,0.025);
+
+            overflow: hidden;
+        }
+
+        .panel-header {
+            min-height: 58px;
+            padding: 0 1.2rem;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+
+            font-size: 0.85rem;
+            font-weight: 650;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+            background: var(--green);
+
+            box-shadow:
+                0 0 12px rgba(85,230,154,0.6);
+        }
+
+        .panel-label {
+            color: var(--dim);
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+
+        .editor-wrap {
+            padding: 1rem;
+        }
+
+        textarea {
+            display: block;
+
+            width: 100%;
+            min-height: 510px;
+
+            padding: 1.2rem;
+
+            resize: vertical;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+
+            color: #dce5f1;
+            background: #070a11;
+
+            font-family:
+                "JetBrains Mono",
+                "Fira Code",
+                "Cascadia Code",
+                monospace;
+
+            font-size: 0.83rem;
+            line-height: 1.65;
+
+            tab-size: 4;
+
+            transition:
+                border-color 120ms ease,
+                box-shadow 120ms ease;
+        }
+
+        textarea:focus {
+            border-color: rgba(122,167,255,0.5);
+
+            box-shadow:
+                0 0 0 3px rgba(122,167,255,0.08);
+        }
+
+        textarea::placeholder {
+            color: #414b5b;
+        }
+
+        .editor-footer {
+            margin-top: 0.8rem;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+
+            color: var(--dim);
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+
+        .actions {
+            padding: 1rem;
+
+            display: flex;
+            gap: 0.7rem;
+
+            border-top: 1px solid var(--border);
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+
+            padding: 0.72rem 1rem;
+
+            color: var(--text);
+            background: var(--panel-light);
+
+            font: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                transform 100ms ease,
+                background 100ms ease,
+                border-color 100ms ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: #182131;
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            color: #07101d;
+            background: var(--accent);
+        }
+
+        .primary:hover:not(:disabled) {
+            background: var(--accent-bright);
+        }
+
+        .secondary {
+            border: 1px solid var(--border);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .stat {
+            padding: 1.1rem;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat:nth-child(odd) {
+            border-right: 1px solid var(--border);
+        }
+
+        .stat-label {
+            color: var(--dim);
+
+            font-family: monospace;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            margin-top: 0.35rem;
+
+            font-family: monospace;
+            font-size: 1.05rem;
+            font-weight: 650;
+        }
+
+        .format {
+            padding: 1.2rem;
+        }
+
+        .format-title {
+            margin-bottom: 0.8rem;
+
+            font-size: 0.8rem;
+            font-weight: 650;
+        }
+
+        .format-code {
+            padding: 0.8rem;
+
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            color: #aebbd0;
+            background: #070a11;
+
+            font-family: monospace;
+            font-size: 0.72rem;
+
+            word-break: break-all;
+        }
+
+        .result {
+            margin-top: 1rem;
+
+            border: 1px solid rgba(85,230,154,0.18);
+            border-radius: var(--radius);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(85,230,154,0.035),
+                    transparent
+                ),
+                var(--panel);
+        }
+
+        .result .panel-header {
+            border-bottom-color: rgba(85,230,154,0.12);
+        }
+
+        .result-status {
+            color: var(--green);
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+
+        .result-body {
+            padding: 1rem;
+        }
+
+        .url-box {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        #url {
+            flex: 1;
+            min-width: 0;
+
+            padding: 0.8rem 0.9rem;
+
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+
+            color: #b9c7db;
+            background: #070a11;
+
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .open-link {
+            display: inline-block;
+            margin-top: 0.8rem;
+
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 0.75rem;
+            text-decoration: none;
+        }
+
+        .open-link:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            margin-top: 1rem;
+            padding: 0.9rem 1rem;
+
+            border: 1px solid rgba(255,107,122,0.2);
+            border-radius: 9px;
+
+            color: var(--red);
+            background: rgba(255,107,122,0.04);
+
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        footer {
+            width: min(1100px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 0 0 2rem;
+
+            color: var(--dim);
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 800px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            textarea {
+                min-height: 380px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            header {
+                width: min(100% - 24px, 1100px);
+            }
+
+            main,
+            footer {
+                width: min(100% - 24px, 1100px);
+            }
+
+            .brand-subtitle {
+                display: none;
+            }
+
+            .hero {
+                margin-bottom: 2rem;
+            }
+
+            .url-box {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <a class="brand" href="#">
+        <span class="brand-mark">&gt;_</span>
+
+        <span class="brand-name">
+            DynamicSite
+        </span>
+
+        <span class="brand-subtitle">
+            by AkaneDev
+        </span>
+    </a>
+
+    <span class="version">
+        DS2
+    </span>
+</header>
+
+
+<main>
+
+    <section class="hero">
+        <div class="eyebrow">
+            URL-native websites
+        </div>
+
+        <h1>
+            Your website.<br>
+            In a URL.
+        </h1>
+
+        <p>
+            Encode an entire HTML document into a single URL.
+            DynamicSite uses a custom Unicode encoding so the
+            resulting URL becomes the website itself.
+        </p>
+    </section>
+
+
+    <section class="workspace">
+
+        <!-- Editor -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="dot"></span>
+                    HTML source
+                </div>
+
+                <span class="panel-label">
+                    INPUT
+                </span>
+            </div>
+
+            <div class="editor-wrap">
+
+                <textarea
+                    id="html"
+                    spellcheck="false"
+                    placeholder="<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello</title>
+</head>
+<body>
+    <h1>Hello from DynamicSite!</h1>
+</body>
+</html>"
+                ></textarea>
+
+                <div class="editor-footer">
+                    <span id="inputSize">
+                        0 bytes
+                    </span>
+
+                    <span>
+                        UTF-8
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="actions">
+                <button
+                    class="primary"
+                    id="generate"
+                >
+                    Generate DynamicSite
+                </button>
+
+                <button
+                    class="secondary"
+                    id="clear"
+                >
+                    Clear
+                </button>
+            </div>
+
+        </div>
+
+
+        <!-- Information -->
+
+        <aside class="panel">
+
+            <div class="panel-header">
+                <div class="panel-title">
+                    Encoding
+                </div>
+
+                <span class="panel-label">
+                    DS2
+                </span>
+            </div>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Source
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="sourceStat"
+                    >
+                        0 B
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        Unicode
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="unicodeStat"
+                    >
+                        —
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        DS1
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="ds1Stat"
+                    >
+                        —
+                    </div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-label">
+                        DS2
+                    </div>
+
+                    <div
+                        class="stat-value"
+                        id="ds2Stat"
+                    >
+                        —
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="format">
+
+                <div class="format-title">
+                    Payload format
+                </div>
+
+                <div class="format-code">
+                    DS2:&lt;unicode payload&gt;
+                </div>
+
+            </div>
+
+            <div class="format">
+
+                <div class="format-title">
+                    How it works
+                </div>
+
+                <div
+                    style="
+                        color: var(--muted);
+                        font-size: 0.78rem;
+                        line-height: 1.7;
+                    "
+                >
+                    HTML is converted to UTF-8,
+                    packed into 14-bit values,
+                    then represented using Unicode
+                    characters.
+                </div>
+
+            </div>
+
+        </aside>
+
+    </section>
+
+
+    <!-- Generated URL -->
+
+    <section
+        class="panel result"
+        id="result"
+        hidden
+    >
+
+        <div class="panel-header">
+
+            <div class="panel-title">
+                DynamicSite generated
+            </div>
+
+            <span class="result-status">
+                READY
+            </span>
+
+        </div>
+
+        <div class="result-body">
+
+            <div class="url-box">
+
+                <input
+                    id="url"
+                    type="text"
+                    readonly
+                >
+
+                <button
+                    class="primary"
+                    id="copy"
+                    disabled
+                >
+                    Copy
+                </button>
+
+            </div>
+
+            <a
+                id="open"
+                class="open-link"
+                target="_blank"
+                rel="noopener"
+            >
+                Open generated site →
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <div
+        id="error"
+        class="error"
+        hidden
+    ></div>
+
+</main>
+
+
+<footer>
+    AKANEDEV // DYNAMICSITE // DS2 // THE URL IS THE WEBSITE
+</footer>
+
+
+<script>
+    const htmlInput =
+        document.getElementById("html");
+
+    const generateButton =
+        document.getElementById("generate");
+
+    const clearButton =
+        document.getElementById("clear");
+
+    const copyButton =
+        document.getElementById("copy");
+
+    const result =
+        document.getElementById("result");
+
+    const urlInput =
+        document.getElementById("url");
+
+    const openLink =
+        document.getElementById("open");
+
+    const errorBox =
+        document.getElementById("error");
+
+    const inputSize =
+        document.getElementById("inputSize");
+
+    const sourceStat =
+        document.getElementById("sourceStat");
+
+    const unicodeStat =
+        document.getElementById("unicodeStat");
+
+    const ds1Stat =
+        document.getElementById("ds1Stat");
+
+    const ds2Stat =
+        document.getElementById("ds2Stat");
+
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) {
+            return `${bytes} B`;
+        }
+
+        if (bytes < 1024 * 1024) {
+            return `${(bytes / 1024).toFixed(1)} KB`;
+        }
+
+        return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+
+    function updateInputStats() {
+        const bytes =
+            new TextEncoder()
+                .encode(htmlInput.value)
+                .length;
+
+        inputSize.textContent =
+            formatBytes(bytes);
+
+        sourceStat.textContent =
+            formatBytes(bytes);
+    }
+
+
+    htmlInput.addEventListener(
+        "input",
+        updateInputStats
+    );
+
+
+    generateButton.addEventListener(
+        "click",
+        () => {
+            errorBox.hidden = true;
+
+            const html =
+                htmlInput.value;
+
+            if (!html.trim()) {
+                errorBox.textContent =
+                    "Enter some HTML first.";
+
+                errorBox.hidden = false;
+
+                return;
+            }
+
+            try {
+                const stats =
+                    getDynamicSiteStats(html);
+
+                const generatedURL =
+                    createDynamicSiteURL(html);
+
+                urlInput.value =
+                    generatedURL;
+
+                openLink.href =
+                    generatedURL;
+
+                unicodeStat.textContent =
+                    `${stats.ds2Characters.toLocaleString()} chars`;
+
+                ds1Stat.textContent =
+                    `${stats.ds1Characters.toLocaleString()} chars`;
+
+                ds2Stat.textContent =
+                    `${stats.ds2Characters.toLocaleString()} chars`;
+
+                result.hidden = false;
+
+                copyButton.disabled = false;
+
+                /*
+                 * Scroll the generated URL into view.
+                 */
+                result.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest"
+                });
+
+            } catch (error) {
+                console.error(error);
+
+                errorBox.textContent =
+                    error.message;
+
+                errorBox.hidden = false;
+            }
+        }
+    );
+
+
+    clearButton.addEventListener(
+        "click",
+        () => {
+            htmlInput.value = "";
+
+            result.hidden = true;
+
+            copyButton.disabled = true;
+
+            urlInput.value = "";
+
+            unicodeStat.textContent = "—";
+            ds1Stat.textContent = "—";
+            ds2Stat.textContent = "—";
+
+            errorBox.hidden = true;
+
+            updateInputStats();
+
+            htmlInput.focus();
+        }
+    );
+
+
+    copyButton.addEventListener(
+        "click",
+        async () => {
+            if (!urlInput.value) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(
+                    urlInput.value
+                );
+
+                copyButton.textContent =
+                    "Copied";
+
+                setTimeout(() => {
+                    copyButton.textContent =
+                        "Copy";
+                }, 1500);
+
+            } catch (error) {
+                console.error(error);
+
+                urlInput.select();
+
+                document.execCommand("copy");
+            }
+        }
+    );
+
+
+    updateInputStats();
+</script>
+
+</body>
+</html>

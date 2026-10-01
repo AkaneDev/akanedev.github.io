@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DynamicSite</title>
+
+    <script src="dynamicSite.js"></script>
+</head>
+
+<body>
+    <main id="error">
+    </main>
+
+    <script>
+        function loadDynamicSite() {
+            /*
+             * DynamicSite payloads live in the URL fragment.
+             *
+             * Example:
+             *
+             *   https://example.com/index.html#DS2:...
+             *
+             * The fragment is NOT sent to the HTTP server.
+             * This avoids request/header limits such as HTTP 431.
+             */
+            const hash = window.location.hash;
+
+            if (!hash || hash.length <= 1) {
+                return;
+            }
+
+            /*
+             * Remove the leading '#'.
+             *
+             * URL fragments may contain percent-encoded characters,
+             * so decode them before passing the payload to the
+             * DynamicSite decoder.
+             */
+            let payload;
+
+            try {
+                payload = decodeURIComponent(hash.slice(1));
+            } catch (error) {
+                console.error(error);
+
+                document.body.innerHTML = `
+                    <main>
+                        <h1>DynamicSite Error</h1>
+                        <p>
+                            The supplied URL fragment could not be decoded.
+                        </p>
+                        <pre>${escapeHTML(error.message)}</pre>
+                    </main>
+                `;
+
+                return;
+            }
+
+            if (!payload) {
+                return;
+            }
+
+            try {
+                const html = decodeDynamicSite(payload);
+
+                /*
+                 * The payload is an entire HTML document.
+                 *
+                 * document.write() lets the generated site become
+                 * the current document.
+                 */
+                document.open();
+                document.write(html);
+                document.close();
+
+            } catch (error) {
+                console.error(error);
+
+                document.body.innerHTML = `
+                    <main>
+                        <h1>DynamicSite Error</h1>
+                        <p>
+                            Failed to decode the supplied site.
+                        </p>
+                        <pre>${escapeHTML(error.message)}</pre>
+                    </main>
+                `;
+            }
+        }
+
+        function escapeHTML(value) {
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        loadDynamicSite();
+    </script>
+</body>
+</html>
